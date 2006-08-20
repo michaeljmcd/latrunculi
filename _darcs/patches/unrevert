@@ -1,0 +1,328 @@
+
+New patches:
+
+[unrevert
+anonymous**20060806035043] 
+<
+> {
+hunk ./src/ai.scm 36
+ 		   )))
+ 
+ (define position-eval (lambda (board side)
+-			(define ai_sum (* own-pawn-value
+-					  (pawn-sum board side)))
+-			(define player_sum (* opponent-pawn-value
+-					      (pawn-sum board (negate-side side))))
++			;(define ai_sum (* own-pawn-value
++			;		  (pawn-sum board side)))
++			;(define player_sum (* opponent-pawn-value
++			;		      (pawn-sum board (negate-side side))))
+ 
+hunk ./src/ai.scm 41
+-			(define ai-king-mobil (* ai-king-mobil-val
+-						 (king-mobility board side)))
+-			(define player-king-mobil (* opponent-king-mobil-val
+-						     (king-mobility board (negate-side side))))
++;			(define ai-king-mobil (* ai-king-mobil-val
++;						 (king-mobility board side)))
++;			(define player-king-mobil (* opponent-king-mobil-val
++;						     (king-mobility board (negate-side side))))
++
++			(define king? (lambda (piece)
++					(if (or (eq? piece WHITE_KING)
++						(eq? piece BLACK_KING))
++					  #t
++					  #f)
++					))
++
++			(define ai-sum 0)
++			(define player-sum 0)
++
++			(define ai-king-mobil 0)
++			(define player-king-mobil 0)
++
++			(define ai-pieces '())
++			(define player-pieces '()) ; location of all pieces except the king.
++			(define ai-king '())
++			(define player-king '())
++
++			(vector-for-each (lambda (j row)
++					   (vector-for-each (lambda (i col)
++							      (if (not (eq? col EMPTY))
++								(begin
++								  (if (eq? side (modulo col 2))
++								    (begin
++								      (if (king? col)
++									(set! ai-king (cons i j))
++									(begin
++									  (set! ai-pieces (cons (cons i j) ai-pieces))
++									  (set! ai-sum (+ ai-sum 1))
++									  )
++									)
++								      )
++								    )
++								    (begin
++								      (if (king? col)
++									(set! player-king (cons i j))
++									(begin
++									  (set! player-pieces (cons (cons i j) player-pieces))
++									  (set! player-sum (+ player-sum 1))
++									  )
++									)
++								      )
++								  )
++								)
++							      )
++							    row)
++					   )
++					 board)
++
++			(set! ai-sum (* (+ ai-sum 1) own-pawn-value))
++			(set! player-sum (* (+ player-sum 1) opponent-pawn-value))
++			; the one is added to take the king into account because, as you can see, he is not counted above.
++
++			(define all-ai-moves
++			(map (lambda (pt)
++			       (generate-piece-moves pt board)
++			       )
++			     ai-pieces
++			     ))
++			(define ai-king-mobil
++			(define ai-mobil
++
++			(define all-player-moves
++			  (map (lambda (pt)
++				 (generate-piece-moves pt board)
++				 )
++			       player-pieces
++			       ))
+ 
+ 			(define win-bonus (if (eq? player-king-mobil 0)
+ 					    +inf
+hunk ./src/ai.scm 122
+ 					     -inf
+ 					     0))
+ 
+-			(define ai-mobil (length (generate-moves board side)))
+-			(define player-mobil (length (generate-moves board (negate-side side))))
++			;(define ai-mobil (length (generate-moves board side)))
++			;(define player-mobil (length (generate-moves board (negate-side side))))
+ 
+hunk ./src/ai.scm 125
+-			(- (+ ai_sum win-bonus ai-king-mobil ai-mobil)
+-			   (+ player_sum lose-bonus player-king-mobil player-mobil))
++			(- (+ ai-sum win-bonus ai-king-mobil ai-mobil)
++			   (+ player-sum lose-bonus player-king-mobil player-mobil))
+ 	))
+ ; This function evaluates the value of a given position. It uses the function:
+ ; __                                   __
+}
+
+Context:
+
+[misc
+michaeljmcd@yahoo.com**20060805094300
+ Miscellaneous odds and ends. Tweaked move speed for the slide. Mostly cleaning up from the attempt to convert the vectors to s8vectors.
+ Added 5 sec. to AI search time.
+] 
+[safety
+michaeljmcd@yahoo.com**20060804164841
+ Controls have been added to make sure the user doesn't do anything during animation.
+] 
+[ai re-integrated.
+michaeljmcd@yahoo.com**20060804164544
+ The AI/verification has been re-integrated into the system. This includes animation of AI moves.
+] 
+[slide
+michaeljmcd@yahoo.com**20060804155530
+ Slide effect is now completed. AI/error checking still disabled.
+] 
+[fade-out
+michaeljmcd@yahoo.com**20060804104042
+ Fade out is now fully implemented. The slide effect is not, and the error-checking mechanisms will not
+ be re-enabled until it is.
+] 
+[end of day submit, 8/7/06
+michaeljmcd@yahoo.com**20060807220405
+ Moved some code around in move.scm. Now, make-move is just a wrapper for move-piece followed by affect-captures. Move-piece makes a move, but does not take its ramifications (like caputures) into affect.
+ The rationale for this was that we needed to be able to separate the two for the sake of special fx in the opengl engine.
+ 
+ Work also begun on the fade effect, but was not completed.
+ Some important lines of code (move validation, ai launch, etc.) were commented out for the debugging of the fade effect. These will be reinstated
+ when the fade effect is completed.
+ 
+] 
+[savegame
+michaeljmcd@yahoo.com**20060730105945
+ Save game functions implemented, but untested and unintegrated with the actual system.
+ Commit before writing GLUT out of the program.
+] 
+[move validation bug fix
+michaeljmcd@yahoo.com**20060730055917
+ The bug appears to be fixed with relation to the move validator.
+] 
+[threading fix
+michaeljmcd@yahoo.com**20060730043854
+ Creating a separate thread for the glut main loop and removing the thread-join! call for the AI's thread solved the problem of things not running.
+ TODO: the current threading is "too fair". The time quantuums should be skewed in the AI's favor, but are, instead, equal.
+] 
+[move validation
+michaeljmcd@yahoo.com**20060729092239
+ The computer now performs move validation on all of the user's moves. If they are invalid, they do not take effect.
+ Changes valid in both graphical engines.
+] 
+[misc
+michaeljmcd@yahoo.com**20060728070235
+ Some work begun on AI addition. Not much, though.
+] 
+[mouse picking
+michaeljmcd@yahoo.com**20060728061644
+ We now, officially, have mouse picking. Pieces will move and capture/be captured as expected. 
+ TODO: Integrate AI into the equation.
+] 
+[move functions forked
+michaeljmcd@yahoo.com**20060728055651
+ For the sake of storing the move functions in one locale, they were forked from the AI code into their own file. 
+ This is so that OpenGL has access to the move functions, but not the AI ones (which it does not require).
+] 
+[mouse picking alpha
+michaeljmcd@yahoo.com**20060728054849
+ We finally have progress on the mouse picking. The pixel read holds the correct coordinates and some code has been added to track the first space in the move.
+ Strangely, despite the fact that the pixels read are 100% accurate, the coordinate genrated is always (0 . 0). Working on this bug.
+] 
+[choppy gfx fixed
+michaeljmcd@yahoo.com**20060724200749
+ Some color-coding mouse function code added. The choppy graphics have also been fixed, though I do not know for sure what fixed it.
+] 
+[2x buffers
+michaeljmcd@yahoo.com**20060726163812
+ Removed preliminary mouse picking code (in favor of working on it separately, then integrating). 
+ Added double buffering support, which works and drastically smooths the work done while rotating the view. Still has problems with certain angles (starts 
+ chopping things up in very strange ways; filed as bug #20).
+] 
+[picking, ncurses
+michaeljmcd@yahoo.com**20060720093817
+ Started to implement mouse picking, though no change will yet be obvious to the user. Removed extraneous "win" parameter from some of the ncurses functions.
+] 
+[display lists added
+michaeljmcd@yahoo.com**20060718092021
+ Added display lists for the pawns (both black and white) using OpenGL's quadrics to generate them with texturing.
+] 
+[board working--almost
+michaeljmcd@yahoo.com**20060718081953
+ A textured board (with border) is now drawn. The problem with the sheared corners has been fixed. The broken board corners have not, however, been repaired.
+] 
+[getting there
+michaeljmcd@yahoo.com**20060717185351
+ A couple of bugs, but we're getting there.
+] 
+[more list work
+michaeljmcd@yahoo.com**20060717160843
+ More work has been done on the lists. However, a problem with either Chicken or its OpenGL bindings has been discovered that limits the number of commands run 
+ within a display list. Options: fix the limit or apply two commands to generate a cube.
+] 
+[textures
+michaeljmcd@yahoo.com**20060717141144
+ Textures now load properly (presuming several things about the TGA image) and work has been begun on display lists.
+] 
+[triangulation
+michaeljmcd@yahoo.com**20060715115230
+ Begun the process of breaking down the primitives into real polygons for use with texturing.
+] 
+[targa
+michaeljmcd@yahoo.com**20060715113654
+ targa.scm now works for loading pixel data for all true color TGA files without compression.
+ Work has begun integrating it with gfx.scm to build textures.
+] 
+[tga work
+michaeljmcd@yahoo.com**20060715084712
+ targa.scm is almost to the point of reading image data. The headers are read. Next is the color map (where applicable) followed by the actual picture data. 
+ Haven't started on RLE.
+] 
+[add
+michaeljmcd@yahoo.com**20060715025431
+ Just finished adding the SCM files to tests.
+] 
+[targa.pdf
+michaeljmcd@yahoo.com**20060715025344
+ Targa.pdf describes the TGA format.
+] 
+[tests
+michaeljmcd@yahoo.com**20060715025222
+ Moved all of the unit tests into their own source folder named tests.
+] 
+[image additions
+michaeljmcd@yahoo.com**20060715025048
+ Added images to be used for the textures. Added file (targa.scm) that will load TGA files and have begun work parsing the file format. Also added to doc/ was a 
+ PDF describing the TGA format.
+] 
+[misc. work
+michaeljmcd@yahoo.com**20060712112006
+ Some more miscellaneous work towards getting the mouse clicks to be (correctly) mapped to board spaces.
+] 
+[Convert mouse coords to space coords
+michaeljmcd@yahoo.com**20060712094621
+ With this patch, the addition of code converting mouse clicks to spacial coordinates has been added. The ability to trace this to a specific space/piece has not 
+ been created as well.
+] 
+[Morning commit 7/16/06
+michaeljmcd@yahoo.com**20060712040901
+ Nothing added except some skeletal work on the mouse function.
+] 
+[OpenGL begins
+michaeljmcd@yahoo.com**20060711213544
+ With this patch, fundamental OpenGL support is added to Latrunculi. We now have a basic board and pieces formed entirely from OpenGL primitives that shows up 
+ properly. The next step will be to add enough mouse support to play the game.
+] 
+[nega-work
+michaeljmcd@yahoo.com**20060710060055
+ Work on the nega-max function. Fixes an error in the implementation. When compiled to native, search completed in 13 seconds!
+] 
+[turn fix
+michaeljmcd@yahoo.com**20060707060214
+ This patch fixes bug #5, in which turns are not properly tracked (it turned out that they weren't properly displayed, either; both problems are fixed).
+] 
+[find-ai-move change
+michaeljmcd@yahoo.com**20060706113929
+ changed the find-ai-move function so that it only makes one pass over the list of possibilities to find the one with the high score, rather than the original two 
+ (one to score the moves and the other to find the max).
+] 
+[board representation
+michaeljmcd@yahoo.com**20060706113821
+ In this patch, the move from a list-based board representation to a vector-based one is complete.
+] 
+[changing spaces from pairs to integers
+michaeljmcd@yahoo.com**20060706093129
+ In this patch, the representation of a space was changed from being a pair (A . B) to an integer A.
+ The second value (meant as an ID) was superflous. Removing it should result in simpler and more effecient code.
+] 
+[ncurses display fix
+michaeljmcd@yahoo.com**20060704065620
+ This patch fixes bug #2, relating to the erroneous display. There were two problems: the color pairs for white and black were somehow reversed and I never 
+ noticed before and that the painting was done with vector-map, in which the order is undefined. It was changed to vector-for-each.
+] 
+[afternoon commit 6/7/06
+michaeljmcd@yahoo.com**20060703105647
+ Work is progressing on make-move. Still have not figured out cause of coordinate bug.
+] 
+[make-move partial fix
+michaeljmcd@yahoo.com**20060703060749
+ Fixed the problem of having a piece cloned when making a move fixed. The error was in the way the board was initialized. All of the empty rows referred to the 
+ same base row, meaning that, since it was referenced, making a change to one changed them all. The coordinate system, however, is still buggy. Entering
+ (0, 7) -> (0, 4) moves (11, 0) -> (11, 3).
+] 
+[A great deal of the conversion from a list-based board representation to a vector-based one is done.
+michaeljmcd@yahoo.com**20060702112721
+ Currently IP is the make-move function in ai.scm.
+ initialize.scm--done
+ gfx.scm--done
+ main.scm done.
+ 
+ AI nearly converted.
+ 
+ end-of-work 6/7/06
+] 
+[Initial import.
+michaeljmcd@yahoo.com**20060702052832] 
+Patch bundle hash:
+e615d8e93d64a842f80cc3009ba49baf0000df54
