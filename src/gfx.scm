@@ -87,6 +87,8 @@
 		  (define camera-zoom 1.6875)
 		  (define display-list-start 0)
 
+v v v v v v v
+^ ^ ^ ^ ^ ^ ^
 		  (glut:InitDisplayMode (+ glut:DOUBLE glut:RGB glut:DEPTH))
 		  (glut:CreateWindow "Latrunculi")
 
@@ -300,6 +302,7 @@
 					       (if (move-valid? brd move WHITE) 
 						 (begin
 						   (set! next-board (move-piece brd move))
+v v v v v v v
 						   (define ai-brd (duplicate-board next-board))
 
 						   (display "Board value (white): ") (display (position-eval next-board WHITE))
@@ -307,9 +310,12 @@
 						   (display "Board value (black): ") (display (position-eval next-board BLACK))
 						   (newline)
 
+^ ^ ^ ^ ^ ^ ^
 						   (set! slide-spc move)
 						   (set! mode LOCKED)
+v v v v v v v
 
+^ ^ ^ ^ ^ ^ ^
 						   (glut:TimerFunc 100 (lambda (value)
 									 (slide)
 									 )
@@ -319,33 +325,44 @@
 						   (set! move-origin '())
 
 						   (define ai-thread (make-thread (lambda ()
+v v v v v v v
 										    ;(if (eq? mode USER)
 										    ;  (define ai-mv (find-ai-move brd BLACK))
 										    ;  (define ai-mv (find-ai-move next-board BLACK))
 										    ;)
+^ ^ ^ ^ ^ ^ ^
 
+v v v v v v v
 										    (define ai-mv (find-ai-move ai-brd BLACK))
+^ ^ ^ ^ ^ ^ ^
 
 										    (set! mode LOCKED)
 
+v v v v v v v
 										    (display "I choose: ") (display ai-mv)
 										    (newline)
 
+^ ^ ^ ^ ^ ^ ^
 										    (set! next-board (move-piece brd ai-mv))
 										    (set! slide-spc ai-mv)
 
+v v v v v v v
 										    (display "Board value: ") (display (position-eval next-board BLACK))
 										    (newline)
 
+^ ^ ^ ^ ^ ^ ^
 										    (glut:TimerFunc 100 (lambda (value)
 													  (slide)
 													  )
 												    2)
 
+v v v v v v v
+^ ^ ^ ^ ^ ^ ^
 										    (glut:PostRedisplay)
 										    )
 										  ))
 
+v v v v v v v
 						   (define board-val (position-eval brd WHITE))
 						   (if (and (> board-val -inf)
 							    (< board-val +inf))
@@ -355,6 +372,7 @@
 						       )
 						     (display "Game over.")
 						     )
+^ ^ ^ ^ ^ ^ ^
 						  )
 						 (begin
 						   (set! move-origin '())

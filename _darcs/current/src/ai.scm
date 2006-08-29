@@ -1,7 +1,5 @@
 ; Relies on SRFI-1 and SRFI-43 (vector library)
 
-;(include "initialize.scm")
-; For debugging only
 (include "move.scm")
 
 (declare (block) (usual-integrations))
@@ -9,19 +7,20 @@
 
 (require 'srfi-1 'vector-lib)
 
-(define ai-pawn-value 3)
-(define player-pawn-value 1)
+(define ai-pawn-value 2550.5)
+(define player-pawn-value 2550.5)
 
-(define ai-king-mobil-val 0.05)
-(define player-king-mobil-val 0.005)
+(define ai-mobil-val 0.0005)
+(define player-mobil-val 0.0001)
 
 ; These values can be tweaked through program settings.
 ; A higher own-pawn-value will result in a more cautious opponent whereas
 ; a high oponent-pawn-value will result in a more aggressive opponent
 
 (define EASY 2)
-(define MEDIUM 6)
-(define HARD 9)
+;(define MEDIUM 6)
+;(define HARD 9)
+; Search depth presets for difficulty level. Disabled for testing.
 
 (define level EASY)
 
@@ -101,8 +100,8 @@
 			     ai-pieces
 			     ))
 
-			(set! ai-king-mobil (* ai-king-mobil-val (length (generate-piece-moves ai-king board))))
-			(set! ai-mobil (length all-ai-moves))
+			(set! ai-king-mobil (* (length (generate-piece-moves ai-king board))))
+			(set! ai-mobil (* ai-mobil-val (length all-ai-moves)))
 
 			(set! all-player-moves
 			  (map (lambda (pt)
@@ -110,18 +109,20 @@
 				 )
 			       player-pieces
 			       ))
-			(set! player-king-mobil (* player-king-mobil-val (length (generate-piece-moves player-king board))))
-			(set! player-mobil (length all-player-moves))
+
+			(set! player-king-mobil (* (length (generate-piece-moves player-king board))))
+			(set! player-mobil (* player-mobil-val (length all-player-moves)))
 
 			(set! win-bonus (if (eq? player-king-mobil 0)
 					    +inf
 					    0))
+
 			(set! lose-bonus (if (eq? ai-king-mobil 0)
 					     -inf
 					     0))
 
-			(- (+ ai-sum win-bonus ai-king-mobil ai-mobil)
-			   (+ player-sum lose-bonus player-king-mobil player-mobil))
+			(- (+ ai-sum win-bonus ai-mobil)
+			   (+ player-sum lose-bonus player-mobil))
 			)
 	))
 ; This function evaluates the value of a given position. It uses the function:
@@ -136,29 +137,14 @@
 ; moves available to the king.
 
 (define generate-piece-moves (lambda (pt board)
-		       (append (append (append (generate-vertical-down board
-								     pt
-								     (cons (car pt) (add1 (cdr pt)))
-								     '()
-								     )
-					       (generate-vertical-up board
-					     			     pt
-								     (cons (car pt) (sub1 (cdr pt)))
-								     '()
-								     )
-				     		)
-				       (generate-horizontal-left board
-							         pt
-							         (cons (sub1 (car pt)) (cdr pt))
-							         '()
-							         )
-			     	       )
-			        (generate-horizontal-right board
-				  		           pt
-						           (cons (add1 (car pt)) (cdr pt))
-						           '()
-						          )
-		     )
+		(define lol
+			(list (generate-vertical-down board pt (cons (car pt) (+ 1 (cdr pt))) '())
+			      (generate-vertical-up board pt (cons (car pt) (- (cdr pt) 1)) '())
+			      (generate-horizontal-left board pt (cons (- (car pt) 1) (cdr pt)) '())
+			      (generate-horizontal-right board pt (cons (+ (car pt) 1) (cdr pt)) '()))
+			)
+
+		(concatenate lol)
 	     ))
 ; takes the space (pt) of a piece and generates all moves for it.
 
@@ -182,7 +168,8 @@
 											     col))
 										   (eq? (modulo col 2)
 											side))
-									    (set! spaces (append spaces (list (cons x y))))
+									    ;(set! spaces (append spaces (list (cons x y))))
+									    (set! spaces (cons (cons x y) spaces))
 									    )
 									  )
 									row)

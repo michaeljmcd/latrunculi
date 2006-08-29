@@ -87,8 +87,6 @@
 		  (define camera-zoom 1.6875)
 		  (define display-list-start 0)
 
-		  (define ai-thinking #f)
-
 		  (glut:InitDisplayMode (+ glut:DOUBLE glut:RGB glut:DEPTH))
 		  (glut:CreateWindow "Latrunculi")
 
@@ -302,8 +300,16 @@
 					       (if (move-valid? brd move WHITE) 
 						 (begin
 						   (set! next-board (move-piece brd move))
+						   (define ai-brd (duplicate-board next-board))
+
+						   (display "Board value (white): ") (display (position-eval next-board WHITE))
+						   (newline)
+						   (display "Board value (black): ") (display (position-eval next-board BLACK))
+						   (newline)
+
 						   (set! slide-spc move)
 						   (set! mode LOCKED)
+
 						   (glut:TimerFunc 100 (lambda (value)
 									 (slide)
 									 )
@@ -313,34 +319,42 @@
 						   (set! move-origin '())
 
 						   (define ai-thread (make-thread (lambda ()
-										    (if (eq? mode USER)
-										      (define ai-mv (find-ai-move brd BLACK))
-										      (define ai-mv (find-ai-move next-board BLACK))
-										    )
+										    ;(if (eq? mode USER)
+										    ;  (define ai-mv (find-ai-move brd BLACK))
+										    ;  (define ai-mv (find-ai-move next-board BLACK))
+										    ;)
 
-										    (display "I choose: ")
-										    (display ai-mv)
-										    (newline)
-
-										    (set! ai-thinking #t)
+										    (define ai-mv (find-ai-move ai-brd BLACK))
 
 										    (set! mode LOCKED)
 
+										    (display "I choose: ") (display ai-mv)
+										    (newline)
+
 										    (set! next-board (move-piece brd ai-mv))
 										    (set! slide-spc ai-mv)
+
+										    (display "Board value: ") (display (position-eval next-board BLACK))
+										    (newline)
 
 										    (glut:TimerFunc 100 (lambda (value)
 													  (slide)
 													  )
 												    2)
 
-										    (set! ai-thinking #f)
 										    (glut:PostRedisplay)
 										    )
 										  ))
 
-						   (thread-quantum-set! ai-thread 300)
-						   (thread-start! ai-thread)
+						   (define board-val (position-eval brd WHITE))
+						   (if (and (> board-val -inf)
+							    (< board-val +inf))
+						     (begin
+							   (thread-quantum-set! ai-thread 300)
+							   (thread-start! ai-thread)
+						       )
+						     (display "Game over.")
+						     )
 						  )
 						 (begin
 						   (set! move-origin '())
