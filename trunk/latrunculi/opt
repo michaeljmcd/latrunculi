@@ -1,1 +1,1 @@
-csc ai-speedometer.scm -heap-size 32M -lambda-lift -optimize-level 3 -o ai-speedometer
+csc main.scm -heap-size 128M -lambda-lift -optimize-level 3 -o ../bin/latrunculi

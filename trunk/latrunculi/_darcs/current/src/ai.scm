@@ -7,17 +7,17 @@
 
 (require 'srfi-1 'vector-lib)
 
-(define ai-pawn-value 2550.5)
-(define player-pawn-value 2550.5)
+(define ai-pawn-value 3550.5)
+(define player-pawn-value 3550.5)
 
-(define ai-mobil-val 0.0005)
-(define player-mobil-val 0.0001)
+(define ai-mobil-val 1)
+(define player-mobil-val 1)
 
 ; These values can be tweaked through program settings.
 ; A higher own-pawn-value will result in a more cautious opponent whereas
 ; a high oponent-pawn-value will result in a more aggressive opponent
 
-(define EASY 2)
+(define EASY 4)
 ;(define MEDIUM 6)
 ;(define HARD 9)
 ; Search depth presets for difficulty level. Disabled for testing.
@@ -114,11 +114,11 @@
 			(set! player-mobil (* player-mobil-val (length all-player-moves)))
 
 			(set! win-bonus (if (eq? player-king-mobil 0)
-					    +inf
+					    -inf
 					    0))
 
 			(set! lose-bonus (if (eq? ai-king-mobil 0)
-					     -inf
+					     +inf
 					     0))
 
 			(- (+ ai-sum win-bonus ai-mobil)
@@ -168,7 +168,6 @@
 											     col))
 										   (eq? (modulo col 2)
 											side))
-									    ;(set! spaces (append spaces (list (cons x y))))
 									    (set! spaces (cons (cons x y) spaces))
 									    )
 									  )

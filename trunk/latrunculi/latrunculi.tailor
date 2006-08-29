@@ -16,8 +16,8 @@ state-file = svn-to-darcs.state
     
 [svn:latrunculi]
 repository = svn.sourceforge.net
-module = /svnroot/latrunculi
-subdir = svnside
+module = latrunculi
+subdir = /svnroot/latrunculi
 
 [darcs:latrunculi]
 repository = /home/beowulf/latrunculi
