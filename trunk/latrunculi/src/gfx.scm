@@ -1,170 +1,180 @@
-; One key idea to remember: the whole goal is to completely 
-; separate the internal representation of the game from its display.
-; All display functions must be 'read-only', not changing the game state
-; in any way. We will write v. 1 to be ASCII only and v. 2 to use OpenGL
-; to give a nicer display.
-
-(require 'srfi-1) 
+(require 'srfi-1 'gl 'glut 'glu 'srfi-4 'lolevel 'srfi-18 'glf)
 (include "initialize.scm")
-; Libraries conditionally loaded.
-; ncurses is the ncurses library, gl and glut load the OpenGL and GLUT toolkits, srfi-1 is
+; gl and glut load the OpenGL and GLUT toolkits, srfi-1 is
 ; the list library, srfi-4 is for homogenous floating point vectors, and lolevel allows us
 ; to use pointers (required for some OpenGL functions).
+
+(include "display-lists.scm")
+; load the required libraries.
 
 (include "initialize.scm")
 (include "move.scm")
 (include "ai.scm")
 (include "savegame.scm")
+(include "targa.scm")
 
-(define NCURSES 0)
-(define PLAINGL 1)
-
-(define engine PLAINGL)
-
-(define display-init #f)
-; whether or not we have initialized the display.
-
-; these define names for the color pairs used by ncurses
-(define BLACK-ON-YELLOW 1)
-(define WHITE-ON-YELLOW 2)
-(define BLUE-ON-YELLOW 3)
-(define RED-ON-BLACK 4)
+(define display-list-start 0)
+(define camera-angle-delta 1) ; the amount a camera angle will change (in degrees) with each key press.
+(define camera-angle 320)
+(define camera-zoom 1.6875)
+(define camera-coor (vector -0.4 0.0 0.0))
+(define brd (create-game-board)) ; game board storage for GL. Note that this will refer to the same physical data as the game state.
+(define mode 0)		; if = user, the use can interact with the system. If = locked, then we are doing something ; (AI calculations or animation), and the user cannot interact with the system.
+(define fade-out '())            ; define a list of pieces that need to be faded out.
+(define slide-spc '()) 		   ; will hold a pair of tuples describing how the piece slides from one locale to another.
+(define alpha 1.0)
+(define progress 0.0)
+(define next-board '())
 
 (define initialize-display (lambda ()
-		(if (eq? engine NCURSES)
-		  (begin
-		        (require 'ncurses) 
+			     (glut:InitDisplayMode (+ glut:DOUBLE glut:RGB glut:DEPTH))
+			     
+			     (glut:InitWindowSize 640 480)
 
-		        (initscr)
-			(nonl)
-			(keypad (stdscr) #t)	
-			(cbreak)
+		             (glut:CreateWindow "Latrunculi") 
 
-		  	(start_color)
-			(init_pair 1 COLOR_BLACK COLOR_YELLOW)
-			; Color pair to be used to paint black's pieces
+			     (gl:Enable gl:TEXTURE_2D)
+			     (gl:ClearDepth 1.0)
+			     (gl:Enable gl:DEPTH_TEST)
+			     (gl:ShadeModel gl:SMOOTH)
+			     (gl:Enable gl:BLEND)
+			     (gl:Hint gl:PERSPECTIVE_CORRECTION_HINT gl:NICEST) 
+			     (gl:BlendFunc gl:SRC_ALPHA gl:ONE_MINUS_SRC_ALPHA) 
+		))
 
-		        (init_pair 2 COLOR_WHITE COLOR_YELLOW)
-			; Color pair to be used to paint white's pieces
+(define show-menu (lambda ()
+		    (let* ((menu-img (tga-data "../img/petteia8.tga")) 
+			   (menu-pix (list->u8vector (vector->list (vector-ref menu-img 3))))
+			   (MENU-TEXTURE 12)
+			   (menu-display (lambda ()
+				          (gl:Clear (+ gl:COLOR_BUFFER_BIT gl:DEPTH_BUFFER_BIT))
+					     (gl:LoadIdentity)
+					     (gl:BindTexture gl:TEXTURE_2D MENU-TEXTURE)
+					     (gl:Begin gl:QUADS)
+					     	(gl:TexCoord2i 0 0)
+					     	(gl:Vertex3i -1 -1 -1)
 
-			(init_pair 3 COLOR_BLUE COLOR_YELLOW)
-			; Color pair to be used for empty spaces
+						(gl:TexCoord2i 1 0)
+						(gl:Vertex3i 1 -1 -1)
 
-			(init_pair 4 COLOR_RED COLOR_BLACK)
-			; Color to be used for row labels.
-			)
-		)
-		(if (eq? engine PLAINGL)
-		  (begin
-		  (require 'gl 'glut 'glu 'srfi-4 'lolevel 'srfi-18)
-		  (include "display-lists.scm")
-		  ; load the required libraries.
+						(gl:TexCoord2i 1 1)
+						(gl:Vertex3i 1 1 -1)
 
-		  ; Variables for OpenGL.
-		  (define CUBE-WIDTH 0.075)
-		  (define PYRAMID-HEIGHT 0.15)
-		  (define PYRAMID-WIDTH CUBE-WIDTH)
-		  (define SPHERE-RADIUS (* 0.5 CUBE-WIDTH))
-		  ; IDs for the textures used in the 3D engine.
-		  (define PINE-TEXTURE 13)
-		  (define GRANITE-TEXTURE 14)
-		  (define MARBLE-TEXTURE 15)
-		  (define USER 0)
-		  (define LOCKED 1)
+						(gl:TexCoord2i 0 1)
+						(gl:Vertex3i -1 1 -1)
+					     (gl:End)
+		  
+					  (gl:Color3f 1.0 0.0 0.0)
+					  (gl:PushMatrix)
+					  (gl:LoadIdentity)
+					  (gl:Translatef -0.3 0.75 0.0)
+					  (gl:Scalef 0.1 0.1 0.1)
 
-		  (define next-board '())
-		  (define alpha 1.0)
-		  (define progress 0.0)
-		  (define slide-spc '()) 		   ; will hold a pair of tuples describing how the piece slides from one locale to another.
-		  (define fade-out '())            ; define a list of pieces that need to be faded out.
-		  (define brd (create-game-board)) ; game board storage for GL. Note that this will refer to the same physical data as the game state.
-		  (define move-origin '()) 	 ; from and to data in the current move.
-		  (define mode USER)		; if = user, the use can interact with the system. If = locked, then we are doing something
-					  ; (AI calculations or animation), and the user cannot interact with the system.
-		  (define camera-angle-delta 1) ; the amount a camera angle will change (in degrees) with each key press.
-		  (define camera-coor (vector -0.4 0.0 0.0))
-		  (define camera-angle 320)
-		  (define camera-zoom 1.6875)
-		  (define display-list-start 0)
+					  (glfDrawSolidString "Latrunculi")
+					  (gl:Translatef -5.5 -8.5 0.0)
+					  (glfDrawSolidString "New Game")
+					  (gl:Translatef 0.0 -3.0 0.0)
+					  (glfDrawSolidString "Load Game")
+					  (gl:Translatef 0.0 -3.0 0.0)
+					  (glfDrawSolidString "Exit")
+					  (gl:Translatef 0.0 9.0 0.0)
+					  (gl:PopMatrix)
 
-v v v v v v v
-^ ^ ^ ^ ^ ^ ^
-		  (glut:InitDisplayMode (+ glut:DOUBLE glut:RGB glut:DEPTH))
-		  (glut:CreateWindow "Latrunculi")
+					  (glut:SwapBuffers)
+					  ))
+			  (mouse-handler (lambda (button state x y)
+					   (if (and (and (>= x 13)
+							 (<= x 305))
+						    (and (>= y 240)
+							 (<= y 280)))
+					     (initialize-game))
+					   (if (and (and (>= x 11)
+							 (<= x 327))
+						    (and (>= y 319)
+							 (<= y 362)))
+					     (display "Load game"))
+					   (if (and (and (>= x 13)
+							 (<= x 145))
+						    (and (>= y 387)
+							 (<= y 427)))
+					     (exit))
+					   )))
+		      (
+		       (glfInit)
+		       (glfLoadFont "../fonts/gothic1.glf")
+		       (glfSetAnchorPoint (GLF-LEFT-DOWN))
+		       (glfEnable (GLF-CONTOURING))
+		       (gl:Enable gl:LINE_SMOOTH)
+		       
+		       (gl:DepthFunc gl:ALWAYS)
+
+		       (gl:PixelStorei gl:UNPACK_ALIGNMENT 1)
+
+		       (gl:BindTexture gl:TEXTURE_2D MENU-TEXTURE)
+
+		       (gl:TexParameteri gl:TEXTURE_2D
+					 gl:TEXTURE_MAG_FILTER
+					 gl:LINEAR)
+
+		       (gl:TexParameteri gl:TEXTURE_2D
+					 gl:TEXTURE_MIN_FILTER
+					 gl:LINEAR)
+
+		       (gl:TexEnvf gl:TEXTURE_ENV gl:TEXTURE_ENV_MODE gl:DECAL)
+
+		       (gl:TexImage2D gl:TEXTURE_2D 
+				      0 
+				      3 
+				      (vector-ref menu-img 1) 
+				      (vector-ref menu-img 0)
+				      0
+				      gl:RGB
+				      gl:UNSIGNED_BYTE
+				      (make-locative menu-pix))
+
+		       (glut:DisplayFunc menu-display)
+		       (glut:IdleFunc menu-display)
+		       (glut:MouseFunc mouse-handler)
+		       
+		       (glut:MainLoop)
+		       ))
+		    ))
+
+(define initialize-game (lambda ()
+			  (let* ((CUBE-WIDTH 0.075) 
+				 (PYRAMID-HEIGHT 0.15) 
+				 (PYRAMID-WIDTH CUBE-WIDTH)
+				 (SPHERE-RADIUS (* 0.5 CUBE-WIDTH))
+				 (USER 0)
+				 (LOCKED 1)
+				 (move-origin '()) 	 ; from and to data in the current move.
+				 (dec-alpha (lambda ()
+					      (set! alpha (- alpha 0.05))
+					      (glut:PostRedisplay) 
+					      (if (> alpha 0)
+						(glut:TimerFunc 100 (lambda (value)
+								      (dec-alpha)) 1)
+						(begin
+						  (set! alpha 1.0)
+						  (set! brd next-board)
+						  (set! mode USER)
+						  (set! fade-out '())
+						  ))
+					      ))
+				 )
+
+		  (gl:DepthFunc gl:LESS)
+		  (gl:MatrixMode gl:PROJECTION)
+		  (gl:Scalef camera-zoom camera-zoom camera-zoom)
+		  (gl:Rotatef camera-angle 1.0 0.0 0.0)
+		  ; Set the initial camera zoom and rotation.
+		  (gl:ClearColor 0.80 0.68 0.38 0) ; An ugly green for testing.
 
 		  (create-display-lists)
 
-		  (gl:Enable gl:TEXTURE_2D)
-		  (gl:ClearDepth 1.0)
-		  (gl:DepthFunc gl:LESS)
-		  (gl:Enable gl:DEPTH_TEST)
-		  (gl:ShadeModel gl:SMOOTH)
-		  (gl:Enable gl:BLEND)
-		  (gl:Hint gl:PERSPECTIVE_CORRECTION_HINT gl:NICEST)
-
-		  (gl:BlendFunc gl:SRC_ALPHA gl:ONE_MINUS_SRC_ALPHA)
-
-	          (gl:MatrixMode gl:PROJECTION)
-		  (gl:Scalef camera-zoom camera-zoom camera-zoom)
-	          (gl:Rotatef camera-angle 1.0 0.0 0.0)
-		  ; Set the initial camera zoom and rotation.
-
-		  (gl:ClearColor 0.40 1.0 0.20 0)
-		  ; An ugly green for testing.
-
 		  (glut:DisplayFunc render-state)
-
 		  (glut:IdleFunc render-state)
 
-		  (define dec-alpha (lambda ()
-			  (set! alpha (- alpha 0.05))
-			  (glut:PostRedisplay)
-
-			  (if (> alpha 0)
-			    (glut:TimerFunc 100 (lambda (value)
-						 (dec-alpha)
-						 )
-					    1)
-			    (begin
-			      (set! alpha 1.0)
-			      (set! brd next-board)
-			      (set! mode USER)
-			      (set! fade-out '())
-			      )
-			    )
-		    ))
-
-		  (define slide (lambda ()
-				  (set! progress (+ progress 0.10))
-				  (glut:PostRedisplay)
-
-				  (if (< progress 1.0)
-				    (glut:TimerFunc 100 (lambda (value)
-							   (slide)
-							   )
-						     2)
-				    (begin
-				      (set! progress 0.0)
-				      (set! brd next-board)
-				      (set! mode USER)
-				      (set! slide-spc '())
-
-				      (define captured-vals (call-with-values (lambda () (affect-captures brd)) list))
-				      (set! next-board (car captured-vals))
-				      (set! fade-out (car (cdr captured-vals)))
-
-				      (if (not (equal? fade-out '()))
-					(begin
-					  (set! mode LOCKED)
-					  (glut:TimerFunc 100 (lambda (value)
-								(dec-alpha)
-							       )
-							  1)
-					  )
-					)
-				      )
-				    )
-				  ))
 
 		  (glut:SpecialFunc (lambda (key x y)
 				      (if (eq? mode USER)
@@ -302,20 +312,16 @@ v v v v v v v
 					       (if (move-valid? brd move WHITE) 
 						 (begin
 						   (set! next-board (move-piece brd move))
-v v v v v v v
 						   (define ai-brd (duplicate-board next-board))
 
-						   (display "Board value (white): ") (display (position-eval next-board WHITE))
-						   (newline)
-						   (display "Board value (black): ") (display (position-eval next-board BLACK))
-						   (newline)
+						   ;(display "Board value (white): ") (display (position-eval next-board WHITE))
+						   ;(newline)
+						   ;(display "Board value (black): ") (display (position-eval next-board BLACK))
+						   ;(newline)
 
-^ ^ ^ ^ ^ ^ ^
 						   (set! slide-spc move)
 						   (set! mode LOCKED)
-v v v v v v v
 
-^ ^ ^ ^ ^ ^ ^
 						   (glut:TimerFunc 100 (lambda (value)
 									 (slide)
 									 )
@@ -325,55 +331,43 @@ v v v v v v v
 						   (set! move-origin '())
 
 						   (define ai-thread (make-thread (lambda ()
-v v v v v v v
 										    ;(if (eq? mode USER)
 										    ;  (define ai-mv (find-ai-move brd BLACK))
 										    ;  (define ai-mv (find-ai-move next-board BLACK))
 										    ;)
-^ ^ ^ ^ ^ ^ ^
 
-v v v v v v v
 										    (define ai-mv (find-ai-move ai-brd BLACK))
-^ ^ ^ ^ ^ ^ ^
 
 										    (set! mode LOCKED)
 
-v v v v v v v
 										    (display "I choose: ") (display ai-mv)
 										    (newline)
 
-^ ^ ^ ^ ^ ^ ^
 										    (set! next-board (move-piece brd ai-mv))
 										    (set! slide-spc ai-mv)
 
-v v v v v v v
 										    (display "Board value: ") (display (position-eval next-board BLACK))
 										    (newline)
 
-^ ^ ^ ^ ^ ^ ^
 										    (glut:TimerFunc 100 (lambda (value)
 													  (slide)
 													  )
 												    2)
 
-v v v v v v v
-^ ^ ^ ^ ^ ^ ^
 										    (glut:PostRedisplay)
 										    )
 										  ))
 
-v v v v v v v
-						   (define board-val (position-eval brd WHITE))
-						   (if (and (> board-val -inf)
-							    (< board-val +inf))
-						     (begin
-							   (thread-quantum-set! ai-thread 300)
-							   (thread-start! ai-thread)
-						       )
-						     (display "Game over.")
-						     )
-^ ^ ^ ^ ^ ^ ^
-						  )
+						   ;(define board-val (position-eval brd WHITE))
+						   ;(if (and (> board-val -inf)
+						;	    (< board-val +inf))
+						;     (begin
+						;	   (thread-quantum-set! ai-thread 300)
+						;	   (thread-start! ai-thread)
+						;       )
+						;     (display "Game over.")
+						;     )
+						;  )
 						 (begin
 						   (set! move-origin '())
 						   (display "illegal move")
@@ -383,25 +377,62 @@ v v v v v v v
 					       )
 					     )
 					   ))
+					 )
 
 				       (gl:Enable gl:TEXTURE_2D)
 				       (gl:Enable gl:DITHER)
 				       (gl:Enable gl:BLEND)
 				      )
 				     )
-				    ))
+				      ))
 
 		     (define main-thread (thread-start! (make-thread (lambda ()
 								       (glut:MainLoop)
 								       ))))
 		     (thread-join! main-thread)
-		   )
-		  )
 
-		(set! display-init #t)
-			     ))
+		     )
+			  ))
+(define slide (lambda ()
+		(let* ((USER 0)
+		       (LOCKED 1))
+		(set! progress (+ progress 0.10))
+		(glut:PostRedisplay)
+		
+		(if (< progress 1.0)
+		  (glut:TimerFunc 100 (lambda (value) (slide)) 2)
+		(begin
+		  (set! progress 0.0)
+		  (set! brd next-board)
+		  (set! mode USER)
+		  (set! slide-spc '())
+
+		  (define captured-vals (call-with-values (lambda () (affect-captures brd)) list))
+		  (set! next-board (car captured-vals))
+		  (set! fade-out (car (cdr captured-vals)))
+
+		  (if (not (equal? fade-out '()))
+		    (begin
+		      (set! mode LOCKED)
+		      (glut:TimerFunc 100 (lambda (value)
+					    (dec-alpha)
+					   )
+				      1)
+		      )
+		    )
+		  )
+		))
+	      ))
 
 (define color-render (lambda ()
+		       (let* ((CUBE-WIDTH 0.075) 
+			      (PYRAMID-HEIGHT 0.15) 
+			      (PYRAMID-WIDTH CUBE-WIDTH)
+			      (SPHERE-RADIUS (* 0.5 CUBE-WIDTH))
+			      (USER 0)
+			      (LOCKED 1)
+			      )
+
 			(gl:Disable gl:TEXTURE_2D)
 			(gl:Disable gl:DITHER)
 			(gl:Disable gl:LIGHTING)
@@ -465,10 +496,20 @@ v v v v v v v
 
 			(gl:Flush)
 
-		        (gl:ClearColor 0.40 1.0 0.20 0)
+			  (gl:ClearColor 0.80 .68 0.38 0) 
+			  )
 		       ))
 
 (define render-state (lambda ()
+		       (let* ((CUBE-WIDTH 0.075) 
+			      (PYRAMID-HEIGHT 0.15) 
+			      (PYRAMID-WIDTH CUBE-WIDTH)
+			      (SPHERE-RADIUS (* 0.5 CUBE-WIDTH))
+			      (USER 0)
+			      (LOCKED 1)
+			      )
+
+		
 		       (gl:MatrixMode gl:MODELVIEW)
 		       (gl:LoadIdentity)
 		       (gl:Translatef (vector-ref camera-coor 0)
@@ -572,130 +613,10 @@ v v v v v v v
 					)
 
 		       (glut:SwapBuffers)
+		       )
 		       ))
 
-(define display-current-state (lambda (board)
-		(if (eq? engine NCURSES)
-		  (begin
-			(wclear (stdscr))
+(define display-current-state (lambda (board) 
+				(set! brd board)
+				))
 
-			(if (eq? current-turn AI)
-			  (attron A_BOLD))
-
-			(printw (car (cdr player0)))
-
-			(if (eq? current-turn AI)
-			  (attroff A_BOLD))
-
-			(attron (COLOR_PAIR RED-ON-BLACK))
-			(move 1 3)
-			;(map (lambda (num)
-			;       (printw (number->string num))
-			;       (move 1 (* num 3))
-			;       )
-			;     (list-tabulate COLS values))
-			(attroff (COLOR_PAIR RED-ON-BLACK))
-
-			; Put column labels down
-			(printw "\n")
-
-			(draw-board board 2)
-			(if (eq? current-turn HUMAN)
-			  (attron A_BOLD))
-
-			(printw "\n")
-			(printw (car (cdr player1)))
-
-			(if (eq? current-turn HUMAN)
-			  (attroff A_BOLD))
-
-			(wrefresh (stdscr))
-			(getch)
-
-			(endwin)
-		   )
-		)
-		(if (eq? engine PLAINGL)
-		  (begin
-		    (if display-init
-		      (begin
-			    (set! brd board)
-			)
-		     )
-		    )
-		  )
-	))
-
-(define draw-board (lambda (board y)
-		     (vector-for-each (lambda (i row)
-			      (attron (COLOR_PAIR RED-ON-BLACK))
-			      (printw (number->string i))
-			      (move y 1)
-			      (attroff (COLOR_PAIR RED-ON-BLACK))
-
-			      (draw-row row 1 y)
-			      (printw "\n")
-			      (set! y (+ y 1))
-			    )
-			  board)
-		  	))
-
-(define draw-row (lambda (row x y)
-		  (define PAWN "[*]")
-		  (define KING "[^]")
-		  (define BLANK "| |")
-
-		  (vector-for-each (lambda (i curr_piece)
-		      ;(define curr_piece c)
-		      (move y x)		     
-
-		      (if (eq? EMPTY curr_piece)
-			(begin
-			 (attron (COLOR_PAIR WHITE-ON-YELLOW))
-			 (printw BLANK)
-			 (attroff (COLOR_PAIR WHITE-ON-YELLOW))
-			))
-		      (if (eq? BLACK_PAWN curr_piece)
-			(begin
-			(attron (COLOR_PAIR BLACK-ON-YELLOW))
-			(printw PAWN)
-			(attroff (COLOR_PAIR BLACK-ON-YELLOW))
-			)
-		      )
-		      (if (eq? WHITE_PAWN curr_piece)
-			(begin
-			(attron (COLOR_PAIR BLUE-ON-YELLOW))
-			(printw PAWN)
-			(attroff (COLOR_PAIR BLUE-ON-YELLOW))
-			)
-			)
-		      (if (eq? BLACK_KING curr_piece)
-			(begin
-			(attron (COLOR_PAIR BLACK-ON-YELLOW))
-			(printw KING)
-			(attroff (COLOR_PAIR BLACK-ON-YELLOW))
-			)
-			)
-		      (if (eq? WHITE_KING curr_piece)
-			(begin
-			(attron (COLOR_PAIR BLUE-ON-YELLOW))
-			(printw KING)
-			(attroff (COLOR_PAIR BLUE-ON-YELLOW))
-			))
-
-		    (set! x (+ x 3))
-		   )
-		       row)
-	))
-
-(define get-player-input (lambda ()
-			   ;(nodelay (stdscr) #\t)
-			   (move 14 0)
-			   (attron A_BOLD)
-			   (printw "Input your move in the form: X1 Y1 X2 Y2")
-			   (attroff A_BOLD)
-			   (move 15 0)
-			   (define str "XX YY XX YY")
-			   (getstr str)
-			   str
-			   ))

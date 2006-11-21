@@ -214,9 +214,7 @@
 (define replace-space (lambda (board space replacement)
 		      (define piece-cleared (get-cell board space))
 		      (define updated-board (duplicate-board board))
-v v v v v v v
 		      ;(define updated-board board)
-^ ^ ^ ^ ^ ^ ^
 		      (vector-set! (vector-ref updated-board (cdr space)) (car space) replacement)
 
 		      (values updated-board piece-cleared)
@@ -226,9 +224,7 @@ v v v v v v v
 
 (define move-piece (lambda (board delta)
 			(define board-dup (duplicate-board board))
-v v v v v v v
 			;(define board-dup board)
-^ ^ ^ ^ ^ ^ ^
 			(define after-move
 				(call-with-values (lambda ()
 						    (replace-space board-dup (car delta) EMPTY)
@@ -244,16 +240,13 @@ v v v v v v v
 (define make-move (lambda (board delta)
 		    (define after-move (move-piece board delta))
 		    (affect-captures (duplicate-board after-move))
-v v v v v v v
 		    ;(affect-captures after-move)
-^ ^ ^ ^ ^ ^ ^
 		    ))
 ; Applies change delta (of the form: ((X1 . Y1) . (X2 . Y2))) to the given board board. Must take captures
 ; into affect. Will be used for both AI moves and player moves. AI moves verified during generation, whereas
 ; player moves will have to be verified in another function. This function does no verification. It simply makes
 ; the move and, if a piece is captured, removes it.
 
-v v v v v v v
 (define unmake-move (lambda (board delta)
 		      (make-move board (cons (car (cdr delta))
 					     (list (car delta)))
@@ -261,7 +254,6 @@ v v v v v v v
 		      ))
 ; Given a move delta, unmake-move reverses the move.
 
-^ ^ ^ ^ ^ ^ ^
 (define move-valid? (lambda (board delta side)
 		      (define jumped? (lambda (board delta)
 					; We need to get a list/vector of all the spaces in between the start and the 

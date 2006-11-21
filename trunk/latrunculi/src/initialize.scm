@@ -9,24 +9,6 @@
 (define BLACK_KING 1)
 (define BLACK_PAWN 3)
 
-(define AI 0)
-(define HUMAN 1)
-
-(define BLACK 1)
-(define WHITE 0)
-
-(define player0 (list BLACK "Ajax" AI))
-(define player1 (list WHITE "Achilles" HUMAN)) 
-
-; Player 0  == CPU, Player 1 == human
-
-; Player data is a tuple of the form (C N P) where C is the player's color, N
-; is the player's name, and P is an integer indicating whether the player is human
-; controlled or AI. If the player is human controlled, the following settings are 
-; irrelevant.
-
-(define current-turn HUMAN)
-
 (define create-game-board (lambda ()
 			    (define board (make-vector ROWS))
 
@@ -54,17 +36,6 @@
 			    board
 			    ))
 ; The board will be represented as a vector of vectors.
-
-(define print-list (lambda (list)
-		(when (not (null? list))
-			(display (car list))
-			(newline)
-			(newline)
-			(newline)
-			(print-list (cdr list))
-		)
-	))
-; For debugging purposes. Makes it easier to see the difference in rows on the board.
 
 ; create-game-board returns a list of lists representing the 12 x 8 board. 
 ; The board, 
