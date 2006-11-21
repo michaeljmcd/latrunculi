@@ -1,1 +1,0 @@
-csc main.scm -heap-size 128M -lambda-lift -optimize-level 3 -o ../bin/latrunculi
