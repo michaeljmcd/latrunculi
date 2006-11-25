@@ -13,18 +13,22 @@
 (include "savegame.scm")
 (include "targa.scm")
 
+(define USER 0)
+(define LOCKED 1)
+
 (define display-list-start 0)
 (define camera-angle-delta 1) ; the amount a camera angle will change (in degrees) with each key press.
 (define camera-angle 320)
 (define camera-zoom 1.6875)
 (define camera-coor (vector -0.4 0.0 0.0))
 (define brd (create-game-board)) ; game board storage for GL. Note that this will refer to the same physical data as the game state.
-(define mode 0)		; if = user, the use can interact with the system. If = locked, then we are doing something ; (AI calculations or animation), and the user cannot interact with the system.
+(define mode USER)		; if = user, the use can interact with the system. If = locked, then we are doing something ; (AI calculations or animation), and the user cannot interact with the system.
 (define fade-out '())            ; define a list of pieces that need to be faded out.
 (define slide-spc '()) 		   ; will hold a pair of tuples describing how the piece slides from one locale to another.
 (define alpha 1.0)
 (define progress 0.0)
 (define next-board '())
+(define move-origin '()) 	 ; from and to data in the current move.
 
 (define initialize-display (lambda ()
 			     (glut:InitDisplayMode (+ glut:DOUBLE glut:RGB glut:DEPTH))
@@ -64,14 +68,14 @@
 						(gl:Vertex3i -1 1 -1)
 					     (gl:End)
 		  
-					  (gl:Color3f 1.0 0.0 0.0)
 					  (gl:PushMatrix)
-					  (gl:LoadIdentity)
+					  (gl:Color3f 0.0 1.0 0.0)
 					  (gl:Translatef -0.3 0.75 0.0)
 					  (gl:Scalef 0.1 0.1 0.1)
 
 					  (glfDrawSolidString "Latrunculi")
 					  (gl:Translatef -5.5 -8.5 0.0)
+
 					  (glfDrawSolidString "New Game")
 					  (gl:Translatef 0.0 -3.0 0.0)
 					  (glfDrawSolidString "Load Game")
@@ -102,10 +106,10 @@
 		      (
 		       (glfInit)
 		       (glfLoadFont "../fonts/gothic1.glf")
-		       (glfSetAnchorPoint (GLF-LEFT-DOWN))
 		       (glfEnable (GLF-CONTOURING))
 		       (gl:Enable gl:LINE_SMOOTH)
 		       
+		  (gl:ClearColor 0.80 0.68 0.38 0) 
 		       (gl:DepthFunc gl:ALWAYS)
 
 		       (gl:PixelStorei gl:UNPACK_ALIGNMENT 1)
@@ -145,9 +149,6 @@
 				 (PYRAMID-HEIGHT 0.15) 
 				 (PYRAMID-WIDTH CUBE-WIDTH)
 				 (SPHERE-RADIUS (* 0.5 CUBE-WIDTH))
-				 (USER 0)
-				 (LOCKED 1)
-				 (move-origin '()) 	 ; from and to data in the current move.
 				 (dec-alpha (lambda ()
 					      (set! alpha (- alpha 0.05))
 					      (glut:PostRedisplay) 
@@ -168,7 +169,7 @@
 		  (gl:Scalef camera-zoom camera-zoom camera-zoom)
 		  (gl:Rotatef camera-angle 1.0 0.0 0.0)
 		  ; Set the initial camera zoom and rotation.
-		  (gl:ClearColor 0.80 0.68 0.38 0) ; An ugly green for testing.
+		  (gl:ClearColor 0.80 0.68 0.38 0) 
 
 		  (create-display-lists)
 
@@ -187,11 +188,9 @@
 					 )
 
 				       (if (eq? key glut:KEY_F8)
-					 (begin
-					   (define dat (call-with-values (lambda () 
-									   (load-game "game1.lsg")
-									   ) 
-									 vector))
+					   (let ((dat (call-with-values (lambda () 
+									  (load-game "game1.lsg")) 
+									vector)))
 
 					   (set! brd (vector-ref dat 0))
 					   (set! current-turn (vector-ref dat 1))
@@ -199,7 +198,7 @@
 					   (set! player1 (vector-ref dat 3))
 
 					   (glut:PostRedisplay)
-					  )
+					   )
 					 )
 
 				       (if (eq? key glut:KEY_RIGHT)
@@ -233,8 +232,8 @@
 				       (if (eq? key glut:KEY_PAGE_UP)
 					 (begin
 					   (gl:MatrixMode gl:PROJECTION)
-					   (gl:Scalef 1.5 1.5 1.5)
-					   (set! camera-zoom (* camera-zoom 1.50))
+					   (gl:Scalef 1.01 1.01 1.01)
+					   (set! camera-zoom (* camera-zoom 1.01))
 					   (glut:PostRedisplay)
 					  )
 					 )
@@ -242,8 +241,8 @@
 				      (if (eq? key glut:KEY_PAGE_DOWN)
 					(begin
 					  (gl:MatrixMode gl:PROJECTION)
-					  (gl:Scalef 0.75 0.75 0.75)
-					  (set! camera-zoom (* camera-zoom 0.75))
+					  (gl:Scalef 0.95 0.95 0.95)
+					  (set! camera-zoom (* camera-zoom 0.95))
 					  (glut:PostRedisplay)
 					 )
 					)
@@ -284,10 +283,8 @@
 				    (if (and (eq? button glut:LEFT_BUTTON)
 					     (eq? state glut:UP)
 					     (eq? mode USER))
-				      (begin
-					(define viewport (make-s32vector 4))
-					(define pixel (make-u8vector 3 2))
-
+				      (let ((viewport (make-s32vector 4))
+					    (pixel (make-u8vector 3 2)))
 					(gl:GetIntegerv gl:VIEWPORT viewport)
 
 					(color-render)
@@ -305,38 +302,26 @@
 					 (begin
 					   (if (null? move-origin) ; if the first element in move, the origin, is the empty list...
 					     (set! move-origin (cons (u8vector-ref pixel 0) (u8vector-ref pixel 1)))
-					     (begin
-					       (define move (cons move-origin
-								  (list (cons (u8vector-ref pixel 0) (u8vector-ref pixel 1)))))
-
+					     (let ((move (cons move-origin
+								  (list (cons (u8vector-ref pixel 0) (u8vector-ref pixel 1))))))
 					       (if (move-valid? brd move WHITE) 
 						 (begin
 						   (set! next-board (move-piece brd move))
 						   (define ai-brd (duplicate-board next-board))
 
-						   ;(display "Board value (white): ") (display (position-eval next-board WHITE))
-						   ;(newline)
-						   ;(display "Board value (black): ") (display (position-eval next-board BLACK))
-						   ;(newline)
-
 						   (set! slide-spc move)
 						   (set! mode LOCKED)
 
 						   (glut:TimerFunc 100 (lambda (value)
-									 (slide)
-									 )
+									 (slide))
 								   2)
+
 						   (glut:PostRedisplay)
 
 						   (set! move-origin '())
 
-						   (define ai-thread (make-thread (lambda ()
-										    ;(if (eq? mode USER)
-										    ;  (define ai-mv (find-ai-move brd BLACK))
-										    ;  (define ai-mv (find-ai-move next-board BLACK))
-										    ;)
-
-										    (define ai-mv (find-ai-move ai-brd BLACK))
+						   (let ((ai-thread (make-thread (lambda ()
+										   (let ((ai-mv (find-ai-move ai-brd BLACK (cons player0 player1))))
 
 										    (set! mode LOCKED)
 
@@ -346,34 +331,34 @@
 										    (set! next-board (move-piece brd ai-mv))
 										    (set! slide-spc ai-mv)
 
-										    (display "Board value: ") (display (position-eval next-board BLACK))
+										    (display "Board value: ") 
+										    (display (position-eval next-board BLACK (cons player0 player1)))
 										    (newline)
 
 										    (glut:TimerFunc 100 (lambda (value)
-													  (slide)
-													  )
+													  (slide))
 												    2)
 
 										    (glut:PostRedisplay)
 										    )
-										  ))
+										   ))
+								    ))
 
-						   ;(define board-val (position-eval brd WHITE))
-						   ;(if (and (> board-val -inf)
-						;	    (< board-val +inf))
-						;     (begin
-						;	   (thread-quantum-set! ai-thread 300)
-						;	   (thread-start! ai-thread)
-						;       )
-						;     (display "Game over.")
-						;     )
-						;  )
+						(if (not (game-over? next-board (cons player0 player1)))
+						  (begin
+						    (thread-quantum-set! ai-thread 300)
+						    (thread-start! ai-thread)
+						    )
+						  (display "Game over.")
+						  )
+						)
+						
+						 )
 						 (begin
 						   (set! move-origin '())
 						   (display "illegal move")
 						   (newline)
 						  )
-						 )
 					       )
 					     )
 					   ))
@@ -388,11 +373,13 @@
 
 		     (define main-thread (thread-start! (make-thread (lambda ()
 								       (glut:MainLoop)
-								       ))))
+								       ))
+							))
 		     (thread-join! main-thread)
 
 		     )
 			  ))
+
 (define slide (lambda ()
 		(let* ((USER 0)
 		       (LOCKED 1))
@@ -508,7 +495,6 @@
 			      (USER 0)
 			      (LOCKED 1)
 			      )
-
 		
 		       (gl:MatrixMode gl:MODELVIEW)
 		       (gl:LoadIdentity)
@@ -615,8 +601,3 @@
 		       (glut:SwapBuffers)
 		       )
 		       ))
-
-(define display-current-state (lambda (board) 
-				(set! brd board)
-				))
-

@@ -5,7 +5,7 @@
 
 (define AI 0)
 (define HUMAN 1)
-(define current-turn HUMAN)
+;(define current-turn HUMAN)
 
 (define BLACK 1)
 (define WHITE 0)
@@ -13,22 +13,22 @@
 (define player0 (list BLACK 
 		      "Ajax" 
 		      AI 
-		      '((BLACK_PAWN . '(0 . 0)) (BLACK_PAWN . '(1 . 0)) (BLACK_PAWN . '(2 . 0))
-						(BLACK_PAWN . '(3 . 0)) (BLACK_PAWN . '(4 . 0))
-						(BLACK_PAWN . '(5 . 0)) (BLACK_PAWN . '(6 . 0))
-						(BLACK_PAWN . '(7 . 0)) (BLACK_PAWN . '(8 . 0))
-						(BLACK_PAWN . '(9 . 0)) (BLACK_PAWN . '(10 . 0))
-						(BLACK_PAWN . '(11 . 0)) (BLACK_KING . '(5 . 1)))
+		      '((3 . (0 . 0)) (3 . (1 . 0)) (3 . (2 . 0))
+						(3 . (3 . 0)) (3 . (4 . 0))
+						(3 . (5 . 0)) (3 . (6 . 0))
+						(3 . (7 . 0)) (3 . (8 . 0))
+						(3 . (9 . 0)) (3 . (10 . 0))
+						(3 . (11 . 0)) (1 . (5 . 1)))
 		      '#(2 1 1 2 2 1 1)))
 (define player1 (list WHITE 
 		      "Achilles" 
 		      HUMAN 
-		      '((WHITE_PAWN . '(0 . 11)) (WHITE_PAWN . '(1 . 11)) (WHITE_PAWN . '(2 . 11))
-						(WHITE_PAWN . '(3 . 11)) (WHITE_PAWN . '(4 . 11))
-						(WHITE_PAWN . '(5 . 11)) (WHITE_PAWN . '(6 . 11))
-						(WHITE_PAWN . '(7 . 11)) (WHITE_PAWN . '(8 . 11))
-						(WHITE_PAWN . '(9 . 11)) (WHITE_PAWN . '(10 . 11))
-						(WHITE_PAWN . '(11 . 11)) (WHITE_KING . '(6 . 10)))
+		      '((2 . (0 . 11)) (2 . (1 . 11)) (2 . (2 . 11))
+						(2 . (3 . 11)) (2 . (4 . 11))
+						(2 . (5 . 11)) (2 . (6 . 11))
+						(2 . (7 . 11)) (2 . (8 . 11))
+						(2 . (9 . 11)) (2 . (10 . 11))
+						(2 . (11 . 11)) (0 . (6 . 6)))
 		      '#(2 1 1 2 2 1 1)))
 
 ; Player data is a tuple of the form (C N P M A) where C is the player's color, N
