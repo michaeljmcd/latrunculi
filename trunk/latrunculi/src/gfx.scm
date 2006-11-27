@@ -46,8 +46,8 @@
 
 			     (glfInit)
 			     (glfLoadFont "../fonts/gothic1.glf")
-			     ;(glfEnable (GLF-CONTOURING))
-			     ;(gl:Enable gl:LINE_SMOOTH)
+			     (glfEnable (GLF-CONTOURING))
+			     (gl:Enable gl:LINE_SMOOTH)
 			     ; Initialize GLF
 		))
 
@@ -57,6 +57,7 @@
 			   (MENU-TEXTURE 12)
 			   (menu-display (lambda ()
 				          (gl:Clear (+ gl:COLOR_BUFFER_BIT gl:DEPTH_BUFFER_BIT))
+					  (gl:MatrixMode gl:PROJECTION)
 					     (gl:LoadIdentity)
 					     (gl:BindTexture gl:TEXTURE_2D MENU-TEXTURE)
 					     (gl:Begin gl:QUADS)
@@ -73,14 +74,14 @@
 						(gl:Vertex3i -1 1 -1)
 					     (gl:End)
 		  
-					  (gl:Color3f 1 1 0)
 					  (gl:PushMatrix)
+					  (gl:LoadIdentity)
+					  (gl:Color3b 255 0 0)
 					  (gl:Translatef -0.3 0.75 0.0)
 					  (gl:Scalef 0.1 0.1 0.1)
 
 					  (glfDrawSolidString "Latrunculi")
 					  (gl:Translatef -5.5 -8.5 0.0)
-
 					  (glfDrawSolidString "New Game")
 					  (gl:Translatef 0.0 -3.0 0.0)
 					  (glfDrawSolidString "Load Game")
@@ -108,11 +109,12 @@
 						    (and (>= y 387)
 							 (<= y 427)))
 					     (exit))
-					   )))
-		      (
-		  (gl:ClearColor 0.80 0.68 0.38 0) 
+					   ))
+			  )
+		       (gl:ClearColor 0.80 0.68 0.38 0) 
+		       ;(gl:BlendFunc gl:SRC_ALPHA gl:DST_ALPHA)
 		       (gl:DepthFunc gl:ALWAYS)
-		       (gl:Disable gl:BLEND)
+		       (gl:Enable gl:BLEND)
 
 		       (gl:PixelStorei gl:UNPACK_ALIGNMENT 1)
 
@@ -141,9 +143,9 @@
 		       (glut:DisplayFunc menu-display)
 		       (glut:IdleFunc menu-display)
 		       (glut:MouseFunc mouse-handler)
-		       
+
 		       (glut:MainLoop)
-		       ))
+		       )
 		    ))
 
 (define initialize-game (lambda ()
@@ -182,7 +184,6 @@
 									vector)))
 
 					   (set! brd (vector-ref dat 0))
-					   (set! current-turn (vector-ref dat 1))
 					   (set! player0 (vector-ref dat 2))
 					   (set! player1 (vector-ref dat 3))
 
@@ -406,6 +407,20 @@
 		     )
 			  ))
 
+(define dec-alpha (lambda ()
+		    (set! alpha (- alpha 0.05))
+		    (glut:PostRedisplay) 
+		    (if (> alpha 0)
+		      (glut:TimerFunc 100 (lambda (value) (dec-alpha)) 1)
+		      (begin
+			(set! alpha 1.0)
+			(set! brd next-board)
+			(set! mode USER)
+			(set! fade-out '())
+			(mutex-unlock! board-mutex)
+			))
+		    ))
+
 (define slide (lambda ()
 		(set! progress (+ progress 0.10))
 		(glut:PostRedisplay)
@@ -433,20 +448,6 @@
 		    )
 		  ))
 		))
-
-(define dec-alpha (lambda ()
-		    (set! alpha (- alpha 0.05))
-		    (glut:PostRedisplay) 
-		    (if (> alpha 0)
-		      (glut:TimerFunc 100 (lambda (value) (dec-alpha)) 1)
-		      (begin
-			(set! alpha 1.0)
-			(set! brd next-board)
-			(set! mode USER)
-			(set! fade-out '())
-			(mutex-unlock! board-mutex)
-			))
-		    ))
 
 (define color-render (lambda ()
 		       (let* ((CUBE-WIDTH 0.075) 
@@ -528,14 +529,15 @@
 		       (let* ((CUBE-WIDTH 0.075) 
 			      (PYRAMID-HEIGHT 0.15) 
 			      (PYRAMID-WIDTH CUBE-WIDTH)
-			      (SPHERE-RADIUS (* 0.5 CUBE-WIDTH)))
-		
-			 (gl:Color3f 1.0 0.0 0.0)
+			      (SPHERE-RADIUS (* 0.5 CUBE-WIDTH))) 
+			 (gl:Clear (+ gl:COLOR_BUFFER_BIT gl:DEPTH_BUFFER_BIT))
+
+			 (gl:Color3b 255 255 0)
 			 (gl:PushMatrix)
 			 (gl:LoadIdentity)
+			 (gl:Translatef 0.0 0.8 0.0)
+			 (gl:Scalef 0.1 0.1 0.1)
 			 (glfDrawSolidString (cadr player0))
-			 ;(gl:Translatef 0.0 1.0 0.0)
-			 ;(glfDrawSolidString (cadr player1))
 			 (gl:PopMatrix)
 
 		       (gl:MatrixMode gl:MODELVIEW)
@@ -544,7 +546,7 @@
 				      (vector-ref camera-coor 1)
 				      (vector-ref camera-coor 2))
 
-		       (gl:Clear (+ gl:COLOR_BUFFER_BIT gl:DEPTH_BUFFER_BIT))
+		       ;(gl:Clear (+ gl:COLOR_BUFFER_BIT gl:DEPTH_BUFFER_BIT))
 
 		       (vector-for-each (lambda (j row)
 					  (vector-for-each (lambda (i col)

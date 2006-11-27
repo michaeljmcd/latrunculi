@@ -5,7 +5,6 @@
 
 (define AI 0)
 (define HUMAN 1)
-;(define current-turn HUMAN)
 
 (define BLACK 1)
 (define WHITE 0)
@@ -19,7 +18,8 @@
 						(3 . (7 . 0)) (3 . (8 . 0))
 						(3 . (9 . 0)) (3 . (10 . 0))
 						(3 . (11 . 0)) (1 . (5 . 1)))
-		      '#(2 1 1 2 2 1 1)))
+		      '#(2 1 2 2 2 1 1)))
+
 (define player1 (list WHITE 
 		      "Achilles" 
 		      HUMAN 
@@ -40,5 +40,5 @@
 ; overall-mobility-value overall-opponent-mobility-value)
 
 (initialize-display)
-;(show-menu)
-(initialize-game)
+(show-menu)
+;(initialize-game)
