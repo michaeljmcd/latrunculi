@@ -119,8 +119,8 @@
 			      (level (cadddr players))
 			     ) 
 			 (for-each (lambda (mv)
-				     (display "Now probing: ") (display mv)
-				     (newline)
+				     ;(display "Now probing: ") (display mv)
+				     ;(newline)
 				     ; debugging code.  
 
 				     (let ((score (nega-max (make-move board mv) (- level 1) side -inf +inf players)))

@@ -30,7 +30,6 @@
 (define next-board '())
 (define move-origin '()) 	 ; from and to data in the current move.
 (define board-mutex (make-mutex))
-(define anim-done '())
 
 (define initialize-display (lambda ()
 			     (glut:InitDisplayMode (+ glut:DOUBLE glut:RGB glut:DEPTH))
@@ -304,6 +303,7 @@
 						       (captured-vals (call-with-values (lambda () (affect-captures (move-piece brd move))) list))
 						       (update (update-players move piece WHITE captured-vals (cons player0 player1)))
 						       )
+						   (display update)
 						   (when (eq? (caar update) BLACK) 
 						     (set! player0 (car update))
 						     (set! player1 (cdr update))
@@ -314,6 +314,7 @@
 						     ))
 						 ; update the players
 
+						 (newline)
 						 (display player0)
 						 (newline)
 						 (display player1)
@@ -337,6 +338,7 @@
 
 						   (let ((ai-thread (make-thread (lambda ()
 										   (let ((ai-mv (find-ai-move ai-brd BLACK (cons player0 player1))))
+										     (newline)
 										     (display "I choose: ")(display ai-mv)
 										     (newline)
 
@@ -350,8 +352,9 @@
 										    
 										    (let* ((piece (get-cell brd (car ai-mv)))
 											   (captured-vals (call-with-values (lambda () (affect-captures brd)) list))
-											   (update (update-players move piece WHITE captured-vals (cons player0 player1)))
+											   (update (update-players ai-mv piece BLACK captured-vals (cons player0 player1)))
 											   )
+										      (display update)
 										      (when (eq? (caar update) BLACK) 
 											(set! player0 (car update))
 											(set! player1 (cdr update)))
@@ -361,6 +364,7 @@
 											))
 										    ; update the players
 
+										    (newline)
 											 (display player0)
 											 (newline)
 											 (display player1)
@@ -368,6 +372,9 @@
 										    (display "Board value: ") 
 										    (display (position-eval next-board BLACK (cons player0 player1)))
 										    (newline)
+
+										   ;(mutex-unlock! board-mutex)
+
 
 										    (glut:TimerFunc 100 (lambda (value)
 													  (slide))
