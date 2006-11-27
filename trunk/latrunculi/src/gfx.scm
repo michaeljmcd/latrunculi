@@ -1,12 +1,9 @@
 (require 'srfi-1 'gl 'glut 'glu 'srfi-4 'lolevel 'srfi-18 'glf)
-(include "initialize.scm")
 ; gl and glut load the OpenGL and GLUT toolkits, srfi-1 is
 ; the list library, srfi-4 is for homogenous floating point vectors, and lolevel allows us
 ; to use pointers (required for some OpenGL functions).
 
 (include "display-lists.scm")
-; load the required libraries.
-
 (include "initialize.scm")
 (include "move.scm")
 (include "ai.scm")
@@ -21,9 +18,9 @@
 (define camera-angle 320)
 (define camera-zoom 1.6875)
 (define camera-coor (vector -0.4 0.0 0.0))
-(define brd (create-game-board)) ; game board storage for GL. Note that this will refer to the same physical data as the game state.
-(define mode USER)		; if = user, the use can interact with the system. If = locked, then we are doing something ; (AI calculations or animation), and the user cannot interact with the system.
-(define fade-out '())            ; define a list of pieces that need to be faded out.
+(define brd (create-game-board)) 
+(define mode USER)		; if = user, the user can interact with the system. If = locked, then we are doing something ; (AI calculations or animation), and the user cannot interact with the system.
+(define fade-out '())            ; define a list of pieces that need to be faded out (i.e. have been captured)
 (define slide-spc '()) 		   ; will hold a pair of tuples describing how the piece slides from one locale to another.
 (define alpha 1.0)
 (define progress 0.0)
@@ -303,7 +300,6 @@
 						       (captured-vals (call-with-values (lambda () (affect-captures (move-piece brd move))) list))
 						       (update (update-players move piece WHITE captured-vals (cons player0 player1)))
 						       )
-						   (display update)
 						   (when (eq? (caar update) BLACK) 
 						     (set! player0 (car update))
 						     (set! player1 (cdr update))
@@ -313,11 +309,6 @@
 						     (set! player0 (cdr update))
 						     ))
 						 ; update the players
-
-						 (newline)
-						 (display player0)
-						 (newline)
-						 (display player1)
 
 						   (set! next-board (move-piece brd move))
 						   (define ai-brd (duplicate-board next-board))
@@ -354,7 +345,6 @@
 											   (captured-vals (call-with-values (lambda () (affect-captures brd)) list))
 											   (update (update-players ai-mv piece BLACK captured-vals (cons player0 player1)))
 											   )
-										      (display update)
 										      (when (eq? (caar update) BLACK) 
 											(set! player0 (car update))
 											(set! player1 (cdr update)))
@@ -363,11 +353,6 @@
 											(set! player0 (cdr update))
 											))
 										    ; update the players
-
-										    (newline)
-											 (display player0)
-											 (newline)
-											 (display player1)
 
 										    (display "Board value: ") 
 										    (display (position-eval next-board BLACK (cons player0 player1)))

@@ -82,35 +82,38 @@
 		     ))
 ; If one of the kings can't make a move, then the game is over.
 
-(define nega-inner (lambda (ply side alpha beta players)
-	(if (null? ply)
-	  (position-eval board side players)
-	  (let ((next-alpha (max alpha (* -1
-					  (nega-max (make-move board (car ply))
-						    (- depth 1)
-						    (negate-side side)
-						    alpha
-						    beta
-						    players))
-				 )))
-	    (if (>= next-alpha beta)
-	      beta
-	      (nega-inner (cdr ply) side next-alpha beta players)
-	      )
-	    )
-	  )
-	))
-
 (define nega-max (lambda (board depth side alpha beta players)
 		   (if (or (eq? 0 depth)
 			   (game-over? board))
 		     (position-eval board side players)
 		     (let ((next-ply (generate-moves board side)))
-		       (nega-inner next-ply side alpha beta players)))
+		       (nega-inner board next-ply side alpha beta players)
+		       ))
 		   ))
 
+(define nega-inner (lambda (board ply side alpha beta players)
+	(if (null? ply)
+	  (position-eval board side players)
+	  (let* ((piece (get-cell board (caar ply)))
+		 (captured-vals (call-with-values (lambda () (affect-captures (move-piece board (car ply)))) list))
+		 (next-alpha (max alpha (* -1
+					  (nega-max (make-move board (car ply))
+						    (- depth 1)
+						    (negate-side side)
+						    alpha
+						    beta
+						    (update-players (car ply) piece side captured-vals players))
+				 )))
+		 )
+	    (if (>= next-alpha beta)
+	      beta
+	      (nega-inner (cdr ply) side next-alpha beta players)
+	      ))
+	  )
+	))
+
 (define find-ai-move (lambda (board side players)
-		       (let* ((self (if (eq? (caar players) WHITE)
+		       (let ((self (if (eq? (caar players) side)
 				      (car players)
 				      (cadr players)
 				      ))
@@ -119,11 +122,14 @@
 			      (level (cadddr players))
 			     ) 
 			 (for-each (lambda (mv)
-				     ;(display "Now probing: ") (display mv)
-				     ;(newline)
-				     ; debugging code.  
-
-				     (let ((score (nega-max (make-move board mv) (- level 1) side -inf +inf players)))
+				     (let* ((piece (get-cell board (car mv)))
+					    (captured-vals (call-with-values (lambda () (affect-captures (move-piece board mv))) list))
+					    (score (nega-max (make-move board mv) 
+							    (- level 1) 
+							    side 
+							    -inf +inf 
+							    (update-players mv piece side captured-vals players))
+							    ))
 				       (when (> score hi-score)
 					 (set! hi-score score)
 					 (set! move mv)))
@@ -145,6 +151,11 @@
 			   )
 			 ))
 
+; This convention applies to all of the next four functions.
+; Board is the current state, origin is the space of origin for this move, curr
+; is the current set of coordinates and moves is the list of moves generated so far.
+; The spaces are indexed starting at zero. 
+
 (define generate-vertical-down (lambda (board origin curr moves)
 				 (if (eq? (cdr curr)
 					  ROWS)
@@ -160,9 +171,6 @@
 				       )
 			   	     )
 			       )))
-; Where board is the current state, origin is the space of origin for this move, curr
-; is the current set of coordinates and moves is the list of moves generated so far.
-; The spaces are numbered from zero.
 
 (define generate-horizontal-right (lambda (board origin curr moves)
 				 (if (eq? (car curr)

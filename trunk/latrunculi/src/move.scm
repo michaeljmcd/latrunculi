@@ -22,6 +22,7 @@
 			    new-board)
 			  ))
 ; Creates a newly-allocated deep copy of board.
+
 (define is-surrounded-horizontally? (lambda (board space)
 				   (let* ((this-cell (get-cell board space))
 					  (side (modulo this-cell 2)) 
