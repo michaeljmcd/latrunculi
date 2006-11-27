@@ -10,31 +10,17 @@
 (define BLACK_PAWN 3)
 
 (define create-game-board (lambda ()
-			    (define board (make-vector ROWS))
-
-			    ;(set! r (make-vector COLS (cons EMPTY EMPTY)))
-			    (vector-set! board 2 (make-vector COLS EMPTY))
-			    (vector-set! board 3 (make-vector COLS EMPTY))
-			    (vector-set! board 4 (make-vector COLS EMPTY))
-			    (vector-set! board 5 (make-vector COLS EMPTY))
-			    ; create a completely empty board
-
-			    (vector-set! board 0 (make-vector COLS BLACK_PAWN)) 
-			    (vector-set! board (- ROWS 1) (make-vector COLS WHITE_PAWN))
-			    ; and fill the upper and lower ranks with pawns
-			
-			    (define empty-row (make-vector COLS EMPTY))
-			    (vector-set! empty-row 5 BLACK_KING)
-			    (vector-set! board 1 empty-row)
-			    ; Place the black king at (5, 1)
-
-			    (define empty-row2 (make-vector COLS EMPTY))
-			    (vector-set! empty-row2 6 WHITE_KING)
-			    (vector-set! board 6 empty-row2)
-			    ; Place the white king at (6, 6)
-	
-			    board
+			    '#(#(3 3 3 3 3 3 3 3 3 3 3 3)
+			       #(-1 -1 -1 -1 -1 1 -1 -1 -1 -1 -1 -1)
+			       #(-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1)
+			       #(-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1)
+			       #(-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1)
+			       #(-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1)
+			       #(-1 -1 -1 -1 -1 -1 0 -1 -1 -1 -1 -1)
+			       #(2 2 2 2 2 2 2 2 2 2 2 2)
+			       )
 			    ))
+; Returns a freshly allocated copy of the default game board.
 ; The board will be represented as a vector of vectors.
 
 ; create-game-board returns a list of lists representing the 12 x 8 board. 

@@ -315,3 +315,59 @@
 ; 3. The move is diagonal (i.e. /\x > 0 AND /\ y > 0)
 ; 4. The move jumps over a piece on either side.
 ; 5. The ending space already has a piece on it.
+
+(define update-players (lambda (move pc side captures players)
+			 (let* ((self (if (eq? (caar players) side)
+				       (car players)
+				       (cdr players)))
+				(other (if (not (eq? (caar players) side))
+					 (car players)
+					 (cdr players)))
+				(updated-self-pcs (cons (cons pc (cadr move))
+							(filter (lambda (piece-id)
+								  (if (or (not (eq? (cdr piece-id)
+										    (car move)))
+									  (not (eq? (find (lambda (pc1)
+											    (if (eq? (cdr piece-id)
+												     pc1)
+											      #t
+											      #f
+											    ))
+											  captures)
+										    #f)))
+								    #t
+								    #f
+								  ))
+								(cadddr self))
+							))
+				(updated-other-pcs (filter (lambda (piece-id)
+							     (let ((result (find (lambda (pc)
+										   (if (eq? pc (cdr piece-id))
+										     #t
+										     #f
+										     ))
+										 captures
+										 ))
+								   )
+							     (if (eq? result #f)
+							       #t
+							       #f
+							       )
+							     ))
+							   (cadddr other)
+							   ))
+				)
+			   (cons (list (car self)
+				       (cadr self)
+				       (caddr self)
+				       updated-self-pcs
+				       (cadr (cdddr self)))
+				 (list (car other)
+				       (cadr other)
+				       (caddr other)
+				       updated-other-pcs
+				       (cadr (cdddr other)))
+				 )
+			   )
+			 ))
+; Returns a tuple containing the updated player data. Takes into affect both captures and moves.

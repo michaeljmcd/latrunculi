@@ -24,6 +24,9 @@
 			       (own-material (* own-material-value (length (cddr current))))
 			       (opponent-material-value (vector-ref (car (cddddr opponent)) 1))
 			       (opponent-material (* opponent-material-value (length (cddr opponent))))
+			       (own-king-mobil-val (vector-ref (cadr (cdddr current)) 3))
+			       (opp-king-mobil-val (vector-ref (cadr (cdddr current)) 4))
+			       ;(own-king-mobil (* own-king-mobil-val (length
 			       )
 			  (- own-material opponent-material)
 			  )

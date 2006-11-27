@@ -29,6 +29,8 @@
 (define progress 0.0)
 (define next-board '())
 (define move-origin '()) 	 ; from and to data in the current move.
+(define board-mutex (make-mutex))
+(define anim-done '())
 
 (define initialize-display (lambda ()
 			     (glut:InitDisplayMode (+ glut:DOUBLE glut:RGB glut:DEPTH))
@@ -44,6 +46,13 @@
 			     (gl:Enable gl:BLEND)
 			     (gl:Hint gl:PERSPECTIVE_CORRECTION_HINT gl:NICEST) 
 			     (gl:BlendFunc gl:SRC_ALPHA gl:ONE_MINUS_SRC_ALPHA) 
+			     ; Initialize OpenGL
+
+			     (glfInit)
+			     (glfLoadFont "../fonts/gothic1.glf")
+			     ;(glfEnable (GLF-CONTOURING))
+			     ;(gl:Enable gl:LINE_SMOOTH)
+			     ; Initialize GLF
 		))
 
 (define show-menu (lambda ()
@@ -68,8 +77,8 @@
 						(gl:Vertex3i -1 1 -1)
 					     (gl:End)
 		  
+					  (gl:Color3f 1 1 0)
 					  (gl:PushMatrix)
-					  (gl:Color3f 0.0 1.0 0.0)
 					  (gl:Translatef -0.3 0.75 0.0)
 					  (gl:Scalef 0.1 0.1 0.1)
 
@@ -84,6 +93,7 @@
 					  (gl:Translatef 0.0 9.0 0.0)
 					  (gl:PopMatrix)
 
+					  (gl:Flush)
 					  (glut:SwapBuffers)
 					  ))
 			  (mouse-handler (lambda (button state x y)
@@ -104,13 +114,9 @@
 					     (exit))
 					   )))
 		      (
-		       (glfInit)
-		       (glfLoadFont "../fonts/gothic1.glf")
-		       (glfEnable (GLF-CONTOURING))
-		       (gl:Enable gl:LINE_SMOOTH)
-		       
 		  (gl:ClearColor 0.80 0.68 0.38 0) 
 		       (gl:DepthFunc gl:ALWAYS)
+		       (gl:Disable gl:BLEND)
 
 		       (gl:PixelStorei gl:UNPACK_ALIGNMENT 1)
 
@@ -149,20 +155,7 @@
 				 (PYRAMID-HEIGHT 0.15) 
 				 (PYRAMID-WIDTH CUBE-WIDTH)
 				 (SPHERE-RADIUS (* 0.5 CUBE-WIDTH))
-				 (dec-alpha (lambda ()
-					      (set! alpha (- alpha 0.05))
-					      (glut:PostRedisplay) 
-					      (if (> alpha 0)
-						(glut:TimerFunc 100 (lambda (value)
-								      (dec-alpha)) 1)
-						(begin
-						  (set! alpha 1.0)
-						  (set! brd next-board)
-						  (set! mode USER)
-						  (set! fade-out '())
-						  ))
-					      ))
-				 )
+						 )
 
 		  (gl:DepthFunc gl:LESS)
 		  (gl:MatrixMode gl:PROJECTION)
@@ -303,11 +296,33 @@
 					   (if (null? move-origin) ; if the first element in move, the origin, is the empty list...
 					     (set! move-origin (cons (u8vector-ref pixel 0) (u8vector-ref pixel 1)))
 					     (let ((move (cons move-origin
-								  (list (cons (u8vector-ref pixel 0) (u8vector-ref pixel 1))))))
+								  (list (cons (u8vector-ref pixel 0) (u8vector-ref pixel 1)))))
+						   )
 					       (if (move-valid? brd move WHITE) 
 						 (begin
+						 (let* ((piece (get-cell brd move-origin))
+						       (captured-vals (call-with-values (lambda () (affect-captures (move-piece brd move))) list))
+						       (update (update-players move piece WHITE captured-vals (cons player0 player1)))
+						       )
+						   (when (eq? (caar update) BLACK) 
+						     (set! player0 (car update))
+						     (set! player1 (cdr update))
+						     )
+						   (when (eq? (caar update) WHITE)
+						     (set! player1 (car update))
+						     (set! player0 (cdr update))
+						     ))
+						 ; update the players
+
+						 (display player0)
+						 (newline)
+						 (display player1)
+
 						   (set! next-board (move-piece brd move))
 						   (define ai-brd (duplicate-board next-board))
+
+						   (mutex-lock! board-mutex)
+						   (mutex-specific-set! board-mutex next-board)
 
 						   (set! slide-spc move)
 						   (set! mode LOCKED)
@@ -322,14 +337,33 @@
 
 						   (let ((ai-thread (make-thread (lambda ()
 										   (let ((ai-mv (find-ai-move ai-brd BLACK (cons player0 player1))))
+										     (display "I choose: ")(display ai-mv)
+										     (newline)
 
 										    (set! mode LOCKED)
 
-										    (display "I choose: ") (display ai-mv)
-										    (newline)
+										    (mutex-lock! board-mutex)
+										    (mutex-specific-set! board-mutex next-board)
 
 										    (set! next-board (move-piece brd ai-mv))
 										    (set! slide-spc ai-mv)
+										    
+										    (let* ((piece (get-cell brd (car ai-mv)))
+											   (captured-vals (call-with-values (lambda () (affect-captures brd)) list))
+											   (update (update-players move piece WHITE captured-vals (cons player0 player1)))
+											   )
+										      (when (eq? (caar update) BLACK) 
+											(set! player0 (car update))
+											(set! player1 (cdr update)))
+										      (when (eq? (caar update) WHITE)
+											(set! player1 (car update))
+											(set! player0 (cdr update))
+											))
+										    ; update the players
+
+											 (display player0)
+											 (newline)
+											 (display player1)
 
 										    (display "Board value: ") 
 										    (display (position-eval next-board BLACK (cons player0 player1)))
@@ -381,20 +415,17 @@
 			  ))
 
 (define slide (lambda ()
-		(let* ((USER 0)
-		       (LOCKED 1))
 		(set! progress (+ progress 0.10))
 		(glut:PostRedisplay)
 		
 		(if (< progress 1.0)
 		  (glut:TimerFunc 100 (lambda (value) (slide)) 2)
-		(begin
+		(let ((captured-vals (call-with-values (lambda () (affect-captures brd)) list)))
 		  (set! progress 0.0)
 		  (set! brd next-board)
 		  (set! mode USER)
 		  (set! slide-spc '())
 
-		  (define captured-vals (call-with-values (lambda () (affect-captures brd)) list))
 		  (set! next-board (car captured-vals))
 		  (set! fade-out (car (cdr captured-vals)))
 
@@ -406,10 +437,24 @@
 					   )
 				      1)
 		      )
+		    (mutex-unlock! board-mutex)
 		    )
-		  )
+		  ))
 		))
-	      ))
+
+(define dec-alpha (lambda ()
+		    (set! alpha (- alpha 0.05))
+		    (glut:PostRedisplay) 
+		    (if (> alpha 0)
+		      (glut:TimerFunc 100 (lambda (value) (dec-alpha)) 1)
+		      (begin
+			(set! alpha 1.0)
+			(set! brd next-board)
+			(set! mode USER)
+			(set! fade-out '())
+			(mutex-unlock! board-mutex)
+			))
+		    ))
 
 (define color-render (lambda ()
 		       (let* ((CUBE-WIDTH 0.075) 
@@ -491,11 +536,16 @@
 		       (let* ((CUBE-WIDTH 0.075) 
 			      (PYRAMID-HEIGHT 0.15) 
 			      (PYRAMID-WIDTH CUBE-WIDTH)
-			      (SPHERE-RADIUS (* 0.5 CUBE-WIDTH))
-			      (USER 0)
-			      (LOCKED 1)
-			      )
+			      (SPHERE-RADIUS (* 0.5 CUBE-WIDTH)))
 		
+			 (gl:Color3f 1.0 0.0 0.0)
+			 (gl:PushMatrix)
+			 (gl:LoadIdentity)
+			 (glfDrawSolidString (cadr player0))
+			 ;(gl:Translatef 0.0 1.0 0.0)
+			 ;(glfDrawSolidString (cadr player1))
+			 (gl:PopMatrix)
+
 		       (gl:MatrixMode gl:MODELVIEW)
 		       (gl:LoadIdentity)
 		       (gl:Translatef (vector-ref camera-coor 0)
