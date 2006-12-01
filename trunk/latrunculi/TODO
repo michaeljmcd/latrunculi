@@ -1,7 +1,0 @@
--Try to make the delta of the progress during a slide a function of the overall length of the move.
--Implement random move selection
--Playtesting AI to tune constants.
--Add text showing player's names to the screen.
--Add text showing whether the AI is thinking
--Add turn indicator.
--Debug concurrency (some captures being ignored as AI search times get shorter).
