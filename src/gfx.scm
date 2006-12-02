@@ -26,7 +26,7 @@
 (define progress 0.0)
 (define next-board '())
 (define move-origin '()) 	 ; from and to data in the current move.
-;(define board-mutex (make-mutex))
+(define board-mutex (make-mutex))
 
 (define initialize-display (lambda ()
 			     (glut:InitDisplayMode (+ glut:DOUBLE glut:RGB glut:DEPTH))
@@ -177,9 +177,8 @@
 
 			    (glut:SpecialFunc game-keyboard-handler)
 			    (glut:MouseFunc game-mouse-handler) 
-			    
-			    (let ((main-thread (thread-start! (make-thread (lambda () (glut:MainLoop))))))
-				  (thread-join! main-thread))
+
+			    (glut:MainLoop)
 			  ))
 
 (define game-keyboard-handler (lambda (key x y)
@@ -311,7 +310,7 @@
 					    )
 				       (if (move-valid? brd move WHITE) 
 					 (begin
-					   ;(mutex-lock! board-mutex)
+					   (mutex-lock! board-mutex)
 					   
 					   (when (eq? (caar update) BLACK) 
 					     (set! player0 (car update))
@@ -329,16 +328,12 @@
 
 					   (set! move-origin '())
 
-					   ;(mutex-unlock! board-mutex)
-
 					   (glut:TimerFunc 100 (lambda (value)
 								 (slide))
 							   2)
 
 					   (glut:PostRedisplay)
 
-				           ;(define ai-thread (make-thread ai-func)) 
-					   
 					   (if (not (game-over? ai-brd (cons player0 player1)))
 					     (begin
 					       (thread-quantum-set! ai-thread 300) 
@@ -370,7 +365,9 @@
 		    (display "I choose: ")(display ai-mv)
 		    (newline)
 
-		   ;(mutex-lock! board-mutex)
+		    (define ai-cond (make-condition-variable))
+
+		   (mutex-lock! board-mutex)
 		   (set! mode LOCKED)
 
 		   (set! next-board (move-piece brd ai-mv))
@@ -414,7 +411,7 @@
 			(set! mode USER)
 			(set! fade-out '())
 
-			;(mutex-unlock! board-mutex)
+			(mutex-unlock! board-mutex)
 		      )
 		    )))
 
@@ -427,28 +424,27 @@
 		  (let ((captured-vals (call-with-values (lambda () 
 							   (affect-captures next-board)) 
 							 list))) 
-		    (if (not (equal? (cdr captured-vals) '()))
+		    (if (not (eqv? (cadr captured-vals) '()))
 		      (begin
-			(set! mode LOCKED)
-
-		      (set! next-board (car captured-vals))
-		      (set! fade-out (cadr captured-vals))
-
-		      (glut:TimerFunc 100 (lambda (value)
-					    (dec-alpha)
-					   )
-				      1)
+			(set! mode LOCKED) 
+			(set! next-board (car captured-vals))
+			(set! fade-out (cadr captured-vals)) 
+			
+			(glut:TimerFunc 100 (lambda (value)
+					      (dec-alpha)
+					      )
+					1)
 		      )
 		    (begin
-			  (set! progress 0.0)
-			  (set! brd next-board)
-			  (set! mode USER)
-			  (set! slide-spc '())
+		      (set! progress 0.0)
+		      (set! brd next-board)
+		      (set! mode USER)
+		      (set! slide-spc '())
 
-			  ;(mutex-unlock! board-mutex)
+		      (mutex-unlock! board-mutex)
 		    )
-		  ))
 		  )
+		    ))
 		))
 
 (define color-render (lambda ()
