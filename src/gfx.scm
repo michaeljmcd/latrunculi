@@ -526,14 +526,38 @@
 			      (PYRAMID-HEIGHT 0.15) 
 			      (PYRAMID-WIDTH CUBE-WIDTH)
 			      (SPHERE-RADIUS (* 0.5 CUBE-WIDTH))) 
+
 			 (gl:Clear (+ gl:COLOR_BUFFER_BIT gl:DEPTH_BUFFER_BIT))
 
-			 (gl:Color3b 255 255 0)
+			 (gl:MatrixMode gl:PROJECTION)
 			 (gl:PushMatrix)
 			 (gl:LoadIdentity)
-			 (gl:Translatef 0.0 0.8 0.0)
+			 (gl:Ortho 0 0 0 0 -1 1)
+			 (gl:MatrixMode gl:MODELVIEW)
+			 (gl:PushMatrix)
+			 (gl:LoadIdentity)
+
+			 (gl:Disable gl:TEXTURE_2D)
+			 (gl:Color3f 1.0 1.0 0.0)
+			 (gl:LoadIdentity)
+
+			 (gl:Translatef -0.85 0.9 0.0)
 			 (gl:Scalef 0.1 0.1 0.1)
 			 (glfDrawSolidString (cadr player0))
+			 (gl:Color3f 0.0 0.0 0.0)
+			 (glfDrawWiredString (cadr player0))
+
+			 (gl:Translatef 0.0 -18.0 0.0)
+			 (gl:Color3f 1.0 1.0 0.0)
+			 (glfDrawSolidString (cadr player1))
+			 (gl:Color3f 0.0 0.0 0.0)
+			 (glfDrawWiredString (cadr player1))
+
+			 (gl:Enable gl:TEXTURE_2D)
+
+			 (gl:MatrixMode gl:PROJECTION)
+			 (gl:PopMatrix)
+			 (gl:MatrixMode gl:MODELVIEW)
 			 (gl:PopMatrix)
 			 
 			 (gl:MatrixMode gl:MODELVIEW)

@@ -18,7 +18,9 @@
 						(3 . (7 . 0)) (3 . (8 . 0))
 						(3 . (9 . 0)) (3 . (10 . 0))
 						(3 . (11 . 0)) (1 . (5 . 1)))
-		      '#(2 1 2 2 2 1 1)))
+		      '#(80 35 35 0.0001 0.0001)
+		      ))
+		      ;'#(2 1 2 2 2)))
 
 (define player1 (list WHITE 
 		      "Achilles" 
@@ -29,7 +31,8 @@
 						(2 . (7 . 11)) (2 . (8 . 11))
 						(2 . (9 . 11)) (2 . (10 . 11))
 						(2 . (11 . 11)) (0 . (6 . 6)))
-		      '#(40 25 25 0.05 0.05 1 1)))
+		      '#(40 25 25 0.05 0.05)
+		      ))
 
 ; Player data is a tuple of the form (C N P M A) where C is the player's color, N
 ; is the player's name, P is an integer indicating whether the player is human
