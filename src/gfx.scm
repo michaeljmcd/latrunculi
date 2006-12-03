@@ -543,15 +543,15 @@
 
 			 (gl:Translatef -0.85 0.9 0.0)
 			 (gl:Scalef 0.1 0.1 0.1)
-			 (glfDrawSolidString (cadr player0))
 			 (gl:Color3f 0.0 0.0 0.0)
-			 (glfDrawWiredString (cadr player0))
+			 (glfDrawSolidString (cadr player0))
+			 ;(glfDrawWiredString (cadr player0))
 
 			 (gl:Translatef 0.0 -18.0 0.0)
-			 (gl:Color3f 1.0 1.0 0.0)
-			 (glfDrawSolidString (cadr player1))
 			 (gl:Color3f 0.0 0.0 0.0)
-			 (glfDrawWiredString (cadr player1))
+			 (glfDrawSolidString (cadr player1))
+			 ;(gl:Color3f 0.0 0.0 0.0)
+			 ;(glfDrawWiredString (cadr player1))
 
 			 (gl:Enable gl:TEXTURE_2D)
 
