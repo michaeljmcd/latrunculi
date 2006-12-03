@@ -18,9 +18,8 @@
 						(3 . (7 . 0)) (3 . (8 . 0))
 						(3 . (9 . 0)) (3 . (10 . 0))
 						(3 . (11 . 0)) (1 . (5 . 1)))
-		      '#(80 35 35 0.0001 0.0001)
+		      '#(80 35 65 0.0001 0.0001)
 		      ))
-		      ;'#(2 1 2 2 2)))
 
 (define player1 (list WHITE 
 		      "Achilles" 
@@ -39,8 +38,7 @@
 ; controlled or AI, M (for material) is a list of tuples describing all of the pieces
 ; that the player has and their positions, and A is the player's AI settings (ignored
 ; if under player control). A is of the form:
-; #(search-depth own-pawn-value opponent-pawn-value own-king-mobility-value opponent-king-mobility-value
-; overall-mobility-value overall-opponent-mobility-value)
+; #(search-depth own-pawn-value opponent-pawn-value own-king-mobility-value opponent-king-mobility-value)
 
 (initialize-display)
 ;(show-menu)
