@@ -106,36 +106,42 @@
 		     ))
 ; If one of the kings can't make a move, then the game is over.
 
-(define nega-max (lambda (board depth side alpha beta players)
-		   (if (or (eq? 0 depth)
-			   (game-over? board))
+(define nega-max (lambda (board side depth players alpha beta)
+		   (let ((nega-eval (lambda (ply board side depth players alpha beta)
+				      (if (null? ply)
+					alpha
+					(let* ((captures (affect-captures (make-move board (car ply))))
+					       (new-alpha (max alpha (* -1
+								       (nega-max (make-move board (car ply))
+										 (negate-side side)
+										 (- depth 1)
+										 (update-players (car ply)
+												 (get-cell board (caar ply))
+												 side
+												 captures
+												 players)
+										 (* -1 alpha)
+										 (* -1 beta)
+										 )
+								       ))
+							 ))
+					  (if (> new-alpha beta)
+					    beta
+					    (nega-eval (cdr ply) board side depth players new-alpha beta)
+					    )
+					  )
+					)
+				     ))
+		     )
+		   (if (or (eq? depth 0)
+			   (game-over? board players))
 		     (position-eval board side players)
-		     (let ((next-ply (generate-moves board side)))
-		       (nega-inner board next-ply side alpha beta players)
-		       ))
+		     (nega-eval)
+		     )
+		   )
 		   ))
 
-(define nega-inner (lambda (board ply side alpha beta players)
-	(if (null? ply)
-	  (position-eval board side players)
-	  (let* ((piece (get-cell board (caar ply)))
-		 (captured-vals (call-with-values (lambda () (affect-captures (move-piece board (car ply)))) list))
-		 (next-alpha (max alpha (* -1
-					  (nega-max (make-move board (car ply))
-						    (- depth 1)
-						    (negate-side side)
-						    alpha
-						    beta
-						    (update-players (car ply) piece side captured-vals players))
-				 )))
-		 )
-	    (if (>= next-alpha beta)
-	      beta
-	      (nega-inner (cdr ply) side next-alpha beta players)
-	      ))
-	  )
-	))
-
+;(define nega-max (lambda (board side depth players alpha beta)
 (define find-ai-move (lambda (board side players)
 		       (let ((self (if (eq? (caar players) side)
 				      (car players)
@@ -152,10 +158,11 @@
 				     (let* ((piece (get-cell board (car mv)))
 					    (captured-vals (call-with-values (lambda () (affect-captures (move-piece board mv))) list))
 					    (score (nega-max (make-move board mv) 
-							    (- level 1) 
 							    side 
+							    (- level 1) 
+							    (update-players mv piece side captured-vals players)
 							    -inf +inf 
-							    (update-players mv piece side captured-vals players))
+							    )
 							    ))
 				       (when (> score hi-score)
 					 (set! hi-score score)
