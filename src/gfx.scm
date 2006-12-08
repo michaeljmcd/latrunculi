@@ -1,3 +1,7 @@
+; Latrunculi
+; (c) Michael J. McDermott, 2006
+; Licensed under the GPL v.2
+
 (require 'srfi-1 'gl 'glut 'glu 'srfi-4 'lolevel 'srfi-18 'glf)
 ; gl and glut load the OpenGL and GLUT toolkits, srfi-1 is
 ; the list library, srfi-4 is for homogenous floating point vectors, and lolevel allows us
@@ -544,14 +548,19 @@
 			 (gl:Translatef -0.85 0.9 0.0)
 			 (gl:Scalef 0.1 0.1 0.1)
 			 (gl:Color3f 0.0 0.0 0.0)
-			 (glfDrawSolidString (cadr player0))
-			 ;(glfDrawWiredString (cadr player0))
+
+			 (if (eq? mode LOCKED)
+			   (glfDrawSolidString (string-append (cadr player0) "*"))
+			   (glfDrawSolidString (cadr player0))
+			   )
 
 			 (gl:Translatef 0.0 -18.0 0.0)
-			 (gl:Color3f 0.0 0.0 0.0)
-			 (glfDrawSolidString (cadr player1))
-			 ;(gl:Color3f 0.0 0.0 0.0)
-			 ;(glfDrawWiredString (cadr player1))
+			 (gl:Color3f 0.0 0.0 0.0) 
+			 
+			 (if (not (eq? mode LOCKED))
+			   (glfDrawSolidString (string-append (cadr player1) "*"))
+			   (glfDrawSolidString (cadr player1))
+			   )
 
 			 (gl:Enable gl:TEXTURE_2D)
 
