@@ -69,6 +69,43 @@
 ; If the game has either been won or lost by an arbitrary side, then the game is, 
 ; in fact, over.
 
+#|
+(define find-ai-move (lambda (board side players)
+		       (let* ((self (if (eq? (caar players) side)
+				      (car players)
+				      (cdr players)
+				      ))
+			      (level (vector-ref (car (cddddr self)) 0))
+			      (all-moves (generate-moves board side players))
+			      (move-scores (map (lambda (mv)
+						  (let* ((piece (get-cell board (car mv)))
+							 (captured-vals (call-with-values (lambda () 
+											    (affect-captures (move-piece board mv))) 
+											  list))
+							  (update (update-players mv piece side captured-vals players))
+							 (score (nega-max (make-move board mv) 
+							    side 
+							    (- level 1) 
+							    (update-players mv piece side captured-vals players)
+							    -inf +inf 
+							    ))
+							 )
+						  (cons score mv)
+						  (display "for move: ") (display mv)
+						  (display update) (newline)
+						  (display captured-vals)(newline)(display piece)
+						  (newline)(newline)
+						  ))
+						all-moves))
+			      )
+			 (display all-moves)
+			 (display move-scores)
+			 (cdr (max-car move-scores))
+			 )
+		       ))
+|#
+
+
 (define generate-moves (lambda (board side)
 			 (define space-list (lambda (board side)
 					     (define spaces '())

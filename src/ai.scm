@@ -106,42 +106,46 @@
 		     ))
 ; If one of the kings can't make a move, then the game is over.
 
+(define nega-eval (lambda (ply board side depth players alpha beta)
+	      (if (null? ply)
+		alpha
+		(let* ((captures (call-with-values (lambda () (affect-captures (make-move board (car ply)))) list))
+		       (new-alpha (max alpha (* -1
+					       (nega-max (make-move board (car ply))
+							 (negate-side side)
+							 (- depth 1)
+							 (update-players (car ply)
+									 (get-cell board (caar ply))
+									 side
+									 captures
+									 players)
+							 (* -1 alpha)
+							 (* -1 beta)
+							 )
+					       ))
+				 ))
+		  (if (> new-alpha beta)
+		    beta
+		    (nega-eval (cdr ply) board side depth players new-alpha beta)
+		    )
+		  )
+		)
+	     ))
+
 (define nega-max (lambda (board side depth players alpha beta)
-		   (let ((nega-eval (lambda (ply board side depth players alpha beta)
-				      (if (null? ply)
-					alpha
-					(let* ((captures (affect-captures (make-move board (car ply))))
-					       (new-alpha (max alpha (* -1
-								       (nega-max (make-move board (car ply))
-										 (negate-side side)
-										 (- depth 1)
-										 (update-players (car ply)
-												 (get-cell board (caar ply))
-												 side
-												 captures
-												 players)
-										 (* -1 alpha)
-										 (* -1 beta)
-										 )
-								       ))
-							 ))
-					  (if (> new-alpha beta)
-					    beta
-					    (nega-eval (cdr ply) board side depth players new-alpha beta)
-					    )
-					  )
-					)
-				     ))
-		     )
 		   (if (or (eq? depth 0)
 			   (game-over? board players))
 		     (position-eval board side players)
-		     (nega-eval)
+		     (nega-eval (generate-moves board side players)
+				board
+				side
+				depth
+				players
+				alpha
+				beta)
 		     )
-		   )
 		   ))
 
-;(define nega-max (lambda (board side depth players alpha beta)
 (define find-ai-move (lambda (board side players)
 		       (let ((self (if (eq? (caar players) side)
 				      (car players)
