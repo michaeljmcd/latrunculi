@@ -1,3 +1,7 @@
+; Latrunculi
+; (c) Michael J. McDermott, 2006
+; Licensed under the GPL v.2
+
 (include "gfx.scm") ; initialize.scm is included in gfx.scm
 (include "ai.scm")
 
@@ -18,7 +22,7 @@
 						(3 . (7 . 0)) (3 . (8 . 0))
 						(3 . (9 . 0)) (3 . (10 . 0))
 						(3 . (11 . 0)) (1 . (5 . 1)))
-		      '#(80 35 65 0.0001 0.0001)
+		      '#(40 95 65 0.0001 0.0001)
 		      ))
 
 (define player1 (list WHITE 
