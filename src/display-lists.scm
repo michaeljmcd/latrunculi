@@ -1,6 +1,6 @@
 ; A seperate file to hold the display lists. This shortens the gfx file, and keeps its contents more readable.
 
-(require-extension gl glu)
+(require-extension gl glu cairo vector-lib)
 (include "targa.scm")
 
 ; texture 1 will be the board's texture, 2 will be black and 3 will be white.
@@ -14,7 +14,7 @@
 				      (SPHERE-RADIUS (* 0.5 CUBE-WIDTH))
 				      (pine-img (tga-data "../img/pine.tga"))
 				      (pine-pix (list->u8vector (vector->list (vector-ref pine-img 3))))
-				      (granite-img (tga-data "../img/granite.tga"))
+                                      (granite-img (tga-data "../img/granite.tga"))
 				      (granite-pix (list->u8vector (vector->list (vector-ref granite-img 3))))
 				      (marble-img (tga-data "../img/white_marble.tga"))
 				      (marble-pix (list->u8vector (vector->list (vector-ref marble-img 3))))
@@ -69,6 +69,7 @@
 
 				 (gl:TexEnvf gl:TEXTURE_ENV gl:TEXTURE_ENV_MODE gl:DECAL)
 
+                                 ; Set up the granite (the black) texture
 				 (gl:BindTexture gl:TEXTURE_2D GRANITE-TEXTURE)
 
 				 (gl:TexParameteri gl:TEXTURE_2D
@@ -80,6 +81,10 @@
 						   gl:LINEAR)
 
 				 (gl:TexEnvf gl:TEXTURE_ENV gl:TEXTURE_ENV_MODE gl:DECAL)
+
+                                 (cairo-set-source-surface granite-instance granite-surface 0 0)
+                                 (cairo-paint granite-instance)
+                                 (cairo-surface-destroy granite-surface)
 
 				 (gl:TexImage2D gl:TEXTURE_2D
 						0

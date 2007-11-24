@@ -2,7 +2,7 @@
 ; (c) Michael J. McDermott, 2006
 ; Licensed under the GPL v.2
 
-(require 'srfi-1 'gl 'glut 'glu 'srfi-4 'lolevel 'srfi-18 'glf)
+(require 'srfi-1 'gl 'glut 'glu 'srfi-4 'lolevel 'srfi-18 'glf 'cairo)
 ; gl and glut load the OpenGL and GLUT toolkits, srfi-1 is
 ; the list library, srfi-4 is for homogenous floating point vectors, and lolevel allows us
 ; to use pointers (required for some OpenGL functions).
