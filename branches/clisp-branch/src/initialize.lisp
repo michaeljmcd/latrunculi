@@ -1,13 +1,13 @@
 (require 'vector-lib)
 
-(define COLS 12)
-(define ROWS 8)
+(defconstant COLS 12)
+(defconstant ROWS 8)
 
-(define EMPTY -1)
-(define WHITE_KING 0)
-(define WHITE_PAWN 2)
-(define BLACK_KING 1)
-(define BLACK_PAWN 3)
+(defconstant EMPTY -1)
+(defconstant WHITE_KING 0)
+(defconstant WHITE_PAWN 2)
+(defconstant BLACK_KING 1)
+(defconstant BLACK_PAWN 3)
 
 (define create-game-board (lambda ()
 			    '#(#(3 3 3 3 3 3 3 3 3 3 3 3)
