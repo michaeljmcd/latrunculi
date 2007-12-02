@@ -2,26 +2,32 @@
 ; (c) Michael J. McDermott, 2006
 ; Licensed under the GPL v.2
 
-(include "gfx.scm") ; initialize.scm is included in gfx.scm
-(include "ai.scm")
+(load "gfx")
+(load "ai")
 
-;(require 'srfi-13 'tinyclos) ; SRFI-13 is aString library.
+(defconstant AI 0)
+(defconstant HUMAN 1)
 
-(define AI 0)
-(define HUMAN 1)
+(defconstant BLACK 1)
+(defconstant WHITE 0)
 
-(define BLACK 1)
-(define WHITE 0)
+(defclass player ()
+  ((color :accessor player-color)
+   (name :accessor player-name)
+   (controller :accessor player-controlled-by)
+   (pieces :accessor piece-list)
+   (ai-settings :accessor get-ai-settings))
+  )
 
 (define player0 (list BLACK 
 		      "Ajax" 
 		      AI 
 		      '((3 . (0 . 0)) (3 . (1 . 0)) (3 . (2 . 0))
-						(3 . (3 . 0)) (3 . (4 . 0))
-						(3 . (5 . 0)) (3 . (6 . 0))
-						(3 . (7 . 0)) (3 . (8 . 0))
-						(3 . (9 . 0)) (3 . (10 . 0))
-						(3 . (11 . 0)) (1 . (5 . 1)))
+                        (3 . (3 . 0)) (3 . (4 . 0))
+                        (3 . (5 . 0)) (3 . (6 . 0))
+                        (3 . (7 . 0)) (3 . (8 . 0))
+                        (3 . (9 . 0)) (3 . (10 . 0))
+                        (3 . (11 . 0)) (1 . (5 . 1)))
 		      '#(40 95 65 0.0001 0.0001)
 		      ))
 
@@ -29,11 +35,11 @@
 		      "Achilles" 
 		      HUMAN 
 		      '((2 . (0 . 11)) (2 . (1 . 11)) (2 . (2 . 11))
-						(2 . (3 . 11)) (2 . (4 . 11))
-						(2 . (5 . 11)) (2 . (6 . 11))
-						(2 . (7 . 11)) (2 . (8 . 11))
-						(2 . (9 . 11)) (2 . (10 . 11))
-						(2 . (11 . 11)) (0 . (6 . 6)))
+                        (2 . (3 . 11)) (2 . (4 . 11))
+                        (2 . (5 . 11)) (2 . (6 . 11))
+                        (2 . (7 . 11)) (2 . (8 . 11))
+                        (2 . (9 . 11)) (2 . (10 . 11))
+                        (2 . (11 . 11)) (0 . (6 . 6)))
 		      '#(40 25 25 0.05 0.05)
 		      ))
 

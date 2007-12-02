@@ -32,140 +32,139 @@
 (define move-origin '()) 	 ; from and to data in the current move.
 (define board-mutex (make-mutex))
 
-(define initialize-display (lambda ()
-			     (glut:InitDisplayMode (+ glut:DOUBLE glut:RGB glut:DEPTH))
-			     
-			     (glut:InitWindowSize 640 480)
+(defun initialize-display ()
+     (glut:InitDisplayMode (+ glut:DOUBLE glut:RGB glut:DEPTH))
+     
+     (glut:InitWindowSize 640 480)
 
-		             (glut:CreateWindow "Latrunculi") 
+     (glut:CreateWindow "Latrunculi") 
 
-			     (gl:Enable gl:TEXTURE_2D)
-			     (gl:ClearDepth 1.0)
-			     (gl:Enable gl:DEPTH_TEST)
-			     (gl:ShadeModel gl:SMOOTH)
-			     (gl:Enable gl:BLEND)
-			     (gl:Hint gl:PERSPECTIVE_CORRECTION_HINT gl:NICEST) 
-			     (gl:BlendFunc gl:SRC_ALPHA gl:ONE_MINUS_SRC_ALPHA) 
-			     ; Initialize OpenGL
+     (gl:Enable gl:TEXTURE_2D)
+     (gl:ClearDepth 1.0)
+     (gl:Enable gl:DEPTH_TEST)
+     (gl:ShadeModel gl:SMOOTH)
+     (gl:Enable gl:BLEND)
+     (gl:Hint gl:PERSPECTIVE_CORRECTION_HINT gl:NICEST) 
+     (gl:BlendFunc gl:SRC_ALPHA gl:ONE_MINUS_SRC_ALPHA) 
+     ; Initialize OpenGL
 
-			     (glfInit)
-			     (glfLoadFont "../fonts/gothic1.glf")
-			     (glfEnable (GLF-CONTOURING))
-			     (gl:Enable gl:LINE_SMOOTH)
-			     ; Initialize GLF
-		))
+     (glfInit)
+     (glfLoadFont "../fonts/gothic1.glf")
+     (glfEnable (GLF-CONTOURING))
+     (gl:Enable gl:LINE_SMOOTH)
+     ; Initialize GLF
+    )
 
-(define show-menu (lambda ()
-		    (let* ((menu-img (tga-data "../img/petteia8.tga")) 
-			   (menu-pix (list->u8vector (vector->list (vector-ref menu-img 3))))
-			   (MENU-TEXTURE 12)
-			   (menu-display (lambda ()
-				          (gl:Clear (+ gl:COLOR_BUFFER_BIT gl:DEPTH_BUFFER_BIT))
-					     (gl:BindTexture gl:TEXTURE_2D MENU-TEXTURE)
-					     (gl:Begin gl:QUADS)
-					     	(gl:TexCoord2i 0 0)
-					     	(gl:Vertex3i -1 -1 -1)
+(defun show-menu ()
+    (let* ((menu-img (tga-data "../img/petteia8.tga")) 
+           (menu-pix (list->u8vector (vector->list (vector-ref menu-img 3))))
+           (MENU-TEXTURE 12)
+           (menu-display (lambda ()
+                          (gl:Clear (+ gl:COLOR_BUFFER_BIT gl:DEPTH_BUFFER_BIT))
+                             (gl:BindTexture gl:TEXTURE_2D MENU-TEXTURE)
+                             (gl:Begin gl:QUADS)
+                                (gl:TexCoord2i 0 0)
+                                (gl:Vertex3i -1 -1 -1)
 
-						(gl:TexCoord2i 1 0)
-						(gl:Vertex3i 1 -1 -1)
+                                (gl:TexCoord2i 1 0)
+                                (gl:Vertex3i 1 -1 -1)
 
-						(gl:TexCoord2i 1 1)
-						(gl:Vertex3i 1 1 -1)
+                                (gl:TexCoord2i 1 1)
+                                (gl:Vertex3i 1 1 -1)
 
-						(gl:TexCoord2i 0 1)
-						(gl:Vertex3i -1 1 -1)
-					     (gl:End)
-					  (gl:PushMatrix)
+                                (gl:TexCoord2i 0 1)
+                                (gl:Vertex3i -1 1 -1)
+                             (gl:End)
+                          (gl:PushMatrix)
 
-					  (gl:LoadIdentity)
-					  (gl:Disable gl:TEXTURE_2D)
+                          (gl:LoadIdentity)
+                          (gl:Disable gl:TEXTURE_2D)
 
-					  (gl:Translatef -0.3 0.75 0.0)
-					  (gl:Scalef 0.1 0.1 0.1)
+                          (gl:Translatef -0.3 0.75 0.0)
+                          (gl:Scalef 0.1 0.1 0.1)
 
-					  (gl:Color3f 0.9 0.45 0.19)
-					  (glfDrawSolidString "Latrunculi")
-					  (gl:Color3f 0.0 0.0 0.0)
-					  (glfDrawWiredString "Latrunculi")
-					  (gl:Translatef -5.5 -8.5 0.0)
+                          (gl:Color3f 0.9 0.45 0.19)
+                          (glfDrawSolidString "Latrunculi")
+                          (gl:Color3f 0.0 0.0 0.0)
+                          (glfDrawWiredString "Latrunculi")
+                          (gl:Translatef -5.5 -8.5 0.0)
 
-					  (gl:Color3f 1.0 0.0 0.0)
-					  (glfDrawSolidString "New Game")
-					  (gl:Color3f 0.0 0.0 0.0)
-					  (glfDrawWiredString "New Game")
-					  (gl:Translatef 0.0 -3.0 0.0)
+                          (gl:Color3f 1.0 0.0 0.0)
+                          (glfDrawSolidString "New Game")
+                          (gl:Color3f 0.0 0.0 0.0)
+                          (glfDrawWiredString "New Game")
+                          (gl:Translatef 0.0 -3.0 0.0)
 
-					  (gl:Color3f 1.0 0.0 0.0)
-					  (glfDrawSolidString "Load Game")
-					  (gl:Color3f 0.0 0.0 0.0)
-					  (glfDrawWiredString "Load Game")
-					  (gl:Translatef 0.0 -3.0 0.0)
+                          (gl:Color3f 1.0 0.0 0.0)
+                          (glfDrawSolidString "Load Game")
+                          (gl:Color3f 0.0 0.0 0.0)
+                          (glfDrawWiredString "Load Game")
+                          (gl:Translatef 0.0 -3.0 0.0)
 
-					  (gl:Color3f 1.0 0.0 0.0)
-					  (glfDrawSolidString "Exit")
-					  (gl:Color3f 0.0 0.0 0.0)
-					  (glfDrawWiredString "Exit")
+                          (gl:Color3f 1.0 0.0 0.0)
+                          (glfDrawSolidString "Exit")
+                          (gl:Color3f 0.0 0.0 0.0)
+                          (glfDrawWiredString "Exit")
 
-					  (gl:Enable gl:TEXTURE_2D)
-					  (gl:PopMatrix)
+                          (gl:Enable gl:TEXTURE_2D)
+                          (gl:PopMatrix)
 
-					  (gl:Flush)
-					  (glut:SwapBuffers)
-					  ))
-			  (mouse-handler (lambda (button state x y)
-					   (if (and (and (>= x 13)
-							 (<= x 305))
-						    (and (>= y 240)
-							 (<= y 280)))
-					     (initialize-game))
-					   (if (and (and (>= x 11)
-							 (<= x 327))
-						    (and (>= y 319)
-							 (<= y 362)))
-					     (display "Load game"))
-					   (if (and (and (>= x 13)
-							 (<= x 145))
-						    (and (>= y 387)
-							 (<= y 427)))
-					     (exit))
-					   ))
-			  )
-		       (gl:ClearColor 0.80 0.68 0.38 0) 
-		       (gl:DepthFunc gl:ALWAYS)
+                          (gl:Flush)
+                          (glut:SwapBuffers)
+                          ))
+          (mouse-handler (lambda (button state x y)
+                           (if (and (and (>= x 13)
+                                         (<= x 305))
+                                    (and (>= y 240)
+                                         (<= y 280)))
+                             (initialize-game))
+                           (if (and (and (>= x 11)
+                                         (<= x 327))
+                                    (and (>= y 319)
+                                         (<= y 362)))
+                             (display "Load game"))
+                           (if (and (and (>= x 13)
+                                         (<= x 145))
+                                    (and (>= y 387)
+                                         (<= y 427)))
+                             (exit))
+                           ))
+          )
+       (gl:ClearColor 0.80 0.68 0.38 0) 
+       (gl:DepthFunc gl:ALWAYS)
 
-		       (gl:PixelStorei gl:UNPACK_ALIGNMENT 1)
+       (gl:PixelStorei gl:UNPACK_ALIGNMENT 1)
 
-		       (gl:BindTexture gl:TEXTURE_2D MENU-TEXTURE)
+       (gl:BindTexture gl:TEXTURE_2D MENU-TEXTURE)
 
-		       (gl:TexParameteri gl:TEXTURE_2D
-					 gl:TEXTURE_MAG_FILTER
-					 gl:LINEAR)
+       (gl:TexParameteri gl:TEXTURE_2D
+                         gl:TEXTURE_MAG_FILTER
+                         gl:LINEAR)
 
-		       (gl:TexParameteri gl:TEXTURE_2D
-					 gl:TEXTURE_MIN_FILTER
-					 gl:LINEAR)
+       (gl:TexParameteri gl:TEXTURE_2D
+                         gl:TEXTURE_MIN_FILTER
+                         gl:LINEAR)
 
-		       (gl:TexEnvf gl:TEXTURE_ENV gl:TEXTURE_ENV_MODE gl:DECAL)
+       (gl:TexEnvf gl:TEXTURE_ENV gl:TEXTURE_ENV_MODE gl:DECAL)
 
-		       (gl:TexImage2D gl:TEXTURE_2D 
-				      0 
-				      3 
-				      (vector-ref menu-img 1) 
-				      (vector-ref menu-img 0)
-				      0
-				      gl:RGB
-				      gl:UNSIGNED_BYTE
-				      (make-locative menu-pix))
+       (gl:TexImage2D gl:TEXTURE_2D 
+                      0 
+                      3 
+                      (vector-ref menu-img 1) 
+                      (vector-ref menu-img 0)
+                      0
+                      gl:RGB
+                      gl:UNSIGNED_BYTE
+                      (make-locative menu-pix))
 
-		       (glut:DisplayFunc menu-display)
-		       (glut:IdleFunc menu-display)
-		       (glut:MouseFunc mouse-handler)
+       (glut:DisplayFunc menu-display)
+       (glut:IdleFunc menu-display)
+       (glut:MouseFunc mouse-handler)
 
-		       (glut:MainLoop)
-		       )
-		    ))
+       (glut:MainLoop)
+    ))
 
-(define initialize-game (lambda ()
+(defun initialize-game ()
 			    (gl:DepthFunc gl:LESS)
 			    (gl:MatrixMode gl:PROJECTION)
 			    (gl:Scalef camera-zoom camera-zoom camera-zoom)
@@ -183,9 +182,9 @@
 			    (glut:MouseFunc game-mouse-handler) 
 
 			    (glut:MainLoop)
-			  ))
+			  )
 
-(define game-keyboard-handler (lambda (key x y)
+(defun game-keyboard-handler (key x y)
 				(if (eq? mode USER)
 				  (begin
 				    (if (eq? key glut:KEY_F7)
@@ -280,12 +279,11 @@
 				       (glut:PostRedisplay)
 				       )
 				     )
-				   )
 				  )
 				))
 
 
-(define game-mouse-handler (lambda (button state x y)
+(defun game-mouse-handler (button state x y)
 			     (if (and (eq? button glut:LEFT_BUTTON)
 				      (eq? state glut:UP)
 				      (eq? mode USER))
@@ -361,9 +359,9 @@
 			       (gl:Enable gl:DITHER)
 			       (gl:Enable gl:BLEND)
 			      )
-			     )))
+			     ))
 
-(define ai-func (lambda ()
+(defun ai-func ()
 		  (let ((ai-mv (find-ai-move ai-brd BLACK (cons player0 player1))))
 		    (newline)
 		    (display "I choose: ")(display ai-mv)
@@ -400,10 +398,9 @@
 				   2)
 
 		   (glut:PostRedisplay)
-		   ) 
 		  ))
 
-(define dec-alpha (lambda ()
+(defun dec-alpha ()
 		    (set! alpha (- alpha 0.05))
 		    (glut:PostRedisplay) 
 
@@ -417,9 +414,9 @@
 
 			(mutex-unlock! board-mutex)
 		      )
-		    )))
+		    ))
 
-(define slide (lambda ()
+(defun slide ()
 		(set! progress (+ progress 0.10))
 		(glut:PostRedisplay)
 		
@@ -447,11 +444,10 @@
 
 		      (mutex-unlock! board-mutex)
 		    )
-		  )
-		    ))
-		))
+		  ))
+              ))
 
-(define color-render (lambda ()
+(defun color-render ()
 		       (let* ((CUBE-WIDTH 0.075) 
 			      (PYRAMID-HEIGHT 0.15) 
 			      (PYRAMID-WIDTH CUBE-WIDTH)
@@ -522,10 +518,9 @@
 			(gl:Flush)
 
 			  (gl:ClearColor 0.80 .68 0.38 0) 
-			  )
 		       ))
 
-(define render-state (lambda ()
+(defun render-state ()
 		       (let* ((CUBE-WIDTH 0.075) 
 			      (PYRAMID-HEIGHT 0.15) 
 			      (PYRAMID-WIDTH CUBE-WIDTH)
@@ -670,6 +665,5 @@
 					  )
 
 			 (glut:SwapBuffers)
-			 )
 		       ))
 
