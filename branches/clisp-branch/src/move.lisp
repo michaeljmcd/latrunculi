@@ -3,27 +3,25 @@
 
 (require 'vector-lib 'srfi-1)
 
-(define get-cell (lambda (board coor)
+(defun get-cell (board coor)
 		   (if (or (>= (cdr coor) ROWS)
 			   (>= (car coor) COLS)
 			   (< (cdr coor) 0)
 			   (< (car coor) 0))
 		     EMPTY
 		     (vector-ref (vector-ref board (cdr coor)) (car coor))
-		    )
 		   ))
 
 
-(define duplicate-board (lambda (board)
+(defun duplicate-board (board)
 			  (let ((new-board '#()))
 			    (vector-for-each (lambda (i row)
 					       (set! new-board (vector-append new-board (vector (vector-copy row))))) 
 					     board)
-			    new-board)
-			  ))
+			    new-board))
 ; Creates a newly-allocated deep copy of board.
 
-(define is-surrounded-horizontally? (lambda (board space)
+(defun is-surrounded-horizontally? (board space)
 				   (let* ((this-cell (get-cell board space))
 					  (side (modulo this-cell 2)) 
 					  (space-after (cons (+ (car space) 1) (cdr space))) 
@@ -46,10 +44,10 @@
 					      (not (eq? this-cell WHITE_KING)))
 				       #t
 				       #f
-				       ))
+				       )
 				     ))
 
-(define is-surrounded-vertically? (lambda (board space)
+(defun is-surrounded-vertically? (board space)
 				    (let* ((this-cell (get-cell board space))
 					   (side (modulo this-cell 2)) 
 					   (space-after (cons (car space) (+ (cdr space) 1)))
@@ -68,10 +66,10 @@
 					       (not (eq? this-cell WHITE_KING))) 
 					#t
 					#f
-					))
+					)
 				    ))
 
-(define is-corner? (lambda (space)
+(defun is-corner? (space)
 		  (if (or (and (eq? (cdr space) 0) 
 			   (or (eq? (car space) 0)
 			       (eq? (car space) (sub1 COLS)))
@@ -82,10 +80,9 @@
 			  )
 		    #t
 		    #f
-		    )
 		  ))
 
-(define is-cornered? (lambda (board space)
+(defun is-cornered? (board space)
 		       (let* ((UPPER_LEFT (cons '0 '0))
 			      (UPPER_RIGHT (cons (sub1 COLS) '0))
 			      (LOWER_LEFT (cons '0 (sub1 ROWS)))
@@ -160,10 +157,9 @@
 			 (set! caught #f))
 
 		       caught
-		       )
 		       ))
 
-(define affect-captures (lambda (board)
+(defun affect-captures (board)
 			  (let ((captured-pieces '())) 
 			    (vector-for-each (lambda (y row)
 					       (vector-for-each (lambda (x col) 
@@ -185,7 +181,6 @@
 					       )
 					     board)
 			    (values board captured-pieces)
-			    )
 			  ))
 ; This function removes any pieces that ought to be captured. The rules regarding captures are as follows:
 ; 1. If a pawn is surrounded on two opposite sides, it is captured.
@@ -193,16 +188,16 @@
 ; 3. A stone in a corner can be taken by placing two stones across the corner.
 ; 4. Multiple stones may be captured along a line (really doesn't change anything, but should be stated).
 
-(define replace-space (lambda (board space replacement)
+(defun replace-space (board space replacement)
 			(let ((piece-cleared (get-cell board space))
 			      (updated-board (duplicate-board board)))
 			  (vector-set! (vector-ref updated-board (cdr space)) (car space) replacement) 
 			  (values updated-board piece-cleared))
-			))
+			)
 ; Clears the space. Returns the modified board and the tuple describing the piece
 ; removed from the board. 
 
-(define move-piece (lambda (board delta)
+(defun move-piece (board delta)
 		     (let* ((board-dup (duplicate-board board)) 
 			    (after-move (call-with-values (lambda ()
 							    (replace-space board-dup (car delta) EMPTY))
@@ -211,26 +206,24 @@
 							    )))
 			    )
 			after-move
-			)
 		     ))
 
-(define make-move (lambda (board delta)
+(defun make-move (board delta)
 		    (let ((after-move (move-piece board delta)))
-		      (affect-captures (duplicate-board after-move)))
+		      (affect-captures (duplicate-board after-move))
 		    ))
 ; Applies change delta (of the form: ((X1 . Y1) . (X2 . Y2))) to the given board board. Must take captures
 ; into affect. Will be used for both AI moves and player moves. AI moves verified during generation, whereas
 ; player moves will have to be verified in another function. This function does no verification. It simply makes
 ; the move and, if a piece is captured, removes it.
 
-(define unmake-move (lambda (board delta)
+(defun unmake-move (board delta)
 		      (make-move board (cons (car (cdr delta))
 					     (list (car delta)))
-				 )
 		      ))
 ; Given a move delta, unmake-move reverses the move.
 
-(define jumped? (lambda (board delta)
+(defun jumped? (board delta)
 		; We need to get a list/vector of all the spaces in between the start and the 
 		; destination (non-inclusive) and check them for a piece.
 		  (let* ((ans #f) 
@@ -284,10 +277,9 @@
 			      ))
 			 )
 		      ans
-		      )
 		  ))
 
-(define move-valid? (lambda (board delta side)
+(defun move-valid? (board delta side)
 		      (let ((space (get-cell board (car delta))) ; move's origin.  
 			    (end (get-cell board (car (cdr delta)))) ; move's destination.  
 			    (delta-x (abs (- (car (car (cdr delta)))
@@ -306,7 +298,7 @@
 			      )
 			  #f
 			  #t
-			  ))
+			  )
 		      ))
 ; Given a move, delta, using the same form as above, validate-move determines whether or not the given move is legal.
 ; This is needed to check user moves, though not AI moves (because the move generator will only generate legal moves
@@ -317,7 +309,7 @@
 ; 4. The move jumps over a piece on either side.
 ; 5. The ending space already has a piece on it.
 
-(define update-players (lambda (move pc side captures players)
+(defun update-players (move pc side captures players)
 			 (let* ((self (if (eq? (caar players) side)
 				       (car players)
 				       (cdr players)))
@@ -368,7 +360,6 @@
 				       (caddr other)
 				       updated-other-pcs
 				       (cadr (cdddr other)))
-				 )
 			   )
 			 ))
 ; Returns a tuple containing the updated player data. Takes into affect both captures and moves.

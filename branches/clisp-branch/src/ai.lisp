@@ -1,27 +1,22 @@
-(declare (block) (usual-integrations))
-; For the compiler (ignored by the interpreter).
-
 (include "move.scm")
 
 (require 'srfi-1 'vector-lib)
 ; Relies on SRFI-1 and SRFI-43 (vector library)
 
-(define negate-side (lambda (side)
+(defun negate-side (side)
 		 (if (eq? side WHITE)
 		   BLACK
 		   WHITE
-		   )
-		 ))
+		   ))
 
-(define king? (lambda (piece-id)
+(defun king? (piece-id)
 		(if (or (eq? piece-id BLACK_KING)
 			(eq? piece-id WHITE_KING))
 		  #t
 		  #f
-		  )
-		))
+		  ))
 
-(define position-eval (lambda (board side players)
+(defun position-eval (board side players)
 			(let* ((current (if (eq? side (car (car players)))
 					  (car players)
 					  (cdr players)))
@@ -54,7 +49,7 @@
 			     (- own-king-mobil opp-king-mobil)
 			     win-lose)
 			  )
-			))
+			)
 ; players is a pair of the form (player0 . player1)
 ; This function evaluates the value of a given position. It uses the function:
 ; __                                   __
@@ -67,7 +62,7 @@
 ; Where mobility in general is the number of moves possible in the position and the king's mobility is the number of 
 ; moves available to the king.
 
-(define generate-piece-moves (lambda (pt board)
+(defun generate-piece-moves (pt board)
 		(let ((lol
 			(list (generate-vertical-down board pt (cons (car pt) (+ 1 (cdr pt))) '())
 			      (generate-vertical-up board pt (cons (car pt) (- (cdr pt) 1)) '())
@@ -75,11 +70,10 @@
 			      (generate-horizontal-right board pt (cons (+ (car pt) 1) (cdr pt)) '()))
 			))
 		(concatenate lol)
-		)
-	     ))
+		))
 ; takes the space (pt) of a piece and generates all moves for it.
 
-(define game-over? (lambda (board players)
+(defun game-over? (board players)
 		     (let ((king1 (find (lambda (pair)
 					  (if (or (eqv? (car pair) BLACK_KING)
 						  (eqv? (car pair) WHITE_KING))
@@ -102,11 +96,10 @@
 			 #t
 			 #f
 			 )
-		       )
-		     ))
+		       ))
 ; If one of the kings can't make a move, then the game is over.
 
-(define nega-eval (lambda (ply board side depth players alpha beta)
+(defun nega-eval (ply board side depth players alpha beta)
 	      (if (null? ply)
 		alpha
 		(let* ((captures (call-with-values (lambda () (affect-captures (make-move board (car ply)))) list))
@@ -129,10 +122,9 @@
 		    (nega-eval (cdr ply) board side depth players new-alpha beta)
 		    )
 		  )
-		)
-	     ))
+		))
 
-(define nega-max (lambda (board side depth players alpha beta)
+(defun nega-max (board side depth players alpha beta)
 		   (if (or (eq? depth 0)
 			   (game-over? board players))
 		     (position-eval board side players)
@@ -143,10 +135,9 @@
 				players
 				alpha
 				beta)
-		     )
-		   ))
+		     ))
 
-(define find-ai-move (lambda (board side players)
+(defun find-ai-move (board side players)
 		       (let ((self (if (eq? (caar players) side)
 				      (car players)
 				      (cadr players)
@@ -173,12 +164,11 @@
 					 (set! move mv)))
 				   )
 				 (generate-moves board side players))
-			 move)
-		       ))
+			 move))
 ; Primarily a driver function. Creates a list of scored moves (scoring is done by the recursive function nega-max) and 
 ; selects the one with the highest score.
 
-(define generate-moves (lambda (board side players)
+(defun generate-moves (board side players)
 			 (let ((pieces (if (eq? side (caar players))
 					 (car (cdddr (car players)))
 					 (car (cddddr players)))
@@ -186,15 +176,14 @@
 			   (append-map (lambda (piece)
 					 (generate-piece-moves (cdr piece) board))
 				       pieces)
-			   )
-			 ))
+			   ))
 
 ; This convention applies to all of the next four functions.
 ; Board is the current state, origin is the space of origin for this move, curr
 ; is the current set of coordinates and moves is the list of moves generated so far.
 ; The spaces are indexed starting at zero. 
 
-(define generate-vertical-down (lambda (board origin curr moves)
+(defun generate-vertical-down (board origin curr moves)
 				 (if (eq? (cdr curr)
 					  ROWS)
 				   moves
@@ -208,9 +197,9 @@
 							       (cons (cons origin (list curr)) moves))
 				       )
 			   	     )
-			       )))
+			       ))
 
-(define generate-horizontal-right (lambda (board origin curr moves)
+(defun generate-horizontal-right (board origin curr moves)
 				 (if (eq? (car curr)
 					  COLS)
 				   moves
@@ -224,10 +213,9 @@
 								  (cons (cons origin (list curr)) moves))
 				       )
 				   )
-				  )
 				 ))
 
-(define generate-horizontal-left (lambda (board origin curr moves)
+(defun generate-horizontal-left (board origin curr moves)
 				 (if (eq? (car curr)
 					  -1)
 				   moves
@@ -239,10 +227,9 @@
 								 (cons (sub1 (car curr)) (cdr curr)) 
 								 (cons (cons origin (list curr)) moves))
 				     )
-				   )
 				   )))
 
-(define generate-vertical-up (lambda (board origin curr moves)
+(defun generate-vertical-up (board origin curr moves)
 				 (if (eq? (cdr curr)
 					  -1)
 				   moves
@@ -255,4 +242,4 @@
 							     (cons (cons origin (list curr)) moves))
 				       )
 				   )
-			       )))
+			       ))
