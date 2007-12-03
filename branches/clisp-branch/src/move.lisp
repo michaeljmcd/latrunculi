@@ -1,10 +1,8 @@
 ; move.scm is to hold the move-related functions, such as making a move and validating one.
 ; The reason for this is so that the click events in the OpenGL code can access these functions without having to include the rest of the AI code.
 
-(require 'vector-lib 'srfi-1)
-
 (defun get-cell (board coor)
-		   (if (or (>= (cdr coor) ROWS)
+		   (if (or (>= (cdr coor) +ROWS+)
 			   (>= (car coor) COLS)
 			   (< (cdr coor) 0)
 			   (< (car coor) 0))
@@ -56,7 +54,7 @@
 					   (side-before (modulo (get-cell board space-before) 2))) 
 				      
 				      (if (and (not (eq? (cdr space) 0))
-					       (not (eq? (cdr space) (sub1 ROWS)))
+					       (not (eq? (cdr space) (sub1 +ROWS+)))
 					       (not (eq? side side-after))
 					       (not (eq? side side-before))
 					       (not (eq? (get-cell board space-after) EMPTY))
@@ -74,7 +72,7 @@
 			   (or (eq? (car space) 0)
 			       (eq? (car space) (sub1 COLS)))
 			   ) ; deals with the upper two corners.
-			  (and (eq? (cdr space) (sub1 ROWS))
+			  (and (eq? (cdr space) (sub1 +ROWS+))
 			       (or (eq? (car space) 0)
 				   (eq? (car space) (sub1 COLS))))
 			  )
@@ -85,8 +83,8 @@
 (defun is-cornered? (board space)
 		       (let* ((UPPER_LEFT (cons '0 '0))
 			      (UPPER_RIGHT (cons (sub1 COLS) '0))
-			      (LOWER_LEFT (cons '0 (sub1 ROWS)))
-			      (LOWER_RIGHT (cons (sub1 COLS) (sub1 ROWS))) 
+			      (LOWER_LEFT (cons '0 (sub1 +ROWS+)))
+			      (LOWER_RIGHT (cons (sub1 COLS) (sub1 +ROWS+))) 
 			      (corner (get-cell board space))
 			      (space-side (modulo corner 2)) 
 			      (caught #f)) 
@@ -108,8 +106,8 @@
 			     ))
 
 		       (when (equal? space LOWER_LEFT)
-			 (let* ((above (get-cell board (cons '0 (- ROWS 2))))
-				(right (get-cell board (cons '1 (- ROWS 1)))) 
+			 (let* ((above (get-cell board (cons '0 (- +ROWS+ 2))))
+				(right (get-cell board (cons '1 (- +ROWS+ 1)))) 
 				(above-side (modulo above 2))
 				(right-side (modulo right 2))) 
 			   
@@ -123,8 +121,8 @@
 			   ))
 
 		       (when (equal? space LOWER_RIGHT)
-			 (let* ((above (get-cell board (cons (sub1 COLS) (- ROWS 2))))
-				(left (get-cell board (cons (- COLS 2) (sub1 ROWS)))) 
+			 (let* ((above (get-cell board (cons (sub1 COLS) (- +ROWS+ 2))))
+				(left (get-cell board (cons (- COLS 2) (sub1 +ROWS+)))) 
 				(above-side (modulo above 2))
 				(left-side (modulo left 2))) 
 			   

@@ -7,15 +7,15 @@
 ; the list library, srfi-4 is for homogenous floating point vectors, and lolevel allows us
 ; to use pointers (required for some OpenGL functions).
 
-(include "display-lists.scm")
-(include "initialize.scm")
-(include "move.scm")
-(include "ai.scm")
-(include "savegame.scm")
-(include "targa.scm")
+(load "display-lists.scm")
+(load "initialize.scm")
+(load "move.scm")
+(load "ai.scm")
+(load "savegame.scm")
+(load "targa.scm")
 
-(define USER 0)
-(define LOCKED 1)
+(defconstant +USER+ 0)
+(defconstant +LOCKED+ 1)
 
 (define display-list-start 0)
 (define camera-angle-delta 1) ; the amount a camera angle will change (in degrees) with each key press.
@@ -23,7 +23,7 @@
 (define camera-zoom 1.6875)
 (define camera-coor (vector -0.4 0.0 0.0))
 (define brd (create-game-board)) 
-(define mode USER)		; if = user, the user can interact with the system. If = locked, then we are doing something ; (AI calculations or animation), and the user cannot interact with the system.
+(define mode +USER+)		; if = user, the user can interact with the system. If = locked, then we are doing something ; (AI calculations or animation), and the user cannot interact with the system.
 (define fade-out '())            ; define a list of pieces that need to be faded out (i.e. have been captured)
 (define slide-spc '()) 		   ; will hold a pair of tuples describing how the piece slides from one locale to another.
 (define alpha 1.0)
@@ -185,7 +185,7 @@
 			  )
 
 (defun game-keyboard-handler (key x y)
-				(if (eq? mode USER)
+				(if (eq? mode +USER+)
 				  (begin
 				    (if (eq? key glut:KEY_F7)
 				      (begin
@@ -286,7 +286,7 @@
 (defun game-mouse-handler (button state x y)
 			     (if (and (eq? button glut:LEFT_BUTTON)
 				      (eq? state glut:UP)
-				      (eq? mode USER))
+				      (eq? mode +USER+))
 			       (let ((viewport (make-s32vector 4))
 				     (pixel (make-u8vector 3 2)))
 				 (gl:GetIntegerv gl:VIEWPORT viewport)
@@ -326,7 +326,7 @@
 					   (set! next-board (move-piece brd move))
 					   (define ai-brd (car captured-vals))
 					   (set! slide-spc move)
-					   (set! mode LOCKED)
+					   (set! mode +LOCKED+)
 
 					   (set! move-origin '())
 
@@ -343,7 +343,7 @@
 					       )
 					     (begin
 					       (display "Game over.")
-					       (set! mode LOCKED)
+					       (set! mode +LOCKED+)
 					       )
 					     )
 					 )
@@ -370,7 +370,7 @@
 		    (define ai-cond (make-condition-variable))
 
 		   (mutex-lock! board-mutex)
-		   (set! mode LOCKED)
+		   (set! mode +LOCKED+)
 
 		   (set! next-board (move-piece brd ai-mv))
 		   (set! slide-spc ai-mv)
@@ -409,7 +409,7 @@
 		      (begin
 			(set! alpha 1.0)
 			(set! brd next-board)
-			(set! mode USER)
+			(set! mode +USER+)
 			(set! fade-out '())
 
 			(mutex-unlock! board-mutex)
@@ -427,7 +427,7 @@
 							 list))) 
 		    (if (not (eqv? (cadr captured-vals) '()))
 		      (begin
-			(set! mode LOCKED) 
+			(set! mode +LOCKED+) 
 			(set! next-board (car captured-vals))
 			(set! fade-out (cadr captured-vals)) 
 			
@@ -439,7 +439,7 @@
 		    (begin
 		      (set! progress 0.0)
 		      (set! brd next-board)
-		      (set! mode USER)
+		      (set! mode +USER+)
 		      (set! slide-spc '())
 
 		      (mutex-unlock! board-mutex)
@@ -544,7 +544,7 @@
 			 (gl:Scalef 0.1 0.1 0.1)
 			 (gl:Color3f 0.0 0.0 0.0)
 
-			 (if (eq? mode LOCKED)
+			 (if (eq? mode +LOCKED+)
 			   (glfDrawSolidString (string-append (cadr player0) "*"))
 			   (glfDrawSolidString (cadr player0))
 			   )
@@ -552,7 +552,7 @@
 			 (gl:Translatef 0.0 -18.0 0.0)
 			 (gl:Color3f 0.0 0.0 0.0) 
 			 
-			 (if (not (eq? mode LOCKED))
+			 (if (not (eq? mode +LOCKED+))
 			   (glfDrawSolidString (string-append (cadr player1) "*"))
 			   (glfDrawSolidString (cadr player1))
 			   )
@@ -578,7 +578,7 @@
 							       (gl:CallList display-list-start) 
 							       (gl:Translatef (* 0.5 CUBE-WIDTH) (* 0.5 CUBE-WIDTH) (* 0.5 CUBE-WIDTH))
 
-							       (if (and (not (equal? mode USER))
+							       (if (and (not (equal? mode +USER+))
 									(not (null? (filter (lambda (k)
 											      (if (equal? space k)
 												#t
@@ -587,7 +587,7 @@
 								  (gl:Color4f 1.0 1.0 1.0 alpha)
 							       )
 
-							       (if (and (not (equal? mode USER))
+							       (if (and (not (equal? mode +USER+))
 									(not (null? slide-spc))
 									(equal? (car slide-spc) space))
 								 (begin
@@ -637,7 +637,7 @@
 								 )
 
 								 )
-							       (if (and (not (equal? mode USER))
+							       (if (and (not (equal? mode +USER+))
 									(not (null? slide-spc))
 									(equal? (car slide-spc) space))
 								 (begin
