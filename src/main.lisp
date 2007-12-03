@@ -5,11 +5,20 @@
 (load "gfx")
 (load "ai")
 
-(defconstant AI 0)
-(defconstant HUMAN 1)
+(defconstant +AI+ 0)
+(defconstant +HUMAN+ 1)
 
-(defconstant BLACK 1)
-(defconstant WHITE 0)
+(defconstant +BLACK+ 1)
+(defconstant +WHITE+ 0)
+
+(defconstant +COLS+ 12)
+(defconstant +ROWS+ 8)
+
+(defconstant +EMPTY+ -1)
+(defconstant +WHITE-KING+ 0)
+(defconstant +WHITE-PAWN+ 2)
+(defconstant +BLACK-KING+ 1)
+(defconstant +BLACK-PAWN+ 3)
 
 (defclass player ()
   ((color :accessor player-color)
@@ -19,9 +28,9 @@
    (ai-settings :accessor get-ai-settings))
   )
 
-(defparameter player0 (list BLACK 
+(defparameter *player0* (list black 
 		      "Ajax" 
-		      AI 
+		      ai 
 		      '((3 . (0 . 0)) (3 . (1 . 0)) (3 . (2 . 0))
                         (3 . (3 . 0)) (3 . (4 . 0))
                         (3 . (5 . 0)) (3 . (6 . 0))
@@ -31,9 +40,9 @@
 		      '#(40 95 65 0.0001 0.0001)
 		      ))
 
-(defparameter player1 (list WHITE 
+(defparameter *player1* (list white 
 		      "Achilles" 
-		      HUMAN 
+		      human 
 		      '((2 . (0 . 11)) (2 . (1 . 11)) (2 . (2 . 11))
                         (2 . (3 . 11)) (2 . (4 . 11))
                         (2 . (5 . 11)) (2 . (6 . 11))
@@ -45,21 +54,10 @@
 
 ; Player data is a tuple of the form (C N P M A) where C is the player's color, N
 ; is the player's name, P is an integer indicating whether the player is human
-; controlled or AI, M (for material) is a list of tuples describing all of the pieces
-; that the player has and their positions, and A is the player's AI settings (ignored
+; controlled or ai, M (for material) is a list of tuples describing all of the pieces
+; that the player has and their positions, and A is the player's ai settings (ignored
 ; if under player control). A is of the form:
 ; #(search-depth own-pawn-value opponent-pawn-value own-king-mobility-value opponent-king-mobility-value)
-
-(require 'vector-lib)
-
-(defconstant COLS 12)
-(defconstant ROWS 8)
-
-(defconstant EMPTY -1)
-(defconstant WHITE_KING 0)
-(defconstant WHITE_PAWN 2)
-(defconstant BLACK_KING 1)
-(defconstant BLACK_PAWN 3)
 
 (define create-game-board (lambda ()
 			    '#(#(3 3 3 3 3 3 3 3 3 3 3 3)
