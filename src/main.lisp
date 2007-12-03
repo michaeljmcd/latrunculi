@@ -2,8 +2,8 @@
 ; (c) Michael J. McDermott, 2006
 ; Licensed under the GPL v.2
 
-(load "gfx")
-(load "ai")
+;(load "gfx")
+;(load "ai")
 
 (defconstant +AI+ 0)
 (defconstant +HUMAN+ 1)
@@ -28,9 +28,9 @@
    (ai-settings :accessor get-ai-settings))
   )
 
-(defparameter *player0* (list black 
+(defparameter *player0* (list +BLACK+ 
 		      "Ajax" 
-		      ai 
+		      +AI+ 
 		      '((3 . (0 . 0)) (3 . (1 . 0)) (3 . (2 . 0))
                         (3 . (3 . 0)) (3 . (4 . 0))
                         (3 . (5 . 0)) (3 . (6 . 0))
@@ -40,9 +40,9 @@
 		      '#(40 95 65 0.0001 0.0001)
 		      ))
 
-(defparameter *player1* (list white 
+(defparameter *player1* (list +WHITE+
 		      "Achilles" 
-		      human 
+		      +HUMAN+
 		      '((2 . (0 . 11)) (2 . (1 . 11)) (2 . (2 . 11))
                         (2 . (3 . 11)) (2 . (4 . 11))
                         (2 . (5 . 11)) (2 . (6 . 11))
@@ -59,17 +59,20 @@
 ; if under player control). A is of the form:
 ; #(search-depth own-pawn-value opponent-pawn-value own-king-mobility-value opponent-king-mobility-value)
 
-(define create-game-board (lambda ()
-			    '#(#(3 3 3 3 3 3 3 3 3 3 3 3)
-			       #(-1 -1 -1 -1 -1 1 -1 -1 -1 -1 -1 -1)
-			       #(-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1)
-			       #(-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1)
-			       #(-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1)
-			       #(-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1)
-			       #(-1 -1 -1 -1 -1 -1 0 -1 -1 -1 -1 -1)
-			       #(2 2 2 2 2 2 2 2 2 2 2 2)
-			       )
-			    ))
+(defun create-game-board ()
+  (make-array '(8 12) :initial-contents
+              '((3 3 3 3 3 3 3 3 3 3 3 3)
+                (-1 -1 -1 -1 -1 1 -1 -1 -1 -1 -1 -1)
+                (-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1)
+                (-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1)
+                (-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1)
+                (-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1)
+                (-1 -1 -1 -1 -1 -1 0 -1 -1 -1 -1 -1)
+                (2 2 2 2 2 2 2 2 2 2 2 2))
+              :element-type 'integer
+              )
+  )
+
 ; Returns a freshly allocated copy of the default game board.
 ; The board will be represented as a vector of vectors.
 
@@ -93,6 +96,6 @@
 
 ; ROWS, COLS used as CONSTANTS! These define the dimensions of the board.
 
-(initialize-display)
+;(initialize-display)
 ;(show-menu)
-(initialize-game)
+;(initialize-game)
