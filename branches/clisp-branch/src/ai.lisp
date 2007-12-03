@@ -1,14 +1,14 @@
 (load "move.scm")
 
 (defun negate-side (side)
-		 (if (eq side WHITE)
+		 (if (eq side +WHITE+)
 		   black
 		   white
 		   ))
 
 (defun king? (piece-id)
-		(if (or (eq piece-id BLACK_KING)
-			(eq piece-id WHITE_KING))
+		(if (or (eq piece-id +BLACK-KING+)
+			(eq piece-id +WHITE-KING+))
 		  t
 		  nil
 		  ))
@@ -72,16 +72,16 @@
 
 (defun game-over? (board players)
 		     (let ((king1 (find (lambda (pair)
-					  (if (or (eqv? (car pair) BLACK_KING)
-						  (eqv? (car pair) WHITE_KING))
+					  (if (or (eqv? (car pair) +BLACK-KING+)
+						  (eqv? (car pair) +WHITE-KING+))
 					    t
 					    nil
 					    )) 
 					(car (cdddr (car players)))
 					))
 			   (king2 (find (lambda (pair)
-					  (if (or (eqv? (car pair) BLACK_KING)
-						  (eqv? (car pair) WHITE_KING))
+					  (if (or (eqv? (car pair) +BLACK-KING+)
+						  (eqv? (car pair) +WHITE-KING+))
 					    t
 					    nil
 					    )) 
