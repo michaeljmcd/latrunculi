@@ -1,4 +1,4 @@
-(load "move.scm")
+(load "move")
 
 (defun negate-side (side)
 		 (if (eq side +WHITE+)
