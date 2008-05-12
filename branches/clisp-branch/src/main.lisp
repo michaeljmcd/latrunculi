@@ -28,30 +28,30 @@
    (ai-settings :accessor get-ai-settings))
   )
 
-(defparameter *player0* (list +BLACK+ 
-		      "Ajax" 
-		      +AI+ 
-		      '((3 . (0 . 0)) (3 . (1 . 0)) (3 . (2 . 0))
+(defvar *player0* (make-instance 'player))
+(setf (slot-value *player0* 'color) +BLACK+)
+(setf (slot-value *player0* 'name) "Ajax")
+(setf (slot-value *player0* 'controller) +AI+)
+(setf (slot-value *player0* 'pieces) '((3 . (0 . 0)) (3 . (1 . 0)) (3 . (2 . 0))
                         (3 . (3 . 0)) (3 . (4 . 0))
                         (3 . (5 . 0)) (3 . (6 . 0))
                         (3 . (7 . 0)) (3 . (8 . 0))
                         (3 . (9 . 0)) (3 . (10 . 0))
-                        (3 . (11 . 0)) (1 . (5 . 1)))
-		      '#(40 95 65 0.0001 0.0001)
-		      ))
+                        (3 . (11 . 0)) (1 . (5 . 1))))
+(setf (slot-value *player0* 'ai-settings)'#(40 95 65 0.0001 0.0001))
 
-(defparameter *player1* (list +WHITE+
-		      "Achilles" 
-		      +HUMAN+
-		      '((2 . (0 . 11)) (2 . (1 . 11)) (2 . (2 . 11))
+(defvar *player1* (make-instance 'player))
+(setf (slot-value *player1* 'color) +WHITE+)
+(setf (slot-value *player1* 'name) "Achilles")
+(setf (slot-value *player1* 'controller) +HUMAN+)
+(setf (slot-value *player1* 'pieces) '((2 . (0 . 11)) (2 . (1 . 11)) (2 . (2 . 11))
                         (2 . (3 . 11)) (2 . (4 . 11))
                         (2 . (5 . 11)) (2 . (6 . 11))
                         (2 . (7 . 11)) (2 . (8 . 11))
                         (2 . (9 . 11)) (2 . (10 . 11))
-                        (2 . (11 . 11)) (0 . (6 . 6)))
-		      '#(40 25 25 0.05 0.05)
-		      ))
-
+                        (2 . (11 . 11)) (0 . (6 . 6))))
+(setf (slot-value *player1* 'ai-settings) '#(40 25 25 0.05 0.05))
+;
 ; Player data is a tuple of the form (C N P M A) where C is the player's color, N
 ; is the player's name, P is an integer indicating whether the player is human
 ; controlled or ai, M (for material) is a list of tuples describing all of the pieces
@@ -72,9 +72,7 @@
               :element-type 'integer
               )
   )
-
-; Returns a freshly allocated copy of the default game board.
-; The board will be represented as a vector of vectors.
+; Returns a fresh board as a 2D array
 
 ; create-game-board returns a list of lists representing the 12 x 8 board. 
 ; The board, 
@@ -93,8 +91,6 @@
 ;
 ; A tuple will be of the form (L . I) where L is a value from the above
 ; legend and I is the ID for the piece if applicable and -1 if N/A. 
-
-; ROWS, COLS used as CONSTANTS! These define the dimensions of the board.
 
 ;(initialize-display)
 ;(show-menu)

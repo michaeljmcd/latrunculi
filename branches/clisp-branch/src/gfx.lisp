@@ -7,12 +7,12 @@
 ; the list library, srfi-4 is for homogenous floating point vectors, and lolevel allows us
 ; to use pointers (required for some OpenGL functions).
 
-(load "display-lists.scm")
-(load "initialize.scm")
-(load "move.scm")
-(load "ai.scm")
-(load "savegame.scm")
-(load "targa.scm")
+(load "display-lists")
+(load "initialize")
+(load "move")
+(load "ai")
+(load "savegame")
+(load "targa")
 
 (defconstant +USER+ 0)
 (defconstant +LOCKED+ 1)

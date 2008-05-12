@@ -3,7 +3,7 @@
 
 (defun get-cell (board coor)
 		   (if (or (>= (cdr coor) +ROWS+)
-			   (>= (car coor) COLS)
+			   (>= (car coor) +COLS+)
 			   (< (cdr coor) 0)
 			   (< (car coor) 0))
 		     EMPTY
@@ -32,7 +32,7 @@
 					  ; The side (black or white) of the piece on the left and the right.  
 					  )
 				     (if (and (not (eq? (car space) 0))
-					      (not (eq? (car space) (- COLS 1))) ; can't capture a piece on the sides
+					      (not (eq? (car space) (- +COLS+ 1))) ; can't capture a piece on the sides
 					      (not (eq? (get-cell board space-after) EMPTY))
 					      (not (eq? (get-cell board space-before) EMPTY)) 
 					      (not (eq? side side-after)) 
@@ -40,8 +40,8 @@
 					      (not (eq? this-cell EMPTY))
 					      (not (eq? this-cell BLACK_KING)) 
 					      (not (eq? this-cell WHITE_KING)))
-				       #t
-				       #f
+				       t
+				       nil
 				       )
 				     ))
 
@@ -62,32 +62,32 @@
 					       (not (eq? this-cell EMPTY))
 					       (not (eq? this-cell BLACK_KING))
 					       (not (eq? this-cell WHITE_KING))) 
-					#t
-					#f
+					t
+					nil
 					)
 				    ))
 
 (defun is-corner? (space)
 		  (if (or (and (eq? (cdr space) 0) 
 			   (or (eq? (car space) 0)
-			       (eq? (car space) (sub1 COLS)))
+			       (eq? (car space) (sub1 +COLS+)))
 			   ) ; deals with the upper two corners.
 			  (and (eq? (cdr space) (sub1 +ROWS+))
 			       (or (eq? (car space) 0)
-				   (eq? (car space) (sub1 COLS))))
+				   (eq? (car space) (sub1 +COLS+))))
 			  )
-		    #t
-		    #f
+		    t
+		    nil
 		  ))
 
 (defun is-cornered? (board space)
 		       (let* ((UPPER_LEFT (cons '0 '0))
-			      (UPPER_RIGHT (cons (sub1 COLS) '0))
+			      (UPPER_RIGHT (cons (sub1 +COLS+) '0))
 			      (LOWER_LEFT (cons '0 (sub1 +ROWS+)))
-			      (LOWER_RIGHT (cons (sub1 COLS) (sub1 +ROWS+))) 
+			      (LOWER_RIGHT (cons (sub1 +COLS+) (sub1 +ROWS+))) 
 			      (corner (get-cell board space))
 			      (space-side (modulo corner 2)) 
-			      (caught #f)) 
+			      (caught nil)) 
 
 			 (when (equal? space UPPER_LEFT)
 			   (let* ((below (get-cell board (cons '0 '1)))
@@ -100,8 +100,8 @@
 				      (not (eq? EMPTY corner))
 				      (not (eq? below-side space-side))
 				      (not (eq? right-side space-side)))
-			       (set! caught #t) 
-			       (set! caught #f)
+			       (set! caught t) 
+			       (set! caught nil)
 			       )
 			     ))
 
@@ -116,13 +116,13 @@
 				    (not (eq? EMPTY corner))
 				    (not (eq? above-side space-side))
 				    (not (eq? right-side space-side)))
-			     (set! caught #t)
-			     (set! caught #f))
+			     (set! caught t)
+			     (set! caught nil))
 			   ))
 
 		       (when (equal? space LOWER_RIGHT)
-			 (let* ((above (get-cell board (cons (sub1 COLS) (- +ROWS+ 2))))
-				(left (get-cell board (cons (- COLS 2) (sub1 +ROWS+)))) 
+			 (let* ((above (get-cell board (cons (sub1 +COLS+) (- +ROWS+ 2))))
+				(left (get-cell board (cons (- +COLS+ 2) (sub1 +ROWS+)))) 
 				(above-side (modulo above 2))
 				(left-side (modulo left 2))) 
 			   
@@ -131,13 +131,13 @@
 				    (not (eq? EMPTY corner))
 				    (not (eq? above-side space-side))
 				    (not (eq? left-side space-side))) 
-			     (set! caught #t)
-			     (set! caught #f))
+			     (set! caught t)
+			     (set! caught nil))
 			   ))
 		       
 		       (when (equal? space UPPER_RIGHT)
-			 (let* ((below (get-cell board (cons (sub1 COLS) '1)))
-				(left (get-cell board (cons (- COLS 2) '0))) 
+			 (let* ((below (get-cell board (cons (sub1 +COLS+) '1)))
+				(left (get-cell board (cons (- +COLS+ 2) '0))) 
 				(below-side (modulo below 2)) 
 				(left-side (modulo left 2)) ) 
 			   
@@ -146,13 +146,13 @@
 				    (not (eq? EMPTY corner))
 				    (not (eq? below-side space-side)) 
 				    (not (eq? left-side space-side)))
-			     (set! caught #t)
-			     (set! caught #f))
+			     (set! caught t)
+			     (set! caught nil))
 			   ))
 
 		       (if (or (eq? corner WHITE_KING)
 			       (eq? corner BLACK_KING))
-			 (set! caught #f))
+			 (set! caught nil))
 
 		       caught
 		       ))
@@ -224,7 +224,7 @@
 (defun jumped? (board delta)
 		; We need to get a list/vector of all the spaces in between the start and the 
 		; destination (non-inclusive) and check them for a piece.
-		  (let* ((ans #f) 
+		  (let* ((ans nil) 
 			 (diff-x (- (car (car (cdr delta)))
 				    (car (car delta)))) 
 			 (delta-x (abs diff-x)) ; The absolute value of the change in the x-direction 
@@ -245,12 +245,12 @@
 			     )
 			(if (> (length (filter (lambda (i)
 						 (if (> i 0)
-						   #f
-						   #t))
+						   nil
+						   t))
 					       x-list))
 			       0)
-			  (set! ans #f)
-			  (set! ans #t)
+			  (set! ans nil)
+			  (set! ans t)
 			  ))
 		      )
 
@@ -266,12 +266,12 @@
 			    (if (and (not (null? y-list))
 				     (> (length (filter (lambda (i)
 							  (if (> i 0)
-							    #f
-							    #t))
+							    nil
+							    t))
 							y-list))
 					0)) 
-			      (set! ans #f)
-			      (set! ans #t)
+			      (set! ans nil)
+			      (set! ans t)
 			      ))
 			 )
 		      ans
@@ -294,8 +294,8 @@
 				(not (eq? side (modulo space 2))) ; trying to move an opposing piece.
 				(jumped? board delta) 	; jumped a piece.
 			      )
-			  #f
-			  #t
+			  nil
+			  t
 			  )
 		      ))
 ; Given a move, delta, using the same form as above, validate-move determines whether or not the given move is legal.
@@ -321,28 +321,28 @@
 									  (not (eq? (find (lambda (pc1)
 											    (if (eq? (cdr piece-id)
 												     pc1)
-											      #t
-											      #f
+											      t
+											      nil
 											    ))
 											  captures)
-										    #f)))
-								    #t
-								    #f
+										    nil)))
+								    t
+								    nil
 								  ))
 								(cadddr self))
 							))
 				(updated-other-pcs (filter (lambda (piece-id)
 							     (let ((result (find (lambda (pc)
 										   (if (eq? pc (cdr piece-id))
-										     #t
-										     #f
+										     t
+										     nil
 										     ))
 										 captures
 										 ))
 								   )
-							     (if (eq? result #f)
-							       #t
-							       #f
+							     (if (eq? result nil)
+							       t
+							       nil
 							       )
 							     ))
 							   (cadddr other)
