@@ -1,45 +1,64 @@
 ; move.scm is to hold the move-related functions, such as making a move and validating one.
 ; The reason for this is so that the click events in the OpenGL code can access these functions without having to include the rest of the AI code.
 
+(defconstant +AI+ 0)
+(defconstant +HUMAN+ 1)
+
+(defconstant +BLACK+ 1)
+(defconstant +WHITE+ 0)
+
+(defconstant +COLS+ 12)
+(defconstant +ROWS+ 8)
+
+(defconstant +EMPTY+ -1)
+(defconstant +WHITE-KING+ 0)
+(defconstant +WHITE-PAWN+ 2)
+(defconstant +BLACK-KING+ 1)
+(defconstant +BLACK-PAWN+ 3)
+; TODO: these are duplicated from main; one copy must go!
+
+(defun sub1 (num)
+   (- num 1)
+  )
+
 (defun get-cell (board coor)
 		   (if (or (>= (cdr coor) +ROWS+)
 			   (>= (car coor) +COLS+)
 			   (< (cdr coor) 0)
 			   (< (car coor) 0))
-		     EMPTY
-		     (vector-ref (vector-ref board (cdr coor)) (car coor))
+		     +EMPTY+
+             (aref board (cdr coor) (car coor))
 		   ))
-
 
 (defun duplicate-board (board)
 			  (let ((new-board '#()))
 			    (vector-for-each (lambda (i row)
-					       (set! new-board (vector-append new-board (vector (vector-copy row))))) 
+					       (setq new-board (vector-append new-board (vector (vector-copy row))))) 
 					     board)
 			    new-board))
 ; Creates a newly-allocated deep copy of board.
 
 (defun is-surrounded-horizontally? (board space)
 				   (let* ((this-cell (get-cell board space))
-					  (side (modulo this-cell 2)) 
+					  (side (mod this-cell 2)) 
 					  (space-after (cons (+ (car space) 1) (cdr space))) 
 					  ; the coordinates of the space to the right of the space under examination.  
 
 					  (space-before (cons (- (car space) 1) (cdr space)))
 					  ; The coordinates of the space to the left of the space under examination.  
-					  (side-after (modulo (get-cell board space-after) 2))
-					  (side-before (modulo (get-cell board space-before) 2))
+					  (side-after (mod (get-cell board space-after) 2))
+					  (side-before (mod (get-cell board space-before) 2))
 					  ; The side (black or white) of the piece on the left and the right.  
 					  )
-				     (if (and (not (eq? (car space) 0))
-					      (not (eq? (car space) (- +COLS+ 1))) ; can't capture a piece on the sides
-					      (not (eq? (get-cell board space-after) EMPTY))
-					      (not (eq? (get-cell board space-before) EMPTY)) 
-					      (not (eq? side side-after)) 
-					      (not (eq? side side-before))
-					      (not (eq? this-cell EMPTY))
-					      (not (eq? this-cell BLACK_KING)) 
-					      (not (eq? this-cell WHITE_KING)))
+				     (if (and (not (eql (car space) 0))
+					      (not (eql (car space) (- +COLS+ 1))) ; can't capture a piece on the sides
+					      (not (eql (get-cell board space-after) +EMPTY+))
+					      (not (eql (get-cell board space-before) +EMPTY+)) 
+					      (not (eql side side-after)) 
+					      (not (eql side side-before))
+					      (not (eql this-cell +EMPTY+))
+					      (not (eql this-cell +BLACK_KING+)) 
+					      (not (eql this-cell +WHITE_KING+)))
 				       t
 				       nil
 				       )
@@ -47,34 +66,34 @@
 
 (defun is-surrounded-vertically? (board space)
 				    (let* ((this-cell (get-cell board space))
-					   (side (modulo this-cell 2)) 
+					   (side (mod this-cell 2)) 
 					   (space-after (cons (car space) (+ (cdr space) 1)))
 					   (space-before (cons (car space) (- (cdr space) 1))) 
-					   (side-after (modulo (get-cell board space-after) 2)) 
-					   (side-before (modulo (get-cell board space-before) 2))) 
+					   (side-after (mod (get-cell board space-after) 2)) 
+					   (side-before (mod (get-cell board space-before) 2))) 
 				      
-				      (if (and (not (eq? (cdr space) 0))
-					       (not (eq? (cdr space) (sub1 +ROWS+)))
-					       (not (eq? side side-after))
-					       (not (eq? side side-before))
-					       (not (eq? (get-cell board space-after) EMPTY))
-					       (not (eq? (get-cell board space-before) EMPTY))
-					       (not (eq? this-cell EMPTY))
-					       (not (eq? this-cell BLACK_KING))
-					       (not (eq? this-cell WHITE_KING))) 
+				      (if (and (not (eql (cdr space) 0))
+					       (not (eql (cdr space) (sub1 +ROWS+)))
+					       (not (eql side side-after))
+					       (not (eql side side-before))
+					       (not (eql (get-cell board space-after) +EMPTY+))
+					       (not (eql (get-cell board space-before) +EMPTY+))
+					       (not (eql this-cell +EMPTY+))
+					       (not (eql this-cell +BLACK_KING+))
+					       (not (eql this-cell +WHITE_KING+))) 
 					t
 					nil
 					)
 				    ))
 
 (defun is-corner? (space)
-		  (if (or (and (eq? (cdr space) 0) 
-			   (or (eq? (car space) 0)
-			       (eq? (car space) (sub1 +COLS+)))
+		  (if (or (and (eql (cdr space) 0) 
+			   (or (eql (car space) 0)
+			       (eql (car space) (sub1 +COLS+)))
 			   ) ; deals with the upper two corners.
-			  (and (eq? (cdr space) (sub1 +ROWS+))
-			       (or (eq? (car space) 0)
-				   (eq? (car space) (sub1 +COLS+))))
+			  (and (eql (cdr space) (sub1 +ROWS+))
+			       (or (eql (car space) 0)
+				   (eql (car space) (sub1 +COLS+))))
 			  )
 		    t
 		    nil
@@ -86,73 +105,73 @@
 			      (LOWER_LEFT (cons '0 (sub1 +ROWS+)))
 			      (LOWER_RIGHT (cons (sub1 +COLS+) (sub1 +ROWS+))) 
 			      (corner (get-cell board space))
-			      (space-side (modulo corner 2)) 
+			      (space-side (mod corner 2)) 
 			      (caught nil)) 
 
 			 (when (equal? space UPPER_LEFT)
 			   (let* ((below (get-cell board (cons '0 '1)))
 				  (right (get-cell board (cons '1 '0))) 
-				  (below-side (modulo below 2))
-				  (right-side (modulo right 2))) 
+				  (below-side (mod below 2))
+				  (right-side (mod right 2))) 
 			     
-			     (if (and (not (eq? EMPTY below)) 
-				      (not (eq? EMPTY right))
-				      (not (eq? EMPTY corner))
-				      (not (eq? below-side space-side))
-				      (not (eq? right-side space-side)))
-			       (set! caught t) 
-			       (set! caught nil)
+			     (if (and (not (eql +EMPTY+ below)) 
+				      (not (eql +EMPTY+ right))
+				      (not (eql +EMPTY+ corner))
+				      (not (eql below-side space-side))
+				      (not (eql right-side space-side)))
+			       (setq caught t) 
+			       (setq caught nil)
 			       )
 			     ))
 
 		       (when (equal? space LOWER_LEFT)
 			 (let* ((above (get-cell board (cons '0 (- +ROWS+ 2))))
 				(right (get-cell board (cons '1 (- +ROWS+ 1)))) 
-				(above-side (modulo above 2))
-				(right-side (modulo right 2))) 
+				(above-side (mod above 2))
+				(right-side (mod right 2))) 
 			   
-			   (if (and (not (eq? EMPTY above))
-				    (not (eq? EMPTY right))
-				    (not (eq? EMPTY corner))
-				    (not (eq? above-side space-side))
-				    (not (eq? right-side space-side)))
-			     (set! caught t)
-			     (set! caught nil))
+			   (if (and (not (eql +EMPTY+ above))
+				    (not (eql +EMPTY+ right))
+				    (not (eql +EMPTY+ corner))
+				    (not (eql above-side space-side))
+				    (not (eql right-side space-side)))
+			     (setq caught t)
+			     (setq caught nil))
 			   ))
 
 		       (when (equal? space LOWER_RIGHT)
 			 (let* ((above (get-cell board (cons (sub1 +COLS+) (- +ROWS+ 2))))
 				(left (get-cell board (cons (- +COLS+ 2) (sub1 +ROWS+)))) 
-				(above-side (modulo above 2))
-				(left-side (modulo left 2))) 
+				(above-side (mod above 2))
+				(left-side (mod left 2))) 
 			   
-			   (if (and (not (eq? EMPTY above))
-				    (not (eq? EMPTY left))
-				    (not (eq? EMPTY corner))
-				    (not (eq? above-side space-side))
-				    (not (eq? left-side space-side))) 
-			     (set! caught t)
-			     (set! caught nil))
+			   (if (and (not (eql +EMPTY+ above))
+				    (not (eql +EMPTY+ left))
+				    (not (eql +EMPTY+ corner))
+				    (not (eql above-side space-side))
+				    (not (eql left-side space-side))) 
+			     (setq caught t)
+			     (setq caught nil))
 			   ))
 		       
 		       (when (equal? space UPPER_RIGHT)
 			 (let* ((below (get-cell board (cons (sub1 +COLS+) '1)))
 				(left (get-cell board (cons (- +COLS+ 2) '0))) 
-				(below-side (modulo below 2)) 
-				(left-side (modulo left 2)) ) 
+				(below-side (mod below 2)) 
+				(left-side (mod left 2)) ) 
 			   
-			   (if (and (not (eq? EMPTY below))
-				    (not (eq? EMPTY left))
-				    (not (eq? EMPTY corner))
-				    (not (eq? below-side space-side)) 
-				    (not (eq? left-side space-side)))
-			     (set! caught t)
-			     (set! caught nil))
+			   (if (and (not (eql +EMPTY+ below))
+				    (not (eql +EMPTY+ left))
+				    (not (eql +EMPTY+ corner))
+				    (not (eql below-side space-side)) 
+				    (not (eql left-side space-side)))
+			     (setq caught t)
+			     (setq caught nil))
 			   ))
 
-		       (if (or (eq? corner WHITE_KING)
-			       (eq? corner BLACK_KING))
-			 (set! caught nil))
+		       (if (or (eql corner +WHITE_KING+)
+			       (eql corner +BLACK_KING+))
+			 (setq caught nil))
 
 		       caught
 		       ))
@@ -166,13 +185,13 @@
 									       (or (is-surrounded-horizontally? board pt)
 										   (is-surrounded-vertically? board pt)
 										   (is-cornered? board pt)))
-								      (set! captured-pieces (append captured-pieces (list pt))) 
-								      (set! board (replace-space board pt EMPTY))
+								      (setq captured-pieces (append captured-pieces (list pt))) 
+								      (setq board (replace-space board pt +EMPTY+))
 								      )
 								    (when (and (is-corner? pt)
 									       (is-cornered? board pt))
-								      (set! captured-pieces (append captured-pieces (list pt)))
-								      (set! board (replace-space board pt EMPTY))
+								      (setq captured-pieces (append captured-pieces (list pt)))
+								      (setq board (replace-space board pt +EMPTY+))
 								      a)
 								    ))
 								row)
@@ -189,7 +208,7 @@
 (defun replace-space (board space replacement)
 			(let ((piece-cleared (get-cell board space))
 			      (updated-board (duplicate-board board)))
-			  (vector-set! (vector-ref updated-board (cdr space)) (car space) replacement) 
+			  (vector-setq (vector-ref updated-board (cdr space)) (car space) replacement) 
 			  (values updated-board piece-cleared))
 			)
 ; Clears the space. Returns the modified board and the tuple describing the piece
@@ -198,7 +217,7 @@
 (defun move-piece (board delta)
 		     (let* ((board-dup (duplicate-board board)) 
 			    (after-move (call-with-values (lambda ()
-							    (replace-space board-dup (car delta) EMPTY))
+							    (replace-space board-dup (car delta) +EMPTY+))
 							  (lambda (brd pc)
 							    (replace-space brd (car (cdr delta)) pc)
 							    )))
@@ -249,8 +268,8 @@
 						   t))
 					       x-list))
 			       0)
-			  (set! ans nil)
-			  (set! ans t)
+			  (setq ans nil)
+			  (setq ans t)
 			  ))
 		      )
 
@@ -270,8 +289,8 @@
 							    t))
 							y-list))
 					0)) 
-			      (set! ans nil)
-			      (set! ans t)
+			      (setq ans nil)
+			      (setq ans t)
 			      ))
 			 )
 		      ans
@@ -287,11 +306,11 @@
 					     (cdr (car delta)))
 					  )) ; The absolute value of the change in the y-direction
 			    ) 
-			(if (or (eq? space EMPTY)   ; trying to move an empty space
-				(not (eq? end EMPTY)) ; trying to move to an occupied space (and (> delta-x 0)
+			(if (or (eql space +EMPTY+)   ; trying to move an empty space
+				(not (eql end +EMPTY+)) ; trying to move to an occupied space (and (> delta-x 0)
 				(and (> delta-y 0) ; trying to move diagonally.
 				     (> delta-x 0))
-				(not (eq? side (modulo space 2))) ; trying to move an opposing piece.
+				(not (eql side (mod space 2))) ; trying to move an opposing piece.
 				(jumped? board delta) 	; jumped a piece.
 			      )
 			  nil
@@ -308,18 +327,18 @@
 ; 5. The ending space already has a piece on it.
 
 (defun update-players (move pc side captures players)
-			 (let* ((self (if (eq? (caar players) side)
+			 (let* ((self (if (eql (caar players) side)
 				       (car players)
 				       (cdr players)))
-				(other (if (not (eq? (caar players) side))
+				(other (if (not (eql (caar players) side))
 					 (car players)
 					 (cdr players)))
 				(updated-self-pcs (cons (cons pc (cadr move))
 							(filter (lambda (piece-id)
-								  (if (or (not (eq? (cdr piece-id)
+								  (if (or (not (eql (cdr piece-id)
 										    (car move)))
-									  (not (eq? (find (lambda (pc1)
-											    (if (eq? (cdr piece-id)
+									  (not (eql (find (lambda (pc1)
+											    (if (eql (cdr piece-id)
 												     pc1)
 											      t
 											      nil
@@ -333,14 +352,14 @@
 							))
 				(updated-other-pcs (filter (lambda (piece-id)
 							     (let ((result (find (lambda (pc)
-										   (if (eq? pc (cdr piece-id))
+										   (if (eql pc (cdr piece-id))
 										     t
 										     nil
 										     ))
 										 captures
 										 ))
 								   )
-							     (if (eq? result nil)
+							     (if (eql result nil)
 							       t
 							       nil
 							       )
