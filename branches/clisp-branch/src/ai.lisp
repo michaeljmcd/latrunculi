@@ -1,47 +1,41 @@
-(load "move")
-
 (defun negate-side (side)
-		 (if (eq side +WHITE+)
-		   black
-		   white
+		 (if (eql side +WHITE+)
+		   +BLACK+
+		   +WHITE+
 		   ))
 
 (defun king? (piece-id)
-		(if (or (eq piece-id +BLACK-KING+)
-			(eq piece-id +WHITE-KING+))
+		(if (or (eq piece-id +BLACK_KING+)
+			(eq piece-id +WHITE_KING+))
 		  t
 		  nil
 		  ))
 
+(defun contains-king? (board-space)
+    (if (king? (car board-space))
+        t
+        nil)
+  )
+
 (defun position-eval (board side players)
-			(let* ((current (if (eq side (car (car players)))
-					  (car players)
-					  (cdr players)))
-			       (opponent (if (not (eq side (car (car players))))
+			(let* ((current (if (eql side (player-color (car players)))
+                              (car players)
+                              (cdr players)
+                              ))
+			       (opponent (if (not (eql side (player-color (car players))))
 					   (car players)
 					   (cdr players)))
-			       (own-material-value (vector-ref (car (cddddr current)) 1))
-			       (own-material (* own-material-value (length (cddr current))))
-			       (opponent-material-value (vector-ref (car (cddddr opponent)) 1))
-			       (opponent-material (* opponent-material-value (length (cddr opponent))))
-			       (own-king-mobil-val (vector-ref (cadr (cdddr current)) 3))
-			       (opp-king-mobil-val (vector-ref (cadr (cdddr current)) 4))
-			       (own-king-loc (cdr (find (lambda (pc) 
-							  (if (king? (car pc))
-							    t
-							    nil))
-							(cadddr current))))
-			       (opp-king-loc (cdr (find (lambda (pc) 
-							  (if (king? (car pc))
-							    t
-							    nil))
-							(cadddr opponent))))
+			       (own-material (* (gethash 'own-pawn-value (get-ai-settings current)) (length (piece-list current))))
+			       (opponent-material (* (gethash 'opponent-pawn-value (get-ai-settings current)) (length (piece-list opponent))))
+			       (own-king-mobil-val (gethash 'own-king-mobility-value (get-ai-settings current)))
+			       (opp-king-mobil-val (gethash 'opponent-king-mobility-value (get-ai-settings current)))
+			       (own-king-loc (cdr (find-if #'contains-king? (piece-list current))))
+			       (opp-king-loc (cdr (find-if #'contains-king? (piece-list opponent))))
 			       (own-king-mobil (* own-king-mobil-val (length (generate-piece-moves own-king-loc board))))
 			       (opp-king-mobil (* opp-king-mobil-val (length (generate-piece-moves opp-king-loc board))))
-			       (win-lose (cond ((eq own-king-mobil 0) => -inf)
-					       ((eq opp-king-mobil 0) => +inf)
-					       (else 0))) 
-			       )
+			       (win-lose (cond ((eql own-king-mobil 0) :negative-infinity)
+					       ((eql opp-king-mobil 0) :positive-infinity)
+					       (t 0))))
 			  (+ (- own-material opponent-material)
 			     (- own-king-mobil opp-king-mobil)
 			     win-lose)
@@ -60,32 +54,30 @@
 ; moves available to the king.
 
 (defun generate-piece-moves (pt board)
-		(let ((lol
-			(list (generate-vertical-down board pt (cons (car pt) (+ 1 (cdr pt))) '())
-			      (generate-vertical-up board pt (cons (car pt) (- (cdr pt) 1)) '())
-			      (generate-horizontal-left board pt (cons (- (car pt) 1) (cdr pt)) '())
-			      (generate-horizontal-right board pt (cons (+ (car pt) 1) (cdr pt)) '()))
-			))
-		(concatenate lol)
+		(let ((down (generate-vertical-down board pt (cons (car pt) (+ 1 (cdr pt))) '()))
+              (up (generate-vertical-up board pt (cons (car pt) (- (cdr pt) 1)) '()))
+              (left (generate-horizontal-left board pt (cons (- (car pt) 1) (cdr pt)) '()))
+              (right (generate-horizontal-right board pt (cons (+ (car pt) 1) (cdr pt)) '())))
+        (remove nil (cons right (cons left (cons down up))))
 		))
 ; takes the space (pt) of a piece and generates all moves for it.
 
 (defun game-over? (board players)
-		     (let ((king1 (find (lambda (pair)
-					  (if (or (eqv? (car pair) +BLACK-KING+)
-						  (eqv? (car pair) +WHITE-KING+))
+		     (let ((king1 (find-if (lambda (pair)
+					  (if (or (eql (car pair) +BLACK_KING+)
+						      (eql (car pair) +WHITE_KING+))
 					    t
 					    nil
 					    )) 
-					(car (cdddr (car players)))
+					(piece-list (car players))
 					))
-			   (king2 (find (lambda (pair)
-					  (if (or (eqv? (car pair) +BLACK-KING+)
-						  (eqv? (car pair) +WHITE-KING+))
+			   (king2 (find-if (lambda (pair)
+					  (if (or (eql (car pair) +BLACK_KING+)
+						      (eql (car pair) +WHITE_KING+))
 					    t
 					    nil
 					    )) 
-				  (car (cddddr players)))
+				  (piece-list (cdr players)))
 				  )
 		       )
 		       (if (or (eq (length (generate-piece-moves (cdr king1) board)) 0)
@@ -97,10 +89,9 @@
 ; If one of the kings can't make a move, then the game is over.
 
 (defun nega-eval (ply board side depth players alpha beta)
-	      (if (null? ply)
+      (if (null ply)
 		alpha
-		(let* ((captures (call-with-values (lambda () (affect-captures (make-move board (car ply)))) list))
-		       (new-alpha (max alpha (* -1
+		(let ((new-alpha (max alpha (* -1
 					       (nega-max (make-move board (car ply))
 							 (negate-side side)
 							 (- depth 1)
@@ -108,6 +99,7 @@
 									 (get-cell board (caar ply))
 									 side
 									 captures
+                                     (multiple-value-list (affect-captures (make-move board (car ply))))
 									 players)
 							 (* -1 alpha)
 							 (* -1 beta)
@@ -122,8 +114,8 @@
 		))
 
 (defun nega-max (board side depth players alpha beta)
-		   (if (or (eq depth 0)
-			   (game-over? board players))
+		   (if (or (eq depth 0) 
+                   (game-over? board players))
 		     (position-eval board side players)
 		     (nega-eval (generate-moves board side players)
 				board
@@ -135,44 +127,33 @@
 		     ))
 
 (defun find-ai-move (board side players)
-		       (let ((self (if (eq (caar players) side)
+		       (let* ((self (if (eql (car players) side)
 				      (car players)
-				      (cadr players)
+				      (cdr players)
 				      ))
-			      (hi-score -inf)
-			      (move '())
-			      (level (cadddr players))
+			         (hi-score :negative-infinity)
+			         (move '())
+			         (level (gethash 'search-depth (get-ai-settings self)))
 			     ) 
-			 (newline)
-			 (for-each (lambda (mv)
-				     (display "Now probing: ")(display mv)
-				     (newline)
-				     (let* ((piece (get-cell board (car mv)))
-					    (captured-vals (call-with-values (lambda () (affect-captures (move-piece board mv))) list))
-					    (score (nega-max (make-move board mv) 
+                 (reduce (lambda (pair1 pair2) (if (> (car pair1) (car pair2)) pair1 pair2))
+                         (map 'list (lambda (mv)
+                            (cons (nega-max (make-move board mv) 
 							    side 
-							    (- level 1) 
+							    (- level 1)
 							    (update-players mv piece side captured-vals players)
-							    -inf +inf 
-							    )
-							    ))
-				       (when (> score hi-score)
-					 (set! hi-score score)
-					 (set! move mv)))
-				   )
-				 (generate-moves board side players))
-			 move))
+							    :negative-infinity :positive-infinity) mv))
+                       (generate-moves board side players))
+                     )
+                 ))
 ; Primarily a driver function. Creates a list of scored moves (scoring is done by the recursive function nega-max) and 
 ; selects the one with the highest score.
 
 (defun generate-moves (board side players)
-			 (let ((pieces (if (eq side (caar players))
-					 (car (cdddr (car players)))
-					 (car (cddddr players)))
-				       ))
-			   (append-map (lambda (piece)
-					 (generate-piece-moves (cdr piece) board))
-				       pieces)
+			 (let ((pieces (if (eq side (player-color (car players)))
+					 (piece-list (car players))
+					 (piece-list (cdr players))
+				       )))
+			   (mapcon (lambda (piece) (generate-piece-moves (cdr piece) board)) pieces)
 			   ))
 
 ; This convention applies to all of the next four functions.
@@ -182,26 +163,24 @@
 
 (defun generate-vertical-down (board origin curr moves)
 				 (if (eq (cdr curr)
-					  ROWS)
+					  +ROWS+)
 				   moves
 				   (let ((cell (get-cell board curr)))
-				     (if (not (eq EMPTY cell))
+				     (if (not (eq +EMPTY+ cell))
 				       moves
 				       (generate-vertical-down board 
 							       origin 
-							       (cons (car curr) 
-								     (add1 (cdr curr))) 
+							       (cons (car curr) (add1 (cdr curr))) 
 							       (cons (cons origin (list curr)) moves))
 				       )
 			   	     )
 			       ))
 
 (defun generate-horizontal-right (board origin curr moves)
-				 (if (eq (car curr)
-					  COLS)
+				 (if (eq (car curr) +COLS+)
 				   moves
 				   (let ((cell (get-cell board curr)))
-				     (if (not (eq EMPTY cell))
+				     (if (not (eq +EMPTY+ cell))
 				       moves
 				       (generate-horizontal-right board 
 								  origin 
@@ -213,11 +192,10 @@
 				 ))
 
 (defun generate-horizontal-left (board origin curr moves)
-				 (if (eq (car curr)
-					  -1)
+				 (if (eq (car curr) -1)
 				   moves
 				   (let ((cell (get-cell board curr)))
-				     (if (not (eq EMPTY cell))
+				     (if (not (eq +EMPTY+ cell))
 				       moves
 				       (generate-horizontal-left board 
 								 origin 
@@ -231,7 +209,7 @@
 					  -1)
 				   moves
 				   (let ((cell (get-cell board curr)))
-				     (if (not (eq EMPTY cell))
+				     (if (not (eq +EMPTY+ cell))
 				       moves
 				       (generate-vertical-up board 
 							     origin 

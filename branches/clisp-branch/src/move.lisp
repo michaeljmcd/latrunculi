@@ -11,15 +11,16 @@
 (defconstant +ROWS+ 8)
 
 (defconstant +EMPTY+ -1)
-(defconstant +WHITE-KING+ 0)
-(defconstant +WHITE-PAWN+ 2)
-(defconstant +BLACK-KING+ 1)
-(defconstant +BLACK-PAWN+ 3)
-; TODO: these are duplicated from main; one copy must go!
+(defconstant +WHITE_KING+ 0)
+(defconstant +WHITE_PAWN+ 2)
+(defconstant +BLACK_KING+ 1)
+(defconstant +BLACK_PAWN+ 3)
 
 (defun sub1 (num)
-   (- num 1)
-  )
+   (- num 1))
+
+(defun add1 (num)
+  (+ num 1))
 
 (defun get-cell (board coor)
 		   (if (or (>= (cdr coor) +ROWS+)
@@ -30,13 +31,17 @@
              (aref board (cdr coor) (car coor))
 		   ))
 
-(defun duplicate-board (board)
-			  (let ((new-board '#()))
-			    (vector-for-each (lambda (i row)
-					       (setq new-board (vector-append new-board (vector (vector-copy row))))) 
-					     board)
-			    new-board))
 ; Creates a newly-allocated deep copy of board.
+(defun duplicate-board (board)
+  (let ((fresh-board (make-array '(8 12) :element-type 'integer)))
+    (loop for i from 0 to (- +ROWS+ 1)
+          do (loop for j from 0 to (- +COLS+ 1)
+                do (setf (aref fresh-board i j) (aref board i j))
+                )
+          )
+    fresh-board
+    )
+  )
 
 (defun is-surrounded-horizontally? (board space)
 				   (let* ((this-cell (get-cell board space))
@@ -108,7 +113,7 @@
 			      (space-side (mod corner 2)) 
 			      (caught nil)) 
 
-			 (when (equal? space UPPER_LEFT)
+			 (when (eql space UPPER_LEFT)
 			   (let* ((below (get-cell board (cons '0 '1)))
 				  (right (get-cell board (cons '1 '0))) 
 				  (below-side (mod below 2))
@@ -124,7 +129,7 @@
 			       )
 			     ))
 
-		       (when (equal? space LOWER_LEFT)
+		       (when (eql space LOWER_LEFT)
 			 (let* ((above (get-cell board (cons '0 (- +ROWS+ 2))))
 				(right (get-cell board (cons '1 (- +ROWS+ 1)))) 
 				(above-side (mod above 2))
@@ -139,7 +144,7 @@
 			     (setq caught nil))
 			   ))
 
-		       (when (equal? space LOWER_RIGHT)
+		       (when (eql space LOWER_RIGHT)
 			 (let* ((above (get-cell board (cons (sub1 +COLS+) (- +ROWS+ 2))))
 				(left (get-cell board (cons (- +COLS+ 2) (sub1 +ROWS+)))) 
 				(above-side (mod above 2))
@@ -154,7 +159,7 @@
 			     (setq caught nil))
 			   ))
 		       
-		       (when (equal? space UPPER_RIGHT)
+		       (when (eql space UPPER_RIGHT)
 			 (let* ((below (get-cell board (cons (sub1 +COLS+) '1)))
 				(left (get-cell board (cons (- +COLS+ 2) '0))) 
 				(below-side (mod below 2)) 
@@ -176,29 +181,24 @@
 		       caught
 		       ))
 
-(defun affect-captures (board)
-			  (let ((captured-pieces '())) 
-			    (vector-for-each (lambda (y row)
-					       (vector-for-each (lambda (x col) 
-								  (let ((pt (cons x y))) 
-								    (when (and (not (is-corner? pt))
-									       (or (is-surrounded-horizontally? board pt)
-										   (is-surrounded-vertically? board pt)
-										   (is-cornered? board pt)))
-								      (setq captured-pieces (append captured-pieces (list pt))) 
-								      (setq board (replace-space board pt +EMPTY+))
-								      )
-								    (when (and (is-corner? pt)
-									       (is-cornered? board pt))
-								      (setq captured-pieces (append captured-pieces (list pt)))
-								      (setq board (replace-space board pt +EMPTY+))
-								      a)
-								    ))
-								row)
-					       )
-					     board)
-			    (values board captured-pieces)
-			  ))
+(defun affect-captures (board players)
+  (let ((captured-pieces (find-if (lambda (piece)
+                                    (let ((pt (cdr piece)))
+                                        (if (or (and (not (is-corner? pt))
+                                                     (or (is-surrounded-horizontally? board pt)
+                                                     (is-surrounded-vertically? board pt)
+                                                     (is-cornered? board pt)))
+                                                (and (is-corner? pt) (is-cornered? board pt)))
+                                          t
+                                          nil)
+                                        )
+                                    )
+                              (append (piece-list (car players)) (piece-list (cdr players))))
+                         ))
+    (values (cdr (last (map (lambda (piece) (replace-space board (cdr piece) +EMPTY+)) captured-pieces)))
+            captured-pieces)
+  ))
+
 ; This function removes any pieces that ought to be captured. The rules regarding captures are as follows:
 ; 1. If a pawn is surrounded on two opposite sides, it is captured.
 ; 2. An outside wall cannot be used to capture a pawn.
@@ -206,24 +206,19 @@
 ; 4. Multiple stones may be captured along a line (really doesn't change anything, but should be stated).
 
 (defun replace-space (board space replacement)
-			(let ((piece-cleared (get-cell board space))
-			      (updated-board (duplicate-board board)))
-			  (vector-setq (vector-ref updated-board (cdr space)) (car space) replacement) 
-			  (values updated-board piece-cleared))
-			)
+  (let ((piece-cleared (get-cell board space))
+        (updated-board (duplicate-board board)))
+    (setf (aref updated-board (car space) (cdr space)) replacement)
+    (values updated-board piece-cleared)
+    )
+  )
 ; Clears the space. Returns the modified board and the tuple describing the piece
 ; removed from the board. 
 
 (defun move-piece (board delta)
-		     (let* ((board-dup (duplicate-board board)) 
-			    (after-move (call-with-values (lambda ()
-							    (replace-space board-dup (car delta) +EMPTY+))
-							  (lambda (brd pc)
-							    (replace-space brd (car (cdr delta)) pc)
-							    )))
-			    )
-			after-move
-		     ))
+  (multiple-value-bind (new-board piece) (replace-space (duplicate-board board) (car delta) +EMPTY+) 
+    (replace-space new-board (cadr delta) piece)
+    ))
 
 (defun make-move (board delta)
 		    (let ((after-move (move-piece board delta)))
@@ -241,7 +236,7 @@
 ; Given a move delta, unmake-move reverses the move.
 
 (defun jumped? (board delta)
-		; We need to get a list/vector of all the spaces in between the start and the 
+		; We need to get a list of all the spaces in between the start and the 
 		; destination (non-inclusive) and check them for a piece.
 		  (let* ((ans nil) 
 			 (diff-x (- (car (car (cdr delta)))
