@@ -195,7 +195,7 @@
                                     )
                               (append (piece-list (car players)) (piece-list (cdr players))))
                          ))
-    (values (cdr (last (map (lambda (piece) (replace-space board (cdr piece) +EMPTY+)) captured-pieces)))
+    (values (cdr (last (map 'list (lambda (piece) (replace-space board (cdr piece) +EMPTY+)) captured-pieces)))
             captured-pieces)
   ))
 
@@ -220,18 +220,17 @@
     (replace-space new-board (cadr delta) piece)
     ))
 
-(defun make-move (board delta)
-		    (let ((after-move (move-piece board delta)))
-		      (affect-captures (duplicate-board after-move))
-		    ))
+(defun make-move (board delta players)
+  (affect-captures (move-piece board delta) players)
+ )
 ; Applies change delta (of the form: ((X1 . Y1) . (X2 . Y2))) to the given board board. Must take captures
 ; into affect. Will be used for both AI moves and player moves. AI moves verified during generation, whereas
 ; player moves will have to be verified in another function. This function does no verification. It simply makes
 ; the move and, if a piece is captured, removes it.
 
-(defun unmake-move (board delta)
+(defun unmake-move (board delta players)
 		      (make-move board (cons (car (cdr delta))
-					     (list (car delta)))
+					     (list (car delta)) players)
 		      ))
 ; Given a move delta, unmake-move reverses the move.
 
@@ -322,14 +321,14 @@
 ; 5. The ending space already has a piece on it.
 
 (defun update-players (move pc side captures players)
-			 (let* ((self (if (eql (caar players) side)
+			 (let* ((self (if (eql (player-color (car players)) side)
 				       (car players)
 				       (cdr players)))
-				(other (if (not (eql (caar players) side))
+				(other (if (not (eql (player-color (car players)) side))
 					 (car players)
 					 (cdr players)))
 				(updated-self-pcs (cons (cons pc (cadr move))
-							(filter (lambda (piece-id)
+							(find-if (lambda (piece-id)
 								  (if (or (not (eql (cdr piece-id)
 										    (car move)))
 									  (not (eql (find (lambda (pc1)
@@ -343,9 +342,9 @@
 								    t
 								    nil
 								  ))
-								(cadddr self))
+								(piece-list self))
 							))
-				(updated-other-pcs (filter (lambda (piece-id)
+				(updated-other-pcs (find-if (lambda (piece-id)
 							     (let ((result (find (lambda (pc)
 										   (if (eql pc (cdr piece-id))
 										     t
@@ -359,19 +358,12 @@
 							       nil
 							       )
 							     ))
-							   (cadddr other)
+							   (piece-list other)
 							   ))
 				)
-			   (cons (list (car self)
-				       (cadr self)
-				       (caddr self)
-				       updated-self-pcs
-				       (cadr (cdddr self)))
-				 (list (car other)
-				       (cadr other)
-				       (caddr other)
-				       updated-other-pcs
-				       (cadr (cdddr other)))
-			   )
+               (setf (piece-list self) updated-self-pcs)
+               (setf (piece-list other) updated-other-pcs)
+
+               (cons self other)
 			 ))
 ; Returns a tuple containing the updated player data. Takes into affect both captures and moves.

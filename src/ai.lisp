@@ -92,14 +92,14 @@
       (if (null ply)
 		alpha
 		(let ((new-alpha (max alpha (* -1
-					       (nega-max (make-move board (car ply))
+					       (nega-max (make-move board (car ply) players)
 							 (negate-side side)
 							 (- depth 1)
 							 (update-players (car ply)
 									 (get-cell board (caar ply))
 									 side
 									 captures
-                                     (multiple-value-list (affect-captures (make-move board (car ply))))
+                                     (multiple-value-list (affect-captures (make-move board (car ply) players)))
 									 players)
 							 (* -1 alpha)
 							 (* -1 beta)
@@ -137,11 +137,14 @@
 			     ) 
                  (reduce (lambda (pair1 pair2) (if (> (car pair1) (car pair2)) pair1 pair2))
                          (map 'list (lambda (mv)
-                            (cons (nega-max (make-move board mv) 
+                                      (let ((piece (get-cell board (car mv)))
+                                            (captured-vals (multiple-value-list (affect-captures (move-piece board mv) players))))
+                            (cons (nega-max (make-move board mv players) 
 							    side 
 							    (- level 1)
-							    (update-players mv piece side captured-vals players)
+							    (update-players mv side side captured-vals players)
 							    :negative-infinity :positive-infinity) mv))
+                                      )
                        (generate-moves board side players))
                      )
                  ))
@@ -153,7 +156,7 @@
 					 (piece-list (car players))
 					 (piece-list (cdr players))
 				       )))
-			   (mapcon (lambda (piece) (generate-piece-moves (cdr piece) board)) pieces)
+			   (multiple-value-call #'nconc (values-list (mapcan (lambda (piece) (generate-piece-moves (cdr piece) board)) pieces)))
 			   ))
 
 ; This convention applies to all of the next four functions.
