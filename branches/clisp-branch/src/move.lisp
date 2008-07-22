@@ -16,6 +16,8 @@
 (defconstant +BLACK_KING+ 1)
 (defconstant +BLACK_PAWN+ 3)
 
+(load "copy_obj")
+
 (defun sub1 (num)
    (- num 1))
 
@@ -320,50 +322,34 @@
 ; 4. The move jumps over a piece on either side.
 ; 5. The ending space already has a piece on it.
 
-(defun update-players (move pc side captures players)
-			 (let* ((self (if (eql (player-color (car players)) side)
-				       (car players)
-				       (cdr players)))
-				(other (if (not (eql (player-color (car players)) side))
-					 (car players)
-					 (cdr players)))
-				(updated-self-pcs (cons (cons pc (cadr move))
-							(find-if (lambda (piece-id)
-								  (if (or (not (eql (cdr piece-id)
-										    (car move)))
-									  (not (eql (find (lambda (pc1)
-											    (if (eql (cdr piece-id)
-												     pc1)
-											      t
-											      nil
-											    ))
-											  captures)
-										    nil)))
-								    t
-								    nil
-								  ))
-								(piece-list self))
-							))
-				(updated-other-pcs (find-if (lambda (piece-id)
-							     (let ((result (find (lambda (pc)
-										   (if (eql pc (cdr piece-id))
-										     t
-										     nil
-										     ))
-										 captures
-										 ))
-								   )
-							     (if (eql result nil)
-							       t
-							       nil
-							       )
-							     ))
-							   (piece-list other)
-							   ))
-				)
-               (setf (piece-list self) updated-self-pcs)
-               (setf (piece-list other) updated-other-pcs)
-
-               (cons self other)
-			 ))
 ; Returns a tuple containing the updated player data. Takes into affect both captures and moves.
+(defun update-players (captures players)
+  (cons (update-player captures (car players)) 
+        (update-player captures (cdr players))) 
+  )
+
+(defun update-player (captures player)
+  (let ((self (deep-copy player)))
+    (setf (slot-value self 'pieces) 
+          (filter-captured-pieces (slot-value self 'pieces) captures))
+    player
+    )
+  )
+
+(defun filter-captured-pieces (piece-list captures)
+  (let ((captured? (lambda (piece)
+                     (if (eql (find-if (lambda (pc)
+                                         (if (eql pc piece)
+                                           t
+                                           nil)
+                                         ) 
+                                       captures)
+                              nil)
+                       nil
+                       t
+                       )
+                     )
+                   ))
+    (find-if-not captured? piece-list)
+    )
+  )

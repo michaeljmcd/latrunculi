@@ -6,10 +6,11 @@
 
 (defun king? (piece-id)
 		(if (or (eq piece-id +BLACK_KING+)
-			(eq piece-id +WHITE_KING+))
-		  t
-		  nil
-		  ))
+                (eq piece-id +WHITE_KING+)) 
+          t 
+          nil
+          )
+        )
 
 (defun contains-king? (board-space)
     (if (king? (car board-space))
@@ -63,29 +64,14 @@
 ; takes the space (pt) of a piece and generates all moves for it.
 
 (defun game-over? (board players)
-		     (let ((king1 (find-if (lambda (pair)
-					  (if (or (eql (car pair) +BLACK_KING+)
-						      (eql (car pair) +WHITE_KING+))
-					    t
-					    nil
-					    )) 
-					(piece-list (car players))
-					))
-			   (king2 (find-if (lambda (pair)
-					  (if (or (eql (car pair) +BLACK_KING+)
-						      (eql (car pair) +WHITE_KING+))
-					    t
-					    nil
-					    )) 
-				  (piece-list (cdr players)))
-				  )
-		       )
-		       (if (or (eq (length (generate-piece-moves (cdr king1) board)) 0)
-			       (eq (length (generate-piece-moves (cdr king2) board)) 0))
-			 t
-			 nil
-			 )
-		       ))
+     (let ((king1 (find-if #'contains-king? (piece-list (car players)))) 
+           (king2 (find-if #'contains-king?  (piece-list (cdr players))))
+           )
+       (if (or (eql (length (generate-piece-moves (cdr king1) board)) 0)
+               (eql (length (generate-piece-moves (cdr king2) board)) 0)) 
+         t 
+         nil)
+       ))
 ; If one of the kings can't make a move, then the game is over.
 
 (defun nega-eval (ply board side depth players alpha beta)
@@ -95,12 +81,13 @@
 					       (nega-max (make-move board (car ply) players)
 							 (negate-side side)
 							 (- depth 1)
-							 (update-players (car ply)
-									 (get-cell board (caar ply))
-									 side
-									 captures
-                                     (multiple-value-list (affect-captures (make-move board (car ply) players)))
-									 players)
+                             (update-players captures players)
+							 ;(update-players (car ply)
+							;		 (get-cell board (caar ply))
+							;		 side
+							;		 captures
+                            ;         (multiple-value-list (affect-captures (make-move board (car ply) players)))
+							;		 players)
 							 (* -1 alpha)
 							 (* -1 beta)
 							 )
@@ -142,7 +129,8 @@
                             (cons (nega-max (make-move board mv players) 
 							    side 
 							    (- level 1)
-							    (update-players mv side side captured-vals players)
+							    ;(update-players mv side side captured-vals players)
+                                (update-players captured-vals players)
 							    :negative-infinity :positive-infinity) mv))
                                       )
                        (generate-moves board side players))
