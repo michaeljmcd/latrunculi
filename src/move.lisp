@@ -188,8 +188,8 @@
                                     (let ((pt (cdr piece)))
                                         (if (or (and (not (is-corner? pt))
                                                      (or (is-surrounded-horizontally? board pt)
-                                                     (is-surrounded-vertically? board pt)
-                                                     (is-cornered? board pt)))
+                                                         (is-surrounded-vertically? board pt)
+                                                         (is-cornered? board pt)))
                                                 (and (is-corner? pt) (is-cornered? board pt)))
                                           t
                                           nil)
@@ -197,8 +197,10 @@
                                     )
                               (append (piece-list (car players)) (piece-list (cdr players))))
                          ))
-    (values (cdr (last (map 'list (lambda (piece) (replace-space board (cdr piece) +EMPTY+)) captured-pieces)))
-            captured-pieces)
+    (if (> (length captured-pieces) 0)
+        (values (cdr (last (map 'list (lambda (piece) (replace-space board (cdr piece) +EMPTY+)) captured-pieces)))
+                captured-pieces)
+        (values board captured-pieces))
   ))
 
 ; This function removes any pieces that ought to be captured. The rules regarding captures are as follows:
@@ -210,7 +212,7 @@
 (defun replace-space (board space replacement)
   (let ((piece-cleared (get-cell board space))
         (updated-board (duplicate-board board)))
-    (setf (aref updated-board (car space) (cdr space)) replacement)
+    (setf (aref updated-board (cdr space) (car space)) replacement)
     (values updated-board piece-cleared)
     )
   )
@@ -218,13 +220,17 @@
 ; removed from the board. 
 
 (defun move-piece (board delta)
-  (multiple-value-bind (new-board piece) (replace-space (duplicate-board board) (car delta) +EMPTY+) 
+  (multiple-value-bind (new-board piece) 
+    (replace-space (duplicate-board board) (car delta) +EMPTY+) 
     (replace-space new-board (cadr delta) piece)
-    ))
+    )
+  )
 
 (defun make-move (board delta players)
-  (affect-captures (move-piece board delta) players)
- )
+  (multiple-value-bind (new-board)
+    (move-piece board delta)
+    (affect-captures new-board players))
+  )
 ; Applies change delta (of the form: ((X1 . Y1) . (X2 . Y2))) to the given board board. Must take captures
 ; into affect. Will be used for both AI moves and player moves. AI moves verified during generation, whereas
 ; player moves will have to be verified in another function. This function does no verification. It simply makes

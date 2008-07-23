@@ -6,6 +6,9 @@
 (load "ai")
 ;(load "gfx")
 
+(defconstant +INFINITY+ 1e38)
+(defconstant +NEGATIVE-INFINITY+ -1e37)
+
 (defclass player ()
   ((color :accessor player-color)
    (name :accessor player-name)
@@ -15,7 +18,7 @@
   )
 
 (defvar ai-settings0 (make-hash-table))
-(setf (gethash 'search-depth ai-settings0) 40)
+(setf (gethash 'search-depth ai-settings0) 2)
 (setf (gethash 'own-pawn-value ai-settings0) 95)
 (setf (gethash 'opponent-pawn-value ai-settings0) 65)
 (setf (gethash 'own-king-mobility-value ai-settings0) 0.0001)
@@ -35,7 +38,7 @@
 (setf (slot-value *player0* 'ai-settings) ai-settings0)
 
 (defvar ai-settings1 (make-hash-table))
-(setf (gethash 'search-depth ai-settings1) 40)
+(setf (gethash 'search-depth ai-settings1) 2)
 (setf (gethash 'own-pawn-value ai-settings1) 25)
 (setf (gethash 'opponent-pawn-value ai-settings1) 25)
 (setf (gethash 'own-king-mobility-value ai-settings1) 0.05)
