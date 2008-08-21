@@ -18,11 +18,8 @@
 
 (load "copy_obj")
 
-(defun sub1 (num)
-   (- num 1))
-
-(defun add1 (num)
-  (+ num 1))
+(defun sub1 (num) (- num 1))
+(defun add1 (num) (+ num 1))
 
 (defun get-cell (board coor)
 		   (if (or (>= (cdr coor) +ROWS+)
@@ -242,61 +239,25 @@
 		      ))
 ; Given a move delta, unmake-move reverses the move.
 
+; returns whether or not a given path includes some piece between the start and end points
+; We need to get a list of all the spaces in between the start and the 
+; destination (non-inclusive) and check them for a piece.
 (defun jumped? (board delta)
-		; We need to get a list of all the spaces in between the start and the 
-		; destination (non-inclusive) and check them for a piece.
-		  (let* ((ans nil) 
-			 (diff-x (- (car (car (cdr delta)))
-				    (car (car delta)))) 
-			 (delta-x (abs diff-x)) ; The absolute value of the change in the x-direction 
-			 (diff-y (- (cdr (car (cdr delta)))
-				    (cdr (car delta))))
-			 (delta-y (abs diff-y)) 
-		      ; At this point, the move is presumed valid in all other respects.
-		      ; If you only move one space, you can't possible have jumped another.
-		      ) 
-		    (if (> delta-x 1)
-		      (let* ((x-start (min (car (car delta))
-					   (car (car (cdr delta))
-						)))
-			     (y-coor (cdr (car delta))) 
-			     (x-list (map (lambda (e)
-					    (get-cell board (cons (+ e x-start 1) y-coor)))
-					  (list-tabulate (- delta-x 1) values))) 
-			     )
-			(if (> (length (filter (lambda (i)
-						 (if (> i 0)
-						   nil
-						   t))
-					       x-list))
-			       0)
-			  (setq ans nil)
-			  (setq ans t)
-			  ))
-		      )
-
-			(if (> delta-y 1)
-			  (let* ((y-start (min (cdr (car delta))
-					       (cdr (car (cdr delta)))
-					       ))
-				 (x-coor (car (car delta)))
-				 (y-list (map (lambda (e)
-						(get-cell board (cons x-coor (+ e y-start 1))))
-					      (list-tabulate (- delta-y 1) values)))
-				 ) 
-			    (if (and (not (null? y-list))
-				     (> (length (filter (lambda (i)
-							  (if (> i 0)
-							    nil
-							    t))
-							y-list))
-					0)) 
-			      (setq ans nil)
-			      (setq ans t)
-			      ))
-			 )
-		      ans
-		  ))
+  (let ((start-x (min (caadr delta) (caar delta)))
+        (end-x (max (caadr delta (caar delta))))
+        (start-y (min (cdadr delta) (cdar delta)))
+        (end-y (max (cdadr delta) (cdar delta)))
+        (answer nil))
+    (loop for i from start-x to end-x
+              do (loop for j from start-y to end-y
+                    do (if (not (eql (aref board i j) +EMPTY+))
+                         (setq answer t)
+                         )
+                    )
+              )
+    answer
+    )
+  )
 
 (defun move-valid? (board delta side)
 		      (let ((space (get-cell board (car delta))) ; move's origin.  

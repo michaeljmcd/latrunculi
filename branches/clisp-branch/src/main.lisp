@@ -28,7 +28,6 @@
 (setf (slot-value *player0* 'color) +BLACK+)
 (setf (slot-value *player0* 'name) "Ajax")
 (setf (slot-value *player0* 'controller) +AI+)
-;(setf (slot-value *player0* 'pieces) '((3 . (0 . 0)) (3 . (1 . 0)) (3 . (2 . 0))
 (setf (piece-list *player0*) '((3 . (0 . 0)) (3 . (1 . 0)) (3 . (2 . 0))
                         (3 . (3 . 0)) (3 . (4 . 0))
                         (3 . (5 . 0)) (3 . (6 . 0))
@@ -39,15 +38,15 @@
 
 (defvar ai-settings1 (make-hash-table))
 (setf (gethash 'search-depth ai-settings1) 2)
-(setf (gethash 'own-pawn-value ai-settings1) 25)
-(setf (gethash 'opponent-pawn-value ai-settings1) 25)
-(setf (gethash 'own-king-mobility-value ai-settings1) 0.05)
-(setf (gethash 'opponent-king-mobility-value ai-settings1) 0.05)
+(setf (gethash 'own-pawn-value ai-settings1) 95)
+(setf (gethash 'opponent-pawn-value ai-settings1) 65)
+(setf (gethash 'own-king-mobility-value ai-settings1) 0.0001)
+(setf (gethash 'opponent-king-mobility-value ai-settings1) 0.0001)
 
 (defvar *player1* (make-instance 'player))
 (setf (slot-value *player1* 'color) +WHITE+)
 (setf (slot-value *player1* 'name) "Achilles")
-(setf (slot-value *player1* 'controller) +HUMAN+)
+(setf (slot-value *player1* 'controller) +AI+)
 (setf (slot-value *player1* 'pieces) '((2 . (0 . 11)) (2 . (1 . 11)) (2 . (2 . 11))
                         (2 . (3 . 11)) (2 . (4 . 11))
                         (2 . (5 . 11)) (2 . (6 . 11))
@@ -79,7 +78,7 @@
           ))
 ; Returns a fresh board as a 2D array
 
-; create-game-board returns a list of lists representing the 12 x 8 board. 
+; create-game-board returns a 2D array representing the 12 x 8 board. 
 ; The board, 
 ; internally, will have the following representation: a list of lists, where 
 ; each list is a row. The list elements will be tuples having the 

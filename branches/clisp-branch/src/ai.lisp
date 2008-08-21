@@ -59,7 +59,7 @@
               (up (generate-vertical-up board pt (cons (car pt) (- (cdr pt) 1)) '()))
               (left (generate-horizontal-left board pt (cons (- (car pt) 1) (cdr pt)) '()))
               (right (generate-horizontal-right board pt (cons (+ (car pt) 1) (cdr pt)) '())))
-        (remove nil (cons right (cons left (cons down up))))
+        (remove nil (append right left down up))
 		))
 ; takes the space (pt) of a piece and generates all moves for it.
 
@@ -132,8 +132,7 @@
                                   mv)
                             )
                                       )
-                       (generate-moves board side players))
-                     )
+                       (generate-moves board side players)))
                  ))
 ; Primarily a driver function. Creates a list of scored moves (scoring is done by the recursive function nega-max) and 
 ; selects the one with the highest score.
@@ -143,7 +142,7 @@
 					 (piece-list (car players))
 					 (piece-list (cdr players))
 				       )))
-			   (multiple-value-call #'nconc (values-list (mapcan (lambda (piece) (generate-piece-moves (cdr piece) board)) pieces)))
+               (mapcan (lambda (piece) (generate-piece-moves (cdr piece) board)) pieces)
 			   ))
 
 ; This convention applies to all of the next four functions.
@@ -152,8 +151,8 @@
 ; The spaces are indexed starting at zero. 
 
 (defun generate-vertical-down (board origin curr moves)
-				 (if (eq (cdr curr)
-					  +ROWS+)
+				 (if (or (eq (cdr curr) +ROWS+)
+                         (> (cdr curr) +ROWS+))
 				   moves
 				   (let ((cell (get-cell board curr)))
 				     (if (not (eq +EMPTY+ cell))
