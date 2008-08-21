@@ -126,7 +126,7 @@
                             (cons (nega-max (make-move board mv players) 
                                             side 
                                             (- level 1)
-                                            (update-players captured-vals players)
+                                            (update-players (cadr captured-vals) players)
                                             +NEGATIVE-INFINITY+ 
                                             +INFINITY+)
                                   mv)
