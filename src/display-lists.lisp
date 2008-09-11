@@ -1,10 +1,7 @@
 ; A seperate file to hold the display lists. This shortens the gfx file, and keeps its contents more readable.
 
-(require-extension gl glu cairo vector-lib)
-(include "targa.scm")
-
 ; texture 1 will be the board's texture, 2 will be black and 3 will be white.
-(define create-display-lists (lambda ()
+(defun create-display-lists ()
 			       (let* ((PINE-TEXTURE 13)
 				      (GRANITE-TEXTURE 14)
 				      (MARBLE-TEXTURE 15)
@@ -371,4 +368,4 @@
 				       (glu:Sphere quad SPHERE-RADIUS 10 10)
 				 (gl:EndList) 
 				 )
-			       ))
+			       )
