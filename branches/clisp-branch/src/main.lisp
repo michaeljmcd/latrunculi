@@ -2,9 +2,18 @@
 ; (c) Michael J. McDermott, 2006
 ; Licensed under the GPL v.2
 
+(require 'asdf)
+
+(defpackage #:latrunculi
+  (:use #:common-lisp)
+  (:export #:start)
+  )
+
+(in-package #:latrunculi)
+
 (load "move")
 (load "ai")
-;(load "gfx")
+(load "gfx")
 
 (defconstant +INFINITY+ 1e38)
 (defconstant +NEGATIVE-INFINITY+ -1e37)
@@ -108,6 +117,4 @@
 ; A tuple will be of the form (L . I) where L is a value from the above
 ; legend and I is the ID for the piece if applicable and -1 if N/A. 
 
-;(initialize-display)
-;(show-menu)
-;(initialize-game)
+(latrunculi:start)
