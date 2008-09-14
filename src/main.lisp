@@ -4,6 +4,9 @@
 
 (require 'asdf)
 
+(push "/home/beowulf/cl_env/lispbuilder-sdl/" asdf:*central-registry*)
+(push "/home/beowulf/cl_env/cl-opengl/" asdf:*central-registry*)
+
 (defpackage #:latrunculi
   (:use #:common-lisp)
   (:export #:start)
@@ -14,6 +17,23 @@
 (load "move")
 (load "ai")
 (load "gfx")
+
+(defconstant +AI+ 0)
+(defconstant +HUMAN+ 1)
+
+(defconstant +BLACK+ 1)
+(defconstant +WHITE+ 0)
+
+(defconstant +COLS+ 12)
+(defconstant +ROWS+ 8)
+
+(defconstant +EMPTY+ -1)
+(defconstant +WHITE_KING+ 0)
+(defconstant +WHITE_PAWN+ 2)
+(defconstant +BLACK_KING+ 1)
+(defconstant +BLACK_PAWN+ 3)
+
+(load "copy_obj")
 
 (defconstant +INFINITY+ 1e38)
 (defconstant +NEGATIVE-INFINITY+ -1e37)
@@ -78,13 +98,6 @@
 
 (defvar players (cons *player0* *player1*))
 
-; Player data is a tuple of the form (C N P M A) where C is the player's color, N
-; is the player's name, P is an integer indicating whether the player is human
-; controlled or ai, M (for material) is a list of tuples describing all of the pieces
-; that the player has and their positions, and A is the player's ai settings (ignored
-; if under player control). A is of the form:
-; #(search-depth own-pawn-value opponent-pawn-value own-king-mobility-value opponent-king-mobility-value)
-
 (defvar *board* 
   (make-array '(8 12) :initial-contents
               '((3 3 3 3 3 3 3 3 3 3 3 3)
@@ -97,7 +110,6 @@
                 (2 2 2 2 2 2 2 2 2 2 2 2))
               :element-type 'integer
           ))
-; Returns a fresh board as a 2D array
 
 ; create-game-board returns a 2D array representing the 12 x 8 board. 
 ; The board, 

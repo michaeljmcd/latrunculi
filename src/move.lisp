@@ -1,23 +1,6 @@
 ; move.scm is to hold the move-related functions, such as making a move and validating one.
 ; The reason for this is so that the click events in the OpenGL code can access these functions without having to include the rest of the AI code.
 
-(defconstant +AI+ 0)
-(defconstant +HUMAN+ 1)
-
-(defconstant +BLACK+ 1)
-(defconstant +WHITE+ 0)
-
-(defconstant +COLS+ 12)
-(defconstant +ROWS+ 8)
-
-(defconstant +EMPTY+ -1)
-(defconstant +WHITE_KING+ 0)
-(defconstant +WHITE_PAWN+ 2)
-(defconstant +BLACK_KING+ 1)
-(defconstant +BLACK_PAWN+ 3)
-
-(load "copy_obj")
-
 (defun sub1 (num) (- num 1))
 (defun add1 (num) (+ num 1))
 

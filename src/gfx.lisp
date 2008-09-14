@@ -1,42 +1,58 @@
 ; Latrunculi
 ; (c) Michael J. McDermott, 2006
 ; Licensed under the GPL v.2
+; Graphics module.
 
-(asdf:operate 'asdf:load-op :uffi)
-(asdf:operate 'asdf:load-op :sdl)
+(asdf:operate 'asdf:load-op :cffi)
+(asdf:operate 'asdf:load-op :lispbuilder-sdl)
+(asdf:operate 'asdf:load-op :cl-opengl)
 
 (defvar *current-state* ':main-menu)
+; recognized values are:
+; :main-menu - the game is showing the mainmenu
+; :active-game - there is an ongoing game
 
-(defun init-sdl ()
-  (sdl:init (logior sdl:+init-video+))
-  (let ((surface (sdl:set-video-mode 1024 768 16
-				     (logior sdl:+resizable+
-					     sdl:+swsurface+))))
-    (when (sgum:null-pointer-p surface)
-      (error "Unable to set video mode"))
-    (sdl:wm-set-caption "Latrunculi" nil)
-    surface))
+(defun start () 
+  (sdl:with-init () 
+    (sdl:window 1024 768 
+                :flags (logior sdl:sdl-opengl)
+                :title-caption "Latrunculi" 
+                :icon-caption "Latrunculi")
 
-(defun run-sdl-event-loop (surface update-fn)
-  (sdl:event-loop
-   (:quit ()
-	  (return))
-   (:idle ()
-	  (funcall update-fn))
-   ))
+     (gl:enable :texture-2d)
+     (gl:clear-depth 1.0d0)
+     (gl:enable :depth-test)
+     (gl:shade-model :smooth)
+     (gl:enable :blend)
+     (gl:hint :perspective-correction-hint :nicest) 
+     (gl:blend-func :src-alpha :one-minus-src-alpha) 
+     ; Initialize OpenGL
 
-(defun generate-display-fun (surface game-state)
-  (case game-state
-    (:main-menu (lambda () ) )
-    (:active-game (lambda ()) )
-    )
-  ; do nothing
+    (display)
+        (sdl:with-events ()
+                         (:quit-event () t)
+                         (:mouse-button-up-event () 
+                                                 (setq *current-state* ':active-game)
+                                                 (display))
+                         (:key-down-event () (sdl:push-quit-event))
+                         (:video-expose-event () (display))
+                         )
+        )
   )
 
-(defun start ()
-  (unwind-protect
-      (progn
-	(let ((surface (init-sdl)))
-	  (run-sdl-event-loop surface (generate-display-fun surface *current-state*)))
-    (sdl:quit)))
+(defun display ()
+  (case *current-state*
+    (:main-menu
+        (let ((menu-surface (sdl:load-image (sdl:create-path "exekias.bmp" "../img/")))
+              (menu-texture nil))
+          (gl:gen-textures 1 (make-pointer menu-texture))
+          (gl:bind-texture :texture-2d menu-texture)
+          (gl:tex-parameter-i :texture-2d :texture-min-filter :linear)
+          (gl:tex-parameter-i :texture-2d :texture-mag-filter :linear)
+          (gl:tex-image-2d :texture-2d 0 256 1097 902 0 :rgb :unsigned-byte 989494)
+          )
+        )
+    (:active-game
+      )
+    )
   )
