@@ -6,6 +6,9 @@
 (asdf:operate 'asdf:load-op :cffi)
 (asdf:operate 'asdf:load-op :lispbuilder-sdl)
 (asdf:operate 'asdf:load-op :cl-opengl)
+(asdf:operate 'asdf:load-op :cl-glu)
+
+(load "display-lists")
 
 (defvar *current-state* ':main-menu)
 ; recognized values are:
@@ -13,6 +16,9 @@
 ; :active-game - there is an ongoing game
 ; :animating - a move has been made already, 
 ;   but the user is not allowed to click yet, as the animation is not done
+
+(defvar *camera-angle* 320)
+(defvar *camera-zoom* 1.6875)
 
 (defun start () 
   (sdl:with-init () 
@@ -35,7 +41,9 @@
                          (:quit-event () t)
                          (:mouse-button-up-event () 
                                                  (setq *current-state* ':active-game)
-                                                 (display))
+                                                 (initialize-game)
+                                                 (display)
+                                                 )
                          (:key-down-event () (sdl:push-quit-event))
                          (:video-expose-event () (display))
                          )
@@ -45,7 +53,7 @@
 (defun display ()
   (case *current-state*
     (:main-menu (menu-display))
-    (:active-game (menu-display))
+    (:active-game (game-display))
     )
   )
 
@@ -94,3 +102,18 @@
   (sdl:update-display)
   )
   )
+
+(defun game-display ()
+  )
+
+(defun initialize-game ()
+			    (gl:depth-func :less)
+			    (gl:matrix-mode :projection)
+			    (gl:scale *camera-zoom* *camera-zoom* *camera-zoom*)
+			    (gl:rotate *camera-angle* 1.0 0.0 0.0)
+			    ; Set the initial camera zoom and rotation.
+
+			    (gl:clear-color 0.80 0.68 0.38 0) 
+
+			    (create-display-lists)
+			  )

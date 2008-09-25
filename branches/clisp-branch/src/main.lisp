@@ -129,4 +129,4 @@
 ; A tuple will be of the form (L . I) where L is a value from the above
 ; legend and I is the ID for the piece if applicable and -1 if N/A. 
 
-(latrunculi:start)
+;(latrunculi:start)
