@@ -2,96 +2,90 @@
 
 ; texture 1 will be the board's texture, 2 will be black and 3 will be white.
 (defun create-display-lists ()
-			       (let* ((PINE-TEXTURE 13)
+			       (let ((PINE-TEXTURE 13)
 				      (GRANITE-TEXTURE 14)
 				      (MARBLE-TEXTURE 15)
 				      (CUBE-WIDTH 0.075) 
 				      (PYRAMID-HEIGHT 0.15) 
-				      (PYRAMID-WIDTH CUBE-WIDTH)
-				      (SPHERE-RADIUS (* 0.5 CUBE-WIDTH))
-				      (pine-img (tga-data "../img/pine.tga"))
-				      (pine-pix (list->u8vector (vector->list (vector-ref pine-img 3))))
-                                      (granite-img (tga-data "../img/granite.tga"))
-				      (granite-pix (list->u8vector (vector->list (vector-ref granite-img 3))))
-				      (marble-img (tga-data "../img/white_marble.tga"))
-				      (marble-pix (list->u8vector (vector->list (vector-ref marble-img 3))))
-				      (quad (glu:NewQuadric))) 
-				 
-				 (glu:QuadricNormals quad glu:SMOOTH)
-				 (glu:QuadricTexture quad (integer->char gl:TRUE))
-				 (glu:QuadricOrientation quad glu:OUTSIDE)
+				      (PYRAMID-WIDTH 0.075)
+				      (SPHERE-RADIUS (* 0.5 0.075))
+                      (quad (glu:new-quadric))
+                      (pine-surface (sdl:convert-surface :surface (sdl:load-image (sdl:create-path "pine.bmp" "../img/"))
+                                                         :free-p t
+                                                         :key-color nil
+                                                         :surface-alpha 255))
+                      (marble-surface (sdl:convert-surface :surface (sdl:load-image (sdl:create-path "white_marble.bmp" "../img/"))
+                                                         :free-p t
+                                                         :key-color nil
+                                                         :surface-alpha 255))
+                      (granite-surface (sdl:convert-surface :surface (sdl:load-image (sdl:create-path "granite.bmp" "../img/"))
+                                                         :free-p t
+                                                         :key-color nil
+                                                         :surface-alpha 255))
+                                      )
+				 (glu:quadric-normals quad :smooth)
+				 (glu:quadric-texture quad :true)
+				 (glu:quadric-orientation quad :outside)
 
-				 (gl:PixelStorei gl:UNPACK_ALIGNMENT 1)
+				 (gl:pixel-store :unpack_alignment 1)
 
-				 (gl:BindTexture gl:TEXTURE_2D PINE-TEXTURE)
+				 (gl:bind-texture :texture_2d PINE-TEXTURE)
 
-				 (gl:TexParameteri gl:TEXTURE_2D
-						   gl:TEXTURE_MAG_FILTER
-						   gl:LINEAR)
+				 (gl:tex-parameter :texture_2d :texture-mag-filter :linear)
+				 (gl:tex-parameter :texture_2d :texture-min-filter :linear)
 
-				 (gl:TexParameteri gl:TEXTURE_2D
-						   gl:TEXTURE_MIN_FILTER
-						   gl:LINEAR)
+				 ;(gl:tex-env-f :texture_env :texture_env_mode :decal)
+                    (sdl-base::with-pixel (pixels (sdl:fp pine-surface)) 
+                                          (gl:tex-image-2d 
+                                            :texture-2d 
+                                            0 
+                                            :rgba
+                                            1024 
+                                            1024 
+                                            0 
+                                            :bgra
+                                            :unsigned-byte 
+                                            (sdl-base::pixel-data pixels))
+                                          )
+				 (gl:bind-texture :texture_2d MARBLE-TEXTURE)
 
-				 (gl:TexEnvf gl:TEXTURE_ENV gl:TEXTURE_ENV_MODE gl:DECAL)
+                (sdl-base::with-pixel (pixels (sdl:fp marble-surface)) 
+                                      (gl:tex-image-2d 
+                                        :texture-2d 
+                                        0 
+                                        :rgba
+                                        1024 
+                                        1024 
+                                        0 
+                                        :bgra
+                                        :unsigned-byte 
+                                        (sdl-base::pixel-data pixels))
+                                      )
+                 (gl:tex-parameter :texture_2d :texture-mag-filter :linear)
+				 (gl:tex-parameter :texture_2d :texture-min-filter :linear)
 
-				 (gl:TexImage2D gl:TEXTURE_2D 
-						0 
-						3 
-						(vector-ref pine-img 1) 
-						(vector-ref pine-img 0)
-						0
-						gl:RGB
-						gl:UNSIGNED_BYTE
-						(make-locative pine-pix))
+				 ;(gl:tex-env-f :texture_env :texture_env_mode :decal)
 
-				 (gl:BindTexture gl:TEXTURE_2D MARBLE-TEXTURE)
-				 (gl:TexImage2D gl:TEXTURE_2D
-						0
-						3
-						(vector-ref marble-img 1)
-						(vector-ref marble-img 0)
-						0
-						gl:RGB
-						gl:UNSIGNED_BYTE
-						(make-locative marble-pix))
+                 ; Set up the granite (the black) texture
+				 (gl:bind-texture :texture-2d GRANITE-TEXTURE)
 
-				 (gl:TexParameteri gl:TEXTURE_2D
-						   gl:TEXTURE_MAG_FILTER
-						   gl:LINEAR)
+				 (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
+				 (gl:tex-parameter :texture-2d :texture-min-filter :linear)
 
-				 (gl:TexParameteri gl:TEXTURE_2D
-						   gl:TEXTURE_MIN_FILTER
-						   gl:LINEAR)
+				 ;l(gl:tex-env-f :texture-env :texture-env-mode :decal)
 
-				 (gl:TexEnvf gl:TEXTURE_ENV gl:TEXTURE_ENV_MODE gl:DECAL)
-
-                                 ; Set up the granite (the black) texture
-				 (gl:BindTexture gl:TEXTURE_2D GRANITE-TEXTURE)
-
-				 (gl:TexParameteri gl:TEXTURE_2D
-						   gl:TEXTURE_MAG_FILTER
-						   gl:LINEAR)
-
-				 (gl:TexParameteri gl:TEXTURE_2D
-						   gl:TEXTURE_MIN_FILTER
-						   gl:LINEAR)
-
-				 (gl:TexEnvf gl:TEXTURE_ENV gl:TEXTURE_ENV_MODE gl:DECAL)
-
-                                 (cairo-set-source-surface granite-instance granite-surface 0 0)
-                                 (cairo-paint granite-instance)
-                                 (cairo-surface-destroy granite-surface)
-
-				 (gl:TexImage2D gl:TEXTURE_2D
-						0
-						3
-						(vector-ref granite-img 1)
-						(vector-ref granite-img 0)
-						0
-						gl:RGB
-						gl:UNSIGNED_BYTE
-						(make-locative granite-pix))
+                 (sdl-base::with-pixel (pixels (sdl:fp granite-surface)) 
+                        (gl:tex-image-2d 
+                          :texture-2d 
+                          0 
+                          :rgba
+                          1024 
+                          1024 
+                          0 
+                          :bgra
+                          :unsigned-byte 
+                          (sdl-base::pixel-data pixels))
+                        )
 
 				 ; We are going to create display lists for each of the following possibilities:
 				 ; 1. Empty space
@@ -100,272 +94,272 @@
 				 ; 4. White pawn
 				 ; 5. Black pawn
 
-				 (set! display-list-start (gl:GenLists 5))
+				 (setq display-list-start (gl:gen-lists 5))
 
-				 (gl:NewList display-list-start gl:COMPILE)
-				       (gl:BindTexture gl:TEXTURE_2D PINE-TEXTURE)
-				       (gl:Begin gl:QUADS)
+				 (gl:new-list display-list-start :compile)
+				       (gl:bind-texture :texture-2d PINE-TEXTURE)
+				       (gl:begin :quads)
 
 				       ; Face 1:
 
-				       (gl:TexCoord2f 1.0 0.0)
-				       (gl:Vertex3f 0 CUBE-WIDTH CUBE-WIDTH)
+				       (gl:tex-coord 1.0 0.0)
+				       (gl:Vertex 0 CUBE-WIDTH CUBE-WIDTH)
 				       ; P_1
 
-				       (gl:TexCoord2f 0.0 0.0)
-				       (gl:Vertex3f 0 CUBE-WIDTH 0)
+				       (gl:tex-coord 0.0 0.0)
+				       (gl:Vertex 0 CUBE-WIDTH 0)
 				       ; P_2
 
-				       (gl:TexCoord2f 1.0 0.0)
-				       (gl:Vertex3f 0 0 0)
+				       (gl:tex-coord 1.0 0.0)
+				       (gl:Vertex 0 0 0)
 				       ; P_6
 
-				       (gl:TexCoord2f 1.0 1.0)
-				       (gl:Vertex3f 0 0 CUBE-WIDTH)
+				       (gl:tex-coord 1.0 1.0)
+				       (gl:Vertex 0 0 CUBE-WIDTH)
 				       ; P_5
 
 				       ; Face 2:
 
-				       (gl:TexCoord2f 1.0 0.0)
-				       (gl:Vertex3f 0 CUBE-WIDTH 0)
+				       (gl:tex-coord 1.0 0.0)
+				       (gl:Vertex 0 CUBE-WIDTH 0)
 				       ; P_2
 
-				       (gl:TexCoord2f 0.0 0.0)
-				       (gl:Vertex3f CUBE-WIDTH CUBE-WIDTH 0)
+				       (gl:tex-coord 0.0 0.0)
+				       (gl:Vertex CUBE-WIDTH CUBE-WIDTH 0)
 				       ; P_3
 
-				       (gl:TexCoord2f 0.0 1.0)
-				       (gl:Vertex3f CUBE-WIDTH 0 0)
+				       (gl:tex-coord 0.0 1.0)
+				       (gl:Vertex CUBE-WIDTH 0 0)
 				       ; P_7
 
-				       (gl:TexCoord2f 1.0 1.0)
-				       (gl:Vertex3f 0 0 0)
+				       (gl:tex-coord 1.0 1.0)
+				       (gl:Vertex 0 0 0)
 				       ; P_6
 
 				       ; Face 3:
-				       (gl:TexCoord2f 0.0 0.0)
-				       (gl:Vertex3f CUBE-WIDTH CUBE-WIDTH CUBE-WIDTH)
+				       (gl:tex-coord 0.0 0.0)
+				       (gl:Vertex CUBE-WIDTH CUBE-WIDTH CUBE-WIDTH)
 				       ; P_4
 
-				       (gl:TexCoord2f 1.0 0.0)
-				       (gl:Vertex3f CUBE-WIDTH CUBE-WIDTH 0)
+				       (gl:tex-coord 1.0 0.0)
+				       (gl:Vertex CUBE-WIDTH CUBE-WIDTH 0)
 				       ; P_3
 
-				       (gl:TexCoord2f 1.0 1.0)
-				       (gl:Vertex3f CUBE-WIDTH 0 0)
+				       (gl:tex-coord 1.0 1.0)
+				       (gl:Vertex CUBE-WIDTH 0 0)
 				       ; P_7
 
-				       (gl:TexCoord2f 0.0 1.0)
-				       (gl:Vertex3f CUBE-WIDTH 0 CUBE-WIDTH)
+				       (gl:tex-coord 0.0 1.0)
+				       (gl:Vertex CUBE-WIDTH 0 CUBE-WIDTH)
 				       ; P_8 
 
 				       ; Face 4:
 
-				       (gl:TexCoord2f 0.0 0.0)
-				       (gl:Vertex3f 0 CUBE-WIDTH CUBE-WIDTH)
+				       (gl:tex-coord 0.0 0.0)
+				       (gl:Vertex 0 CUBE-WIDTH CUBE-WIDTH)
 				       ; P_1
 
-				       (gl:TexCoord2f 1.0 0.0)
-				       (gl:Vertex3f CUBE-WIDTH CUBE-WIDTH CUBE-WIDTH)
+				       (gl:tex-coord 1.0 0.0)
+				       (gl:Vertex CUBE-WIDTH CUBE-WIDTH CUBE-WIDTH)
 				       ; P_4
 
-				       (gl:TexCoord2f 1.0 1.0)
-				       (gl:Vertex3f CUBE-WIDTH 0 CUBE-WIDTH)
+				       (gl:tex-coord 1.0 1.0)
+				       (gl:Vertex CUBE-WIDTH 0 CUBE-WIDTH)
 				       ; P_8 
 
-				       (gl:TexCoord2f 0.0 1.0)
-				       (gl:Vertex3f 0 0 CUBE-WIDTH)
+				       (gl:tex-coord 0.0 1.0)
+				       (gl:Vertex 0 0 CUBE-WIDTH)
 				       ; P_5
 
 				       ; Face 5:
 
-				       (gl:TexCoord2f 0.0 0.0)
-				       (gl:Vertex3f 0 CUBE-WIDTH CUBE-WIDTH)
+				       (gl:tex-coord 0.0 0.0)
+				       (gl:Vertex 0 CUBE-WIDTH CUBE-WIDTH)
 				       ; P_1
 				       
-				       (gl:TexCoord2f 1.0 0.0)
-				       (gl:Vertex3f 0 CUBE-WIDTH 0)
+				       (gl:tex-coord 1.0 0.0)
+				       (gl:Vertex 0 CUBE-WIDTH 0)
 				       ; P_2
 
-				       (gl:TexCoord2f 1.0 1.0)
-				       (gl:Vertex3f CUBE-WIDTH CUBE-WIDTH 0)
+				       (gl:tex-coord 1.0 1.0)
+				       (gl:Vertex CUBE-WIDTH CUBE-WIDTH 0)
 				       ; P_3
 
-				       (gl:TexCoord2f 0.0 1.0)
-				       (gl:Vertex3f CUBE-WIDTH CUBE-WIDTH CUBE-WIDTH)
+				       (gl:tex-coord 0.0 1.0)
+				       (gl:Vertex CUBE-WIDTH CUBE-WIDTH CUBE-WIDTH)
 				       ; P_4
 				       ; Face 6:
 
-				       (gl:TexCoord2f 0.0 1.0)
-				       (gl:Vertex3f CUBE-WIDTH 0 CUBE-WIDTH)
+				       (gl:tex-coord 0.0 1.0)
+				       (gl:Vertex CUBE-WIDTH 0 CUBE-WIDTH)
 				       ; P_8 
 
-				       (gl:TexCoord2f 1.0 1.0)
-				       (gl:Vertex3f CUBE-WIDTH 0 0)
+				       (gl:tex-coord 1.0 1.0)
+				       (gl:Vertex CUBE-WIDTH 0 0)
 				       ; P_7
 
-				       (gl:TexCoord2f 1.0 0.0)
-				       (gl:Vertex3f 0 0 0)
+				       (gl:tex-coord 1.0 0.0)
+				       (gl:Vertex 0 0 0)
 				       ; P_6
 
-				       (gl:TexCoord2f 0.0 0.0)
-				       (gl:Vertex3f 0 0 CUBE-WIDTH)
+				       (gl:tex-coord 0.0 0.0)
+				       (gl:Vertex 0 0 CUBE-WIDTH)
 				       ; P_5
 				       ; white king display list 
 				       (gl:End) 
-				       (gl:EndList) 
+				       (gl:end-list) 
 				       
-				       (gl:NewList (+ display-list-start 1) gl:COMPILE)
-						   (gl:BindTexture gl:TEXTURE_2D MARBLE-TEXTURE)
+				       (gl:new-list (+ display-list-start 1) :compile)
+						   (gl:bind-texture :texture-2d MARBLE-TEXTURE)
 
-						   (gl:Begin gl:TRIANGLES)
-						    (gl:TexCoord2f -.5 0.5)
-						    (gl:Vertex3f (* -0.5 PYRAMID-WIDTH)
+						   (gl:Begin :triangles)
+						    (gl:tex-coord -.5 0.5)
+						    (gl:Vertex (* -0.5 PYRAMID-WIDTH)
 								 0
 								 (* 0.5 PYRAMID-WIDTH))
 
-						    (gl:TexCoord2f 0.5 1.0)
-						    (gl:Vertex3f 0
+						    (gl:tex-coord 0.5 1.0)
+						    (gl:Vertex 0
 								 PYRAMID-HEIGHT
 								 0)
 
-						    (gl:TexCoord2f 1.0 1.0)
-						    (gl:Vertex3f (* 0.5 PYRAMID-WIDTH)
+						    (gl:tex-coord 1.0 1.0)
+						    (gl:Vertex (* 0.5 PYRAMID-WIDTH)
 								 0
 								 (* 0.5 PYRAMID-WIDTH))
 						    ; first face.
 
-						    (gl:TexCoord2f 0.0 0.0)
-						    (gl:Vertex3f (* 0.5 PYRAMID-WIDTH)
+						    (gl:tex-coord 0.0 0.0)
+						    (gl:Vertex (* 0.5 PYRAMID-WIDTH)
 								 0
 								 (* 0.5 PYRAMID-WIDTH))
 
-						    (gl:TexCoord2f 1.0 0.0)
-						    (gl:Vertex3f 0.0
+						    (gl:tex-coord 1.0 0.0)
+						    (gl:Vertex 0.0
 								 PYRAMID-HEIGHT
 								 0.0)
 
-						    (gl:TexCoord2f 1.0 1.0)
-						    (gl:Vertex3f (* 0.5 PYRAMID-WIDTH)
+						    (gl:tex-coord 1.0 1.0)
+						    (gl:Vertex (* 0.5 PYRAMID-WIDTH)
 								 0
 								 (* -0.5 PYRAMID-WIDTH))
 						    ; second.
 
-						    (gl:TexCoord2f 0.0 0.0)
-						    (gl:Vertex3f (* 0.5 PYRAMID-WIDTH)
+						    (gl:tex-coord 0.0 0.0)
+						    (gl:Vertex (* 0.5 PYRAMID-WIDTH)
 								 0
 								 (* -0.5 PYRAMID-WIDTH)) ; pt. 4
 
-						    (gl:TexCoord2f 1.0 0.0)
-						    (gl:Vertex3f 0.0
+						    (gl:tex-coord 1.0 0.0)
+						    (gl:Vertex 0.0
 								 PYRAMID-HEIGHT
 								 0.0) ; pt. 2
 
-						    (gl:TexCoord2f 1.0 1.0)
-						    (gl:Vertex3f (* -0.5 PYRAMID-WIDTH)
+						    (gl:tex-coord 1.0 1.0)
+						    (gl:Vertex (* -0.5 PYRAMID-WIDTH)
 								 0
 								 (* -0.5 PYRAMID-WIDTH)) ; pt. 5
 						    ; third.
 
-						    (gl:TexCoord2f 0.0 1.0)
-						    (gl:Vertex3f 0.0
+						    (gl:tex-coord 0.0 1.0)
+						    (gl:Vertex 0.0
 								 PYRAMID-HEIGHT
 								 0.0) ; pt. 2
 
-						    (gl:TexCoord2f 1.0 0.0)
-						    (gl:Vertex3f (* -0.5 PYRAMID-WIDTH)
+						    (gl:tex-coord 1.0 0.0)
+						    (gl:Vertex (* -0.5 PYRAMID-WIDTH)
 								 0
 								 (* -0.5 PYRAMID-WIDTH)) ; pt. 5
 
-						    (gl:TexCoord2f 0.0 0.0)
-						    (gl:Vertex3f (* -0.5 PYRAMID-WIDTH)
+						    (gl:tex-coord 0.0 0.0)
+						    (gl:Vertex (* -0.5 PYRAMID-WIDTH)
 								 0
 								 (* 0.5 PYRAMID-WIDTH))
 						    ; fourth.
 						(gl:End)
-				 (gl:EndList)
+				 (gl:end-list)
 
 				 ; The black king
-				 (gl:NewList (+ display-list-start 2) gl:COMPILE)
-						   (gl:BindTexture gl:TEXTURE_2D GRANITE-TEXTURE)
+				 (gl:new-list (+ display-list-start 2) :compile)
+						   (gl:bind-texture :texture-2d GRANITE-TEXTURE)
 
-						   (gl:Begin gl:TRIANGLES)
-						    (gl:TexCoord2f -.5 0.5)
-						    (gl:Vertex3f (* -0.5 PYRAMID-WIDTH)
+						   (gl:Begin :triangles)
+						    (gl:tex-coord -.5 0.5)
+						    (gl:Vertex (* -0.5 PYRAMID-WIDTH)
 								 0
 								 (* 0.5 PYRAMID-WIDTH))
 
-						    (gl:TexCoord2f 0.5 1.0)
-						    (gl:Vertex3f 0
+						    (gl:tex-coord 0.5 1.0)
+						    (gl:Vertex 0
 								 PYRAMID-HEIGHT
 								 0)
 
-						    (gl:TexCoord2f 1.0 1.0)
-						    (gl:Vertex3f (* 0.5 PYRAMID-WIDTH)
+						    (gl:tex-coord 1.0 1.0)
+						    (gl:Vertex (* 0.5 PYRAMID-WIDTH)
 								 0
 								 (* 0.5 PYRAMID-WIDTH))
 						    ; first face.
 
-						    (gl:TexCoord2f 0.0 0.0)
-						    (gl:Vertex3f (* 0.5 PYRAMID-WIDTH)
+						    (gl:tex-coord 0.0 0.0)
+						    (gl:Vertex (* 0.5 PYRAMID-WIDTH)
 								 0
 								 (* 0.5 PYRAMID-WIDTH))
 
-						    (gl:TexCoord2f 1.0 0.0)
-						    (gl:Vertex3f 0.0
+						    (gl:tex-coord 1.0 0.0)
+						    (gl:Vertex 0.0
 								 PYRAMID-HEIGHT
 								 0.0)
 
-						    (gl:TexCoord2f 1.0 1.0)
-						    (gl:Vertex3f (* 0.5 PYRAMID-WIDTH)
+						    (gl:tex-coord 1.0 1.0)
+						    (gl:Vertex (* 0.5 PYRAMID-WIDTH)
 								 0
 								 (* -0.5 PYRAMID-WIDTH))
 						    ; second.
 
-						    (gl:TexCoord2f 0.0 0.0)
-						    (gl:Vertex3f (* 0.5 PYRAMID-WIDTH)
+						    (gl:tex-coord 0.0 0.0)
+						    (gl:Vertex (* 0.5 PYRAMID-WIDTH)
 								 0
 								 (* -0.5 PYRAMID-WIDTH)) ; pt. 4
 
-						    (gl:TexCoord2f 1.0 0.0)
-						    (gl:Vertex3f 0.0
+						    (gl:tex-coord 1.0 0.0)
+						    (gl:Vertex 0.0
 								 PYRAMID-HEIGHT
 								 0.0) ; pt. 2
 
-						    (gl:TexCoord2f 1.0 1.0)
-						    (gl:Vertex3f (* -0.5 PYRAMID-WIDTH)
+						    (gl:tex-coord 1.0 1.0)
+						    (gl:Vertex (* -0.5 PYRAMID-WIDTH)
 								 0
 								 (* -0.5 PYRAMID-WIDTH)) ; pt. 5
 						    ; third.
 
-						    (gl:TexCoord2f 0.0 1.0)
-						    (gl:Vertex3f 0.0
+						    (gl:tex-coord 0.0 1.0)
+						    (gl:Vertex 0.0
 								 PYRAMID-HEIGHT
 								 0.0) ; pt. 2
 
-						    (gl:TexCoord2f 1.0 0.0)
-						    (gl:Vertex3f (* -0.5 PYRAMID-WIDTH)
+						    (gl:tex-coord 1.0 0.0)
+						    (gl:Vertex (* -0.5 PYRAMID-WIDTH)
 								 0
 								 (* -0.5 PYRAMID-WIDTH)) ; pt. 5
 
-						    (gl:TexCoord2f 0.0 0.0)
-						    (gl:Vertex3f (* -0.5 PYRAMID-WIDTH)
+						    (gl:tex-coord 0.0 0.0)
+						    (gl:Vertex (* -0.5 PYRAMID-WIDTH)
 								 0
 								 (* 0.5 PYRAMID-WIDTH))
 						    ; fourth.
 						(gl:End)
-				 (gl:EndList)
+				 (gl:end-list)
 
 				 ; White pawn
-				 (gl:NewList (+ display-list-start 3) gl:COMPILE)
-				       (gl:BindTexture gl:TEXTURE_2D MARBLE-TEXTURE)
+				 (gl:new-list (+ display-list-start 3) :compile)
+				       (gl:bind-texture :texture-2d MARBLE-TEXTURE)
 				       (glu:Sphere quad SPHERE-RADIUS 10 10)
-				 (gl:EndList)
+				 (gl:end-list)
 
 				 ; black pawn.
-				 (gl:NewList (+ display-list-start 4) gl:COMPILE)
-				       (gl:BindTexture gl:TEXTURE_2D GRANITE-TEXTURE)
+				 (gl:new-list (+ display-list-start 4) :compile)
+				       (gl:bind-texture :texture-2d GRANITE-TEXTURE)
 				       (glu:Sphere quad SPHERE-RADIUS 10 10)
-				 (gl:EndList) 
-				 )
-			       )
+				 (gl:end-list) 
+                 )
+                   )
