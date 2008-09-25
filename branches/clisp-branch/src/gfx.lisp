@@ -11,6 +11,8 @@
 ; recognized values are:
 ; :main-menu - the game is showing the mainmenu
 ; :active-game - there is an ongoing game
+; :animating - a move has been made already, 
+;   but the user is not allowed to click yet, as the animation is not done
 
 (defun start () 
   (sdl:with-init () 
@@ -42,17 +44,53 @@
 
 (defun display ()
   (case *current-state*
-    (:main-menu
-        (let ((menu-surface (sdl:load-image (sdl:create-path "exekias.bmp" "../img/")))
-              (menu-texture nil))
-          (gl:gen-textures 1 (make-pointer menu-texture))
-          (gl:bind-texture :texture-2d menu-texture)
-          (gl:tex-parameter-i :texture-2d :texture-min-filter :linear)
-          (gl:tex-parameter-i :texture-2d :texture-mag-filter :linear)
-          (gl:tex-image-2d :texture-2d 0 256 1097 902 0 :rgb :unsigned-byte 989494)
-          )
-        )
-    (:active-game
-      )
+    (:main-menu (menu-display))
+    (:active-game (menu-display))
     )
+  )
+
+(defun menu-display ()
+  (let ((menu-surface (sdl:convert-surface :surface (sdl:load-image (sdl:create-path "exekias.bmp" "../img/")) 
+                                           :free-p t
+                                           :key-color nil
+                                           :surface-alpha 255
+                                           ))
+        (menu-texture (first (gl:gen-textures 1)))
+        )
+    (gl:bind-texture :texture-2d menu-texture)
+    (gl:tex-parameter :texture-2d :texture-min-filter :linear)
+    (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
+
+    (sdl-base::with-pixel (pixels (sdl:fp menu-surface)) 
+                          (gl:tex-image-2d 
+                            :texture-2d 
+                            0 
+                            :rgba
+                            1024 
+                            1024 
+                            0 
+                            :bgra
+                            :unsigned-byte 
+                            (sdl-base::pixel-data pixels))
+                          )
+
+  (gl:clear :color-buffer-bit :depth-buffer-bit)
+  (gl:load-identity)
+
+  (gl:begin :quads)
+      (gl:vertex -1 1 0) ; top left
+      (gl:tex-coord 1 0)
+
+      (gl:vertex 1 1 0) ; top right
+      (gl:tex-coord 1 1)
+
+      (gl:vertex 1 -1 0) ; bottom right
+      (gl:tex-coord 0 1)
+
+      (gl:vertex -1 -1 0) ;bottom left
+      (gl:tex-coord 0 0)
+  (gl:end)
+
+  (sdl:update-display)
+  )
   )
