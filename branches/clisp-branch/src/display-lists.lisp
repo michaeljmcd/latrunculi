@@ -40,8 +40,8 @@
                                             :texture-2d 
                                             0 
                                             :rgba
-                                            1024 
-                                            1024 
+                                            64 
+                                            64 
                                             0 
                                             :bgra
                                             :unsigned-byte 
@@ -54,8 +54,8 @@
                                         :texture-2d 
                                         0 
                                         :rgba
-                                        1024 
-                                        1024 
+                                        64 
+                                        64 
                                         0 
                                         :bgra
                                         :unsigned-byte 
@@ -79,8 +79,8 @@
                           :texture-2d 
                           0 
                           :rgba
-                          1024 
-                          1024 
+                          64 
+                          64 
                           0 
                           :bgra
                           :unsigned-byte 
