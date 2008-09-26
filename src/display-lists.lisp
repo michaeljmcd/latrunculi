@@ -27,14 +27,14 @@
 				 (glu:quadric-texture quad :true)
 				 (glu:quadric-orientation quad :outside)
 
-				 (gl:pixel-store :unpack_alignment 1)
+				 (gl:pixel-store :unpack-alignment 1)
 
-				 (gl:bind-texture :texture_2d PINE-TEXTURE)
+				 (gl:bind-texture :texture-2d PINE-TEXTURE)
 
-				 (gl:tex-parameter :texture_2d :texture-mag-filter :linear)
-				 (gl:tex-parameter :texture_2d :texture-min-filter :linear)
+				 (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
+				 (gl:tex-parameter :texture-2d :texture-min-filter :linear)
 
-				 ;(gl:tex-env-f :texture_env :texture_env_mode :decal)
+				 (gl:tex-env :texture-env :texture-env-mode :decal)
                     (sdl-base::with-pixel (pixels (sdl:fp pine-surface)) 
                                           (gl:tex-image-2d 
                                             :texture-2d 
@@ -47,7 +47,7 @@
                                             :unsigned-byte 
                                             (sdl-base::pixel-data pixels))
                                           )
-				 (gl:bind-texture :texture_2d MARBLE-TEXTURE)
+				 (gl:bind-texture :texture-2d MARBLE-TEXTURE)
 
                 (sdl-base::with-pixel (pixels (sdl:fp marble-surface)) 
                                       (gl:tex-image-2d 
@@ -61,10 +61,10 @@
                                         :unsigned-byte 
                                         (sdl-base::pixel-data pixels))
                                       )
-                 (gl:tex-parameter :texture_2d :texture-mag-filter :linear)
-				 (gl:tex-parameter :texture_2d :texture-min-filter :linear)
+                 (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
+				 (gl:tex-parameter :texture-2d :texture-min-filter :linear)
 
-				 ;(gl:tex-env-f :texture_env :texture_env_mode :decal)
+				 (gl:tex-env :texture-env :texture-env-mode :decal)
 
                  ; Set up the granite (the black) texture
 				 (gl:bind-texture :texture-2d GRANITE-TEXTURE)
