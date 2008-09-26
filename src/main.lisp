@@ -17,6 +17,7 @@
 (load "move")
 (load "ai")
 (load "gfx")
+(load "copy_obj")
 
 (defconstant +AI+ 0)
 (defconstant +HUMAN+ 1)
@@ -32,8 +33,6 @@
 (defconstant +WHITE_PAWN+ 2)
 (defconstant +BLACK_KING+ 1)
 (defconstant +BLACK_PAWN+ 3)
-
-(load "copy_obj")
 
 (defconstant +INFINITY+ 1e38)
 (defconstant +NEGATIVE-INFINITY+ -1e37)

@@ -72,7 +72,7 @@
 				 (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
 				 (gl:tex-parameter :texture-2d :texture-min-filter :linear)
 
-				 ;l(gl:tex-env-f :texture-env :texture-env-mode :decal)
+				 (gl:tex-env :texture-env :texture-env-mode :decal)
 
                  (sdl-base::with-pixel (pixels (sdl:fp granite-surface)) 
                         (gl:tex-image-2d 
