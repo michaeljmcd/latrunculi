@@ -1,3 +1,5 @@
+(in-package #:latrunculi)
+
 (defun negate-side (side)
 		 (if (eql side +WHITE+)
 		   +BLACK+

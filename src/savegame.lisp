@@ -1,25 +1,24 @@
 ; This file provides the utilities required to load/save a game.
+(in-package #:latrunculi)
 
-(define save-game (lambda (filename board turn player0 player1)
-		    (define out (open-output-file filename))
+(defun save-game (filename board turn player0 player1)
+  (let ((out (open-output-file filename))) 
+    (write board out)
+    (write turn out)
+    (write player0 out)
+    (write player1 out) 
+    (close-output-port out)
+    )
+  )
 
-		    (write board out)
-		    (write turn out)
-		    (write player0 out)
-		    (write player1 out)
-
-		    (close-output-port out)
-		    ))
-
-(define load-game (lambda (filename)
-		    (define in (open-input-file filename))
-
-		    (define board (read in))
-		    (define turn (read in))
-		    (define player0 (read in))
-		    (define player1 (read in))
-
-		    (close-input-port in)
-
-		    (values board turn player0 player1)
-		    ))
+(defun load-game (filename)
+  (let* ((in (open-input-file filename)) 
+         (board (read in))
+         (turn (read in))
+         (player0 (read in))
+         (player1 (read in))
+         ) 
+    (close-input-port in) 
+    (values board turn player0 player1)
+    )
+  )

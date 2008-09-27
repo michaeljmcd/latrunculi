@@ -1,4 +1,6 @@
 ; A seperate file to hold the display lists. This shortens the gfx file, and keeps its contents more readable.
+(in-package #:latrunculi)
+(defvar *display-list-start* 0)
 
 ; texture 1 will be the board's texture, 2 will be black and 3 will be white.
 (defun create-display-lists ()
@@ -94,9 +96,9 @@
 				 ; 4. White pawn
 				 ; 5. Black pawn
 
-				 (setq display-list-start (gl:gen-lists 5))
+				 (setq *display-list-start* (gl:gen-lists 5))
 
-				 (gl:new-list display-list-start :compile)
+				 (gl:new-list *display-list-start* :compile)
 				       (gl:bind-texture :texture-2d PINE-TEXTURE)
 				       (gl:begin :quads)
 
@@ -209,7 +211,7 @@
 				       (gl:End) 
 				       (gl:end-list) 
 				       
-				       (gl:new-list (+ display-list-start 1) :compile)
+				       (gl:new-list (+ *display-list-start* 1) :compile)
 						   (gl:bind-texture :texture-2d MARBLE-TEXTURE)
 
 						   (gl:Begin :triangles)
@@ -280,7 +282,7 @@
 				 (gl:end-list)
 
 				 ; The black king
-				 (gl:new-list (+ display-list-start 2) :compile)
+				 (gl:new-list (+ *display-list-start* 2) :compile)
 						   (gl:bind-texture :texture-2d GRANITE-TEXTURE)
 
 						   (gl:Begin :triangles)
@@ -351,13 +353,13 @@
 				 (gl:end-list)
 
 				 ; White pawn
-				 (gl:new-list (+ display-list-start 3) :compile)
+				 (gl:new-list (+ *display-list-start* 3) :compile)
 				       (gl:bind-texture :texture-2d MARBLE-TEXTURE)
 				       (glu:Sphere quad SPHERE-RADIUS 10 10)
 				 (gl:end-list)
 
 				 ; black pawn.
-				 (gl:new-list (+ display-list-start 4) :compile)
+				 (gl:new-list (+ *display-list-start* 4) :compile)
 				       (gl:bind-texture :texture-2d GRANITE-TEXTURE)
 				       (glu:Sphere quad SPHERE-RADIUS 10 10)
 				 (gl:end-list) 

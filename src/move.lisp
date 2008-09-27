@@ -1,6 +1,8 @@
 ; move.scm is to hold the move-related functions, such as making a move and validating one.
 ; The reason for this is so that the click events in the OpenGL code can access these functions without having to include the rest of the AI code.
 
+(in-package #:latrunculi)
+
 (defun sub1 (num) (- num 1))
 (defun add1 (num) (+ num 1))
 
@@ -218,7 +220,8 @@
 
 (defun unmake-move (board delta players)
 		      (make-move board (cons (car (cdr delta))
-					     (list (car delta)) players)
+                                     (list (car delta)) 
+                                     players)
 		      ))
 ; Given a move delta, unmake-move reverses the move.
 
