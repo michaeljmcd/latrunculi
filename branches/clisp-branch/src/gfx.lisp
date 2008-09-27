@@ -5,13 +5,6 @@
 
 (in-package #:latrunculi)
 
-(asdf:operate 'asdf:load-op :cffi)
-(asdf:operate 'asdf:load-op :lispbuilder-sdl)
-(asdf:operate 'asdf:load-op :cl-opengl)
-(asdf:operate 'asdf:load-op :cl-glu)
-
-(load "display-lists")
-
 (defvar *current-state* ':main-menu)
 ; recognized values are:
 ; :main-menu - the game is showing the mainmenu
@@ -135,70 +128,51 @@
                  (gl:ortho 0 0 0 0 -1 1)
                  (gl:matrix-mode :modelview)
                  (gl:push-matrix)
+                 (gl:load-identity) 
+                 
+                 (gl:disable :texture-2d) 
+                 (gl:color 255 255 0)
+                 (gl:load-identity) 
+                 
+                 (gl:enable :texture-2d) 
+                 (gl:matrix-mode :projection) 
+                 (gl:pop-matrix)
+                 (gl:matrix-mode :modelview)
+                 (gl:pop-matrix) 
+                 
+                 (gl:matrix-mode :modelview) 
                  (gl:load-identity)
-
-			 (gl:disable :texture-2d)
-             (gl:color 255 255 0)
-			 (gl:load-identity)
-
-             #|
-			 (gl:Translatef -0.85 0.9 0.0)
-			 (gl:Scalef 0.1 0.1 0.1)
-			 (gl:Color3f 0.0 0.0 0.0)
-
-			 (if (eql mode LOCKED)
-			   (glfDrawSolidString (string-append (cadr player0) "*"))
-			   (glfDrawSolidString (cadr player0))
-			   )
-
-			 (gl:Translatef 0.0 -18.0 0.0)
-			 (gl:Color3f 0.0 0.0 0.0) 
-			 
-			 (if (not (eql mode LOCKED))
-			   (glfDrawSolidString (string-append (cadr player1) "*"))
-			   (glfDrawSolidString (cadr player1))
-			   )
-             |#
-
-			 (gl:enable :texture-2d)
-
-			 (gl:matrix-mode :projection)
-			 (gl:pop-matrix)
-			 (gl:matrix-mode :modelview)
-			 (gl:pop-matrix)
-			 
-			 (gl:matrix-mode :modelview)
-			 (gl:load-identity)
-			 (gl:translate (aref *camera-coordinates* 0)
+                 (gl:translate (aref *camera-coordinates* 0)
                            (aref *camera-coordinates* 1)
-                           (aref *camera-coordinates* 2))
-
-             (loop for x from 0 to (- +ROWS+ 1)
-                   do (loop for y from 0 to (- +COLS+ 1)
-                            do
-                            (let ((current-space (cons x y))
-                                  (piece (aref *board* x y)))
-							       (gl:translate (* -0.5 CUBE-WIDTH) (* -0.5 CUBE-WIDTH) (* -0.5 CUBE-WIDTH))
-							       (gl:call-list display-list-start) 
-							       (gl:translate (* 0.5 CUBE-WIDTH) (* 0.5 CUBE-WIDTH) (* 0.5 CUBE-WIDTH))
-
-                                   (if (and (not (eql *current-state* ':animating))
-                                            (not (eql (find current-space *fade-out*) nil))
-                                            )
-                                     (gl:color 1.0 1.0 1.0 alpha)
-                                     )
-
-                                   (if (and (not (eql *current-state* ':animating))
-                                            (not (eql *slide-space* nil))
-                                            (eql (car *slide-space*) current-space))
-                                     (progn
-                                       (let* ((from (car *slide-space*))
-                                              (to (cdr *slide-space*))
-                                              (delta-x (- (car from) (car to)))
-                                              (delta-y (- (cdr from) (cdr to))))
+                           (aref *camera-coordinates* 2)) 
+                 
+                 (loop for x from 0 to (- +ROWS+ 1)
+                       do (loop for y from 0 to (- +COLS+ 1)
+                                do
+                                (let ((current-space (cons x y))
+                                      (piece (aref *board* x y)))
+                                  
+                                  (gl:translate (* -0.5 CUBE-WIDTH) (* -0.5 CUBE-WIDTH) (* -0.5 CUBE-WIDTH)) 
+                                  (gl:call-list *display-list-start*)
+                                  (gl:translate (* 0.5 CUBE-WIDTH) (* 0.5 CUBE-WIDTH) (* 0.5 CUBE-WIDTH)) 
+                                  
+                                  (if (and (not (eql *current-state* ':animating))
+                                           (not (eql (find current-space *fade-out*) nil))
+                                           )
+                                    (gl:color 1.0 1.0 1.0 *alpha*)
+                                    ) 
+                                  
+                                  (if (and (not (eql *current-state* ':animating))
+                                           (not (eql *slide-space* nil))
+                                           (eql (car *slide-space*) current-space))
+                                    (progn
+                                      (let* ((from (car *slide-space*))
+                                             (to (cdr *slide-space*))
+                                             (delta-x (- (car from) (car to)))
+                                             (delta-y (- (cdr from) (cdr to))))
                                          (if (not (eql delta-x 0)) ; if the move is horizontal
-                                           (gl:translate (* -1 progress CUBE-WIDTH delta-x) 0.0 0.0)
-                                           (gl:translate 0.0 0.0 (* progress CUBE-WIDTH delta-y))
+                                           (gl:translate (* -1 *progress* CUBE-WIDTH delta-x) 0.0 0.0)
+                                           (gl:translate 0.0 0.0 (* *progress* CUBE-WIDTH delta-y))
                                            )
                                          )
                                        )
@@ -207,19 +181,19 @@
 
                                  (cond 
                                    ((eql piece +WHITE_KING+)
-                                    (gl:call-list (+ display-list-start 1))
+                                    (gl:call-list (+ *display-list-start* 1))
                                      )
                                    ((eql piece +BLACK_KING+)
-                                    (gl:call-list (+ display-list-start 2))
+                                    (gl:call-list (+ *display-list-start* 2))
                                      )
                                    ((eql piece +WHITE_PAWN+)
                                     (gl:translate 0.0 (* 0.25 CUBE-WIDTH) 0.0)
-                                    (gl:call-list (+ display-list-start 3))
+                                    (gl:call-list (+ *display-list-start* 3))
                                     (gl:translate 0.0 (* -0.25 CUBE-WIDTH) 0.0)
                                     )
                                    ((eql piece +BLACK_PAWN+)
                                     (gl:translate 0.0 (* 0.25 CUBE-WIDTH) 0.0)
-                                    (gl:call-list (+ display-list-start 4))
+                                    (gl:call-list (+ *display-list-start* 4))
                                     (gl:translate 0.0 (* -0.25 CUBE-WIDTH) 0.0)
                                     )
                                    )
@@ -230,7 +204,7 @@
 
                                  (if (and (not (eql *current-state* ':active-game))
                                           (not (eql nil *slide-space*))
-                                          (eql (car *slide-space* space))
+                                          (eql (car *slide-space*) space)
                                           )
                                    (progn
                                        (let* ((from (car *slide-space*))
@@ -238,20 +212,20 @@
                                               (delta-x (- (car from) (car to)))
                                               (delta-y (- (cdr from) (cdr to))))
                                          (if (not (eql delta-x 0)) ; if the move is horizontal
-                                           (gl:translate (* progress CUBE-WIDTH delta-x) 0.0 0.0)
-                                           (gl:translate 0.0 0.0 (* -1 progress CUBE-WIDTH delta-y))
+                                           (gl:translate (* *progress* CUBE-WIDTH delta-x) 0.0 0.0)
+                                           (gl:translate 0.0 0.0 (* -1 *progress* CUBE-WIDTH delta-y))
                                            )
                                          )
                                        )
                                    )
-
-                                 (gl:translate CUBE-WIDTH 0.0 0.0) 
-                                 (gl:color 1.0 1.0 1.0 1.0)
-                                 )
-                            )
-
-                            (gl:translate (* -1 +COLS+ CUBE-WIDTH) 0.0 (* -1 CUBE-WIDTH))
-                            )
-             (sdl:update-display)
-             )
-                   )
+                                 ) 
+                                
+                                (gl:translate CUBE-WIDTH 0.0 0.0) 
+                                (gl:color 1.0 1.0 1.0 1.0)
+                                ) 
+                       
+                       (gl:translate (* -1 +COLS+ CUBE-WIDTH) 0.0 (* -1 CUBE-WIDTH))
+                       )
+                 (sdl:update-display)
+                 )
+               )
