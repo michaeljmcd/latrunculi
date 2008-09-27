@@ -9,11 +9,13 @@
                  (:file "ai"
                         :depends-on ("main" "move"))
                  (:file "copy_obj")
-                 (:file "display-lists")
+                 (:file "display-lists"
+                        :depends-on ("main"))
                  (:file "gfx"
                         :depends-on ("display-lists" "main"))
                  (:file "move"
                         :depends-on ("main"))
-                 (:file "savegame")
+                 (:file "savegame"
+                        :depends-on ("main"))
                  )
              )
