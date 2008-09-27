@@ -117,34 +117,53 @@
 
 (defun game-display ()
 		       (let* ((CUBE-WIDTH 0.075) 
-			      (PYRAMID-HEIGHT 0.15) 
-			      (PYRAMID-WIDTH CUBE-WIDTH)
-			      (SPHERE-RADIUS (* 0.5 CUBE-WIDTH))) 
+                      (PYRAMID-HEIGHT 0.15) 
+                      (PYRAMID-WIDTH CUBE-WIDTH)
+                      (SPHERE-RADIUS (* 0.5 CUBE-WIDTH))) 
+                 
                  (gl:clear :color-buffer-bit :depth-buffer-bit)
-                 
-                 (gl:matrix-mode :projection)
-                 (gl:push-matrix)
-                 (gl:load-identity)
-                 (gl:ortho 0 0 0 0 -1 1)
-                 (gl:matrix-mode :modelview)
-                 (gl:push-matrix)
-                 (gl:load-identity) 
-                 
-                 (gl:disable :texture-2d) 
-                 (gl:color 255 255 0)
-                 (gl:load-identity) 
-                 
-                 (gl:enable :texture-2d) 
-                 (gl:matrix-mode :projection) 
-                 (gl:pop-matrix)
-                 (gl:matrix-mode :modelview)
-                 (gl:pop-matrix) 
-                 
+
+			 (gl:matrix-mode :projection)
+			 (gl:push-matrix)
+			 (gl:load-identity)
+			 (gl:ortho 0 0 0 0 -1 1)
+			 (gl:matrix-mode :modelview)
+			 (gl:push-matrix)
+			 (gl:load-identity)
+
+			 (gl:disable :texture-2d)
+			 (gl:color 1.0 1.0 0.0)
+			 (gl:load-identity)
+
+			 (gl:translate -0.85 0.9 0.0)
+			 (gl:scale 0.1 0.1 0.1)
+			 (gl:color 0.0 0.0 0.0)
+
+			 ;(if (eq? mode LOCKED)
+			 ;  (glfDrawSolidString (string-append (cadr player0) "*"))
+			 ;  (glfDrawSolidString (cadr player0))
+			 ;  )
+
+			 (gl:translate 0.0 -18.0 0.0)
+			 (gl:color 0.0 0.0 0.0) 
+			 
+			 ;(if (not (eq? mode LOCKED))
+			 ;  (glfDrawSolidString (string-append (cadr player1) "*"))
+			 ;  (glfDrawSolidString (cadr player1))
+			 ;  )
+
+			 (gl:enable :texture-2d)
+
+			 (gl:matrix-mode :projection)
+			 (gl:pop-matrix)
+			 (gl:matrix-mode :modelview)
+			 (gl:pop-matrix)
+ 
                  (gl:matrix-mode :modelview) 
                  (gl:load-identity)
                  (gl:translate (aref *camera-coordinates* 0)
-                           (aref *camera-coordinates* 1)
-                           (aref *camera-coordinates* 2)) 
+                               (aref *camera-coordinates* 1) 
+                               (aref *camera-coordinates* 2)) 
                  
                  (loop for x from 0 to (- +ROWS+ 1)
                        do (loop for y from 0 to (- +COLS+ 1)
@@ -178,6 +197,9 @@
                                        )
                                      )
 								 ; Assumes a correct move (i.e. no diagonal)
+                                 (if (not (eql piece +EMPTY+))
+                                   (gl:translate 0.0 ( * 0.5 CUBE-WIDTH) 0.0)
+                                   )
 
                                  (cond 
                                    ((eql piece +WHITE_KING+)
@@ -218,11 +240,11 @@
                                          )
                                        )
                                    )
-                                 ) 
+                                 )
                                 
                                 (gl:translate CUBE-WIDTH 0.0 0.0) 
                                 (gl:color 1.0 1.0 1.0 1.0)
-                                ) 
+                                )
                        
                        (gl:translate (* -1 +COLS+ CUBE-WIDTH) 0.0 (* -1 CUBE-WIDTH))
                        )
