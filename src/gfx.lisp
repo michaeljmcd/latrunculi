@@ -10,6 +10,7 @@
 ; :main-menu - the game is showing the mainmenu
 ; :active-game - there is an ongoing game
 ; :animating - a move has been made already, 
+; :game-over - game is over, but still showing the board
 ;   but the user is not allowed to click yet, as the animation is not done
 
 (defvar *camera-angle* 320)
@@ -20,6 +21,9 @@
 (defvar *alpha* 1.0)
 (defvar *progress* 0.0)
 (defvar *camera-angle-delta* 1) ; the amount a camera angle will change (in degrees) with each key press.
+(defvar *move-origin* '()) 	 ; from and to data in the current move.
+(defvar *ai-board* nil)
+(defvar *next-board* nil)
 
 (defun start () 
   (sdl:with-init () 
@@ -41,10 +45,8 @@
     (display)
         (sdl:with-events ()
                          (:quit-event () t)
-                         (:mouse-button-up-event () 
-                                                 (setq *current-state* ':active-game)
-                                                 (initialize-game)
-                                                 (display)
+                         (:mouse-button-up-event (:button button :X x :Y y) 
+                                                 (game-mouse-handler button x y)
                                                  )
                          (:key-down-event (:key key) 
                                           (if (eql *current-state* ':active-game)
@@ -123,9 +125,7 @@
 			  )
 
 (defun game-display ()
-		       (let ((CUBE-WIDTH 0.075) ) 
-                 
-                 (gl:clear :color-buffer-bit :depth-buffer-bit)
+  (gl:clear :color-buffer-bit :depth-buffer-bit)
 
 			 (gl:matrix-mode :projection)
 			 (gl:push-matrix)
@@ -175,9 +175,9 @@
                                 (let ((current-space (cons x y))
                                       (piece (aref *board* x y)))
                                   
-                                  (gl:translate (* -0.5 CUBE-WIDTH) (* -0.5 CUBE-WIDTH) (* -0.5 CUBE-WIDTH)) 
+                                  (gl:translate (* -0.5 +CUBE-WIDTH+) (* -0.5 +CUBE-WIDTH+) (* -0.5 +CUBE-WIDTH+)) 
                                   (gl:call-list *display-list-start*)
-                                  (gl:translate (* 0.5 CUBE-WIDTH) (* 0.5 CUBE-WIDTH) (* 0.5 CUBE-WIDTH)) 
+                                  (gl:translate (* 0.5 +CUBE-WIDTH+) (* 0.5 +CUBE-WIDTH+) (* 0.5 +CUBE-WIDTH+)) 
                                   
                                   (if (and (not (eql *current-state* ':animating))
                                            (not (eql (find current-space *fade-out*) nil))
@@ -194,15 +194,15 @@
                                              (delta-x (- (car from) (car to)))
                                              (delta-y (- (cdr from) (cdr to))))
                                          (if (not (eql delta-x 0)) ; if the move is horizontal
-                                           (gl:translate (* -1 *progress* CUBE-WIDTH delta-x) 0.0 0.0)
-                                           (gl:translate 0.0 0.0 (* *progress* CUBE-WIDTH delta-y))
+                                           (gl:translate (* -1 *progress* +CUBE-WIDTH+ delta-x) 0.0 0.0)
+                                           (gl:translate 0.0 0.0 (* *progress* +CUBE-WIDTH+ delta-y))
                                            )
                                          )
                                        )
                                      )
 								 ; Assumes a correct move (i.e. no diagonal)
                                  (if (not (eql piece +EMPTY+))
-                                   (gl:translate 0.0 ( * 0.5 CUBE-WIDTH) 0.0)
+                                   (gl:translate 0.0 ( * 0.5 +CUBE-WIDTH+) 0.0)
                                    )
 
                                  (cond 
@@ -213,19 +213,19 @@
                                     (gl:call-list (+ *display-list-start* 2))
                                      )
                                    ((eql piece +WHITE_PAWN+)
-                                    (gl:translate 0.0 (* 0.25 CUBE-WIDTH) 0.0)
+                                    (gl:translate 0.0 (* 0.25 +CUBE-WIDTH+) 0.0)
                                     (gl:call-list (+ *display-list-start* 3))
-                                    (gl:translate 0.0 (* -0.25 CUBE-WIDTH) 0.0)
+                                    (gl:translate 0.0 (* -0.25 +CUBE-WIDTH+) 0.0)
                                     )
                                    ((eql piece +BLACK_PAWN+)
-                                    (gl:translate 0.0 (* 0.25 CUBE-WIDTH) 0.0)
+                                    (gl:translate 0.0 (* 0.25 +CUBE-WIDTH+) 0.0)
                                     (gl:call-list (+ *display-list-start* 4))
-                                    (gl:translate 0.0 (* -0.25 CUBE-WIDTH) 0.0)
+                                    (gl:translate 0.0 (* -0.25 +CUBE-WIDTH+) 0.0)
                                     )
                                    )
 
                                  (if (not (eql piece +EMPTY+))
-                                   (gl:translate 0.0 ( * -0.5 CUBE-WIDTH) 0.0)
+                                   (gl:translate 0.0 ( * -0.5 +CUBE-WIDTH+) 0.0)
                                    )
 
                                  (if (and (not (eql *current-state* ':active-game))
@@ -238,22 +238,21 @@
                                               (delta-x (- (car from) (car to)))
                                               (delta-y (- (cdr from) (cdr to))))
                                          (if (not (eql delta-x 0)) ; if the move is horizontal
-                                           (gl:translate (* *progress* CUBE-WIDTH delta-x) 0.0 0.0)
-                                           (gl:translate 0.0 0.0 (* -1 *progress* CUBE-WIDTH delta-y))
+                                           (gl:translate (* *progress* +CUBE-WIDTH+ delta-x) 0.0 0.0)
+                                           (gl:translate 0.0 0.0 (* -1 *progress* +CUBE-WIDTH+ delta-y))
                                            )
                                          )
                                        )
                                    )
                                  )
                                 
-                                (gl:translate CUBE-WIDTH 0.0 0.0) 
+                                (gl:translate +CUBE-WIDTH+ 0.0 0.0) 
                                 (gl:color 1.0 1.0 1.0 1.0)
                                 )
                        
-                       (gl:translate (* -1 +COLS+ CUBE-WIDTH) 0.0 (* -1 CUBE-WIDTH))
+                       (gl:translate (* -1 +COLS+ +CUBE-WIDTH+) 0.0 (* -1 +CUBE-WIDTH+))
                        )
                  (sdl:update-display)
-                 )
                )
 
 (defun game-keyboard-handler (key)
@@ -305,4 +304,152 @@
       (game-display)
       )
     )
+  )
+
+(defun game-mouse-handler (button x y)
+  ; 1 button = left
+  (when (and (eql button 1)
+             (eql *current-state* ':main-menu))
+       (setq *current-state* ':active-game) 
+       (initialize-game) 
+       (display)
+       )
+
+  (if (and (eql button 1)
+           (eql *current-state* ':active-game)
+           )
+       (let ((viewport (gl:get-integer :viewport))
+             (pixel 0))
+
+        (print viewport)
+        (color-render)
+
+        (setf pixel (gl:read-pixels x
+                        (- (aref viewport 3) y)
+                        1
+                        1
+                        :rgb
+                        :unsigned-byte))
+
+        (if (and (not (eql (aref pixel 0) 255))
+                 (null *move-origin*))
+              (setf *move-origin* 
+                    (cons (aref pixel 0)
+                          (aref pixel 1)))
+              )
+        (if (and (not (eql (aref pixel 0) 255))
+                 (not (null *move-origin*)))
+              (let ((move (cons *move-origin* (cons (aref pixel 0)
+                                                    (aref pixel 1))))
+                    (captured-vals nil)
+                    (update nil))
+                (if (move-valid? *board* move +WHITE+)
+                  (progn
+                    (setq captured-vals (multiple-value-list (affect-captures (movie-piece *board* move) (cons *player0* *player1*))))
+                    (setq update (update-players captured-vals *players*))
+                    (when (eql (player-color (car update)) +BLACK+)
+                      (setq *player0* (car update))
+                      (setq *player1* (cdr update))
+                      )
+
+                    (when (eql (player-color (car update)) +WHITE+)
+                      (setq *player1* (car update))
+                      (setq *player0* (cdr update))
+                      )
+
+                    (setq *next-board* (move-piece *board* move))
+                    (setq *ai-board* (car captured-vals))
+                    (setq *slide-space* move)
+                    (setq *current-state* ':animating)
+
+                    ; todo animation
+
+                    (display)
+
+                    (if (not (game-over? *ai-board* (cons *player0* *player1*)))
+                      (progn
+                        ; get AI move
+                        )
+                      (progn
+                        (write "Game over.")
+                        (setq *current-state* ':game-over)
+                        )
+                      )
+                    )
+                  (progn
+                    (setf *move-origin* '())
+                    (write "illegal move")
+                    )
+                  )
+                )
+            )
+        )
+       )
+
+        (gl:enable :texture-2d)
+        (gl:enable :dither)
+        (gl:enable :blend)
+    )
+
+(defun color-render ()
+  (gl:disable :texture-2d)
+  (gl:disable :dither)
+  (gl:disable :lighting)
+  (gl:disable :blend)
+
+  (gl:clear-color 1 1 1 0)
+  (gl:clear :color-buffer-bit :depth-buffer-bit)
+
+  (gl:matrix-mode :modelview)
+  (gl:load-identity)
+
+  (gl:translate (aref *camera-coordinates* 0)
+                (aref *camera-coordinates* 1)
+                (aref *camera-coordinates* 2))
+  
+  (loop for x from 0 to (- +ROWS+ 1)
+        do (loop for y from 0 to (- +COLS+ 1)
+                 do
+                 (let ((piece (aref *board* x y)))
+					   ;(gl:Color3ub i j 0)
+                   (gl:color x y 0) 
+                   
+                   (gl:translate (* -0.5 +CUBE-WIDTH+) (* -0.5 +CUBE-WIDTH+) (* -0.5 +CUBE-WIDTH+))
+                   (gl:call-list *display-list-start*)
+                   (gl:translate (* 0.5 +CUBE-WIDTH+) (* 0.5 +CUBE-WIDTH+) (* 0.5 +CUBE-WIDTH+))
+
+                   (if (not (eql piece +EMPTY+))
+                     (gl:translate 0.0 (* 0.5 +CUBE-WIDTH+) 0.0)
+                     )
+
+                   (cond
+                     ((eql piece +WHITE_KING+)
+                      (gl:call-list (+ *display-list-start* 1))
+                      )
+                     ((eql piece +BLACK_KING+)
+                      (gl:call-list (+ *display-list-start* 2))
+                      )
+                     ((eql piece +WHITE_PAWN+)
+                      (gl:translate 0.0 (* 0.25 +CUBE-WIDTH+) 0.0)
+                      (gl:call-list (+ *display-list-start* 3))
+                      (gl:translate 0.0 (* -0.25 +CUBE-WIDTH+) 0.0)
+                      )
+                     ((eql piece +BLACK_PAWN+)
+                      (gl:translate 0.0 (* 0.25 +CUBE-WIDTH+) 0.0)
+                      (gl:call-list (+ *display-list-start* 4))
+                      (gl:translate 0.0 (* -0.25 +CUBE-WIDTH+) 0.0)
+                      )
+                     )
+
+                   (if (not (eql piece +EMPTY+))
+                     (gl:translate 0.0 (* -0.5 +CUBE-WIDTH+) 0.0)
+                     )
+                   ) 
+                 )
+        
+        (gl:translate +CUBE-WIDTH+ 0.0 0.0)
+        )
+  (gl:translate (* -1 +COLS+ +CUBE-WIDTH+) 0.0 (* -1 +CUBE-WIDTH+)) 
+  (gl:flush) 
+  (gl:clear-color 0.80 .68 0.38 0) 
   )

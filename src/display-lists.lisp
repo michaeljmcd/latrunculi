@@ -2,16 +2,18 @@
 (in-package #:latrunculi)
 (defvar *display-list-start* 0)
 
+(defconstant +CUBE-WIDTH+ 0.075) 
+(defconstant +PYRAMID-HEIGHT+ 0.15) 
+(defconstant +PYRAMID-WIDTH+ 0.075)
+(defconstant +SPHERE-RADIUS+ 0.0375)
+; keep equal to 1/2 cube-width
+
 ; texture 1 will be the board's texture, 2 will be black and 3 will be white.
 (defun create-display-lists ()
-			       (let ((PINE-TEXTURE 13)
+			       (let ((quad (glu:new-quadric))
+                      (PINE-TEXTURE 13)
 				      (GRANITE-TEXTURE 14)
 				      (MARBLE-TEXTURE 15)
-				      (CUBE-WIDTH 0.075) 
-				      (PYRAMID-HEIGHT 0.15) 
-				      (PYRAMID-WIDTH 0.075)
-				      (SPHERE-RADIUS (* 0.5 0.075))
-                      (quad (glu:new-quadric))
                       (pine-surface (sdl:convert-surface :surface (sdl:load-image (sdl:create-path "pine.bmp" "../img/"))
                                                          :free-p t
                                                          :key-color nil
@@ -105,11 +107,11 @@
 				       ; Face 1:
 
 				       (gl:tex-coord 1.0 0.0)
-				       (gl:Vertex 0 CUBE-WIDTH CUBE-WIDTH)
+				       (gl:Vertex 0 +CUBE-WIDTH+ +CUBE-WIDTH+)
 				       ; P_1
 
 				       (gl:tex-coord 0.0 0.0)
-				       (gl:Vertex 0 CUBE-WIDTH 0)
+				       (gl:Vertex 0 +CUBE-WIDTH+ 0)
 				       ; P_2
 
 				       (gl:tex-coord 1.0 0.0)
@@ -117,21 +119,21 @@
 				       ; P_6
 
 				       (gl:tex-coord 1.0 1.0)
-				       (gl:Vertex 0 0 CUBE-WIDTH)
+				       (gl:Vertex 0 0 +CUBE-WIDTH+)
 				       ; P_5
 
 				       ; Face 2:
 
 				       (gl:tex-coord 1.0 0.0)
-				       (gl:Vertex 0 CUBE-WIDTH 0)
+				       (gl:Vertex 0 +CUBE-WIDTH+ 0)
 				       ; P_2
 
 				       (gl:tex-coord 0.0 0.0)
-				       (gl:Vertex CUBE-WIDTH CUBE-WIDTH 0)
+				       (gl:Vertex +CUBE-WIDTH+ +CUBE-WIDTH+ 0)
 				       ; P_3
 
 				       (gl:tex-coord 0.0 1.0)
-				       (gl:Vertex CUBE-WIDTH 0 0)
+				       (gl:Vertex +CUBE-WIDTH+ 0 0)
 				       ; P_7
 
 				       (gl:tex-coord 1.0 1.0)
@@ -140,64 +142,64 @@
 
 				       ; Face 3:
 				       (gl:tex-coord 0.0 0.0)
-				       (gl:Vertex CUBE-WIDTH CUBE-WIDTH CUBE-WIDTH)
+				       (gl:Vertex +CUBE-WIDTH+ +CUBE-WIDTH+ +CUBE-WIDTH+)
 				       ; P_4
 
 				       (gl:tex-coord 1.0 0.0)
-				       (gl:Vertex CUBE-WIDTH CUBE-WIDTH 0)
+				       (gl:Vertex +CUBE-WIDTH+ +CUBE-WIDTH+ 0)
 				       ; P_3
 
 				       (gl:tex-coord 1.0 1.0)
-				       (gl:Vertex CUBE-WIDTH 0 0)
+				       (gl:Vertex +CUBE-WIDTH+ 0 0)
 				       ; P_7
 
 				       (gl:tex-coord 0.0 1.0)
-				       (gl:Vertex CUBE-WIDTH 0 CUBE-WIDTH)
+				       (gl:Vertex +CUBE-WIDTH+ 0 +CUBE-WIDTH+)
 				       ; P_8 
 
 				       ; Face 4:
 
 				       (gl:tex-coord 0.0 0.0)
-				       (gl:Vertex 0 CUBE-WIDTH CUBE-WIDTH)
+				       (gl:Vertex 0 +CUBE-WIDTH+ +CUBE-WIDTH+)
 				       ; P_1
 
 				       (gl:tex-coord 1.0 0.0)
-				       (gl:Vertex CUBE-WIDTH CUBE-WIDTH CUBE-WIDTH)
+				       (gl:Vertex +CUBE-WIDTH+ +CUBE-WIDTH+ +CUBE-WIDTH+)
 				       ; P_4
 
 				       (gl:tex-coord 1.0 1.0)
-				       (gl:Vertex CUBE-WIDTH 0 CUBE-WIDTH)
+				       (gl:Vertex +CUBE-WIDTH+ 0 +CUBE-WIDTH+)
 				       ; P_8 
 
 				       (gl:tex-coord 0.0 1.0)
-				       (gl:Vertex 0 0 CUBE-WIDTH)
+				       (gl:Vertex 0 0 +CUBE-WIDTH+)
 				       ; P_5
 
 				       ; Face 5:
 
 				       (gl:tex-coord 0.0 0.0)
-				       (gl:Vertex 0 CUBE-WIDTH CUBE-WIDTH)
+				       (gl:Vertex 0 +CUBE-WIDTH+ +CUBE-WIDTH+)
 				       ; P_1
 				       
 				       (gl:tex-coord 1.0 0.0)
-				       (gl:Vertex 0 CUBE-WIDTH 0)
+				       (gl:Vertex 0 +CUBE-WIDTH+ 0)
 				       ; P_2
 
 				       (gl:tex-coord 1.0 1.0)
-				       (gl:Vertex CUBE-WIDTH CUBE-WIDTH 0)
+				       (gl:Vertex +CUBE-WIDTH+ +CUBE-WIDTH+ 0)
 				       ; P_3
 
 				       (gl:tex-coord 0.0 1.0)
-				       (gl:Vertex CUBE-WIDTH CUBE-WIDTH CUBE-WIDTH)
+				       (gl:Vertex +CUBE-WIDTH+ +CUBE-WIDTH+ +CUBE-WIDTH+)
 				       ; P_4
 				       ; Face 6:
 
 				       (gl:tex-coord 0.0 1.0)
-				       (gl:Vertex CUBE-WIDTH 0 CUBE-WIDTH)
+				       (gl:Vertex +CUBE-WIDTH+ 0 +CUBE-WIDTH+)
 				       ; P_8 
 
 				       (gl:tex-coord 1.0 1.0)
-				       (gl:Vertex CUBE-WIDTH 0 0)
+				       (gl:Vertex +CUBE-WIDTH+ 0 0)
 				       ; P_7
 
 				       (gl:tex-coord 1.0 0.0)
@@ -205,7 +207,7 @@
 				       ; P_6
 
 				       (gl:tex-coord 0.0 0.0)
-				       (gl:Vertex 0 0 CUBE-WIDTH)
+				       (gl:Vertex 0 0 +CUBE-WIDTH+)
 				       ; P_5
 				       ; white king display list 
 				       (gl:End) 
@@ -216,67 +218,67 @@
 
 						   (gl:Begin :triangles)
 						    (gl:tex-coord -.5 0.5)
-						    (gl:Vertex (* -0.5 PYRAMID-WIDTH)
+						    (gl:Vertex (* -0.5 +PYRAMID-WIDTH+)
 								 0
-								 (* 0.5 PYRAMID-WIDTH))
+								 (* 0.5 +PYRAMID-WIDTH+))
 
 						    (gl:tex-coord 0.5 1.0)
 						    (gl:Vertex 0
-								 PYRAMID-HEIGHT
+								 +PYRAMID-HEIGHT+
 								 0)
 
 						    (gl:tex-coord 1.0 1.0)
-						    (gl:Vertex (* 0.5 PYRAMID-WIDTH)
+						    (gl:Vertex (* 0.5 +PYRAMID-WIDTH+)
 								 0
-								 (* 0.5 PYRAMID-WIDTH))
+								 (* 0.5 +PYRAMID-WIDTH+))
 						    ; first face.
 
 						    (gl:tex-coord 0.0 0.0)
-						    (gl:Vertex (* 0.5 PYRAMID-WIDTH)
+						    (gl:Vertex (* 0.5 +PYRAMID-WIDTH+)
 								 0
-								 (* 0.5 PYRAMID-WIDTH))
+								 (* 0.5 +PYRAMID-WIDTH+))
 
 						    (gl:tex-coord 1.0 0.0)
 						    (gl:Vertex 0.0
-								 PYRAMID-HEIGHT
+								 +PYRAMID-HEIGHT+
 								 0.0)
 
 						    (gl:tex-coord 1.0 1.0)
-						    (gl:Vertex (* 0.5 PYRAMID-WIDTH)
+						    (gl:Vertex (* 0.5 +PYRAMID-WIDTH+)
 								 0
-								 (* -0.5 PYRAMID-WIDTH))
+								 (* -0.5 +PYRAMID-WIDTH+))
 						    ; second.
 
 						    (gl:tex-coord 0.0 0.0)
-						    (gl:Vertex (* 0.5 PYRAMID-WIDTH)
+						    (gl:Vertex (* 0.5 +PYRAMID-WIDTH+)
 								 0
-								 (* -0.5 PYRAMID-WIDTH)) ; pt. 4
+								 (* -0.5 +PYRAMID-WIDTH+)) ; pt. 4
 
 						    (gl:tex-coord 1.0 0.0)
 						    (gl:Vertex 0.0
-								 PYRAMID-HEIGHT
+								 +PYRAMID-HEIGHT+
 								 0.0) ; pt. 2
 
 						    (gl:tex-coord 1.0 1.0)
-						    (gl:Vertex (* -0.5 PYRAMID-WIDTH)
+						    (gl:Vertex (* -0.5 +PYRAMID-WIDTH+)
 								 0
-								 (* -0.5 PYRAMID-WIDTH)) ; pt. 5
+								 (* -0.5 +PYRAMID-WIDTH+)) ; pt. 5
 						    ; third.
 
 						    (gl:tex-coord 0.0 1.0)
 						    (gl:Vertex 0.0
-								 PYRAMID-HEIGHT
+								 +PYRAMID-HEIGHT+
 								 0.0) ; pt. 2
 
 						    (gl:tex-coord 1.0 0.0)
-						    (gl:Vertex (* -0.5 PYRAMID-WIDTH)
+						    (gl:Vertex (* -0.5 +PYRAMID-WIDTH+)
 								 0
-								 (* -0.5 PYRAMID-WIDTH)) ; pt. 5
+								 (* -0.5 +PYRAMID-WIDTH+)) ; pt. 5
 
 						    (gl:tex-coord 0.0 0.0)
-						    (gl:Vertex (* -0.5 PYRAMID-WIDTH)
+						    (gl:Vertex (* -0.5 +PYRAMID-WIDTH+)
 								 0
-								 (* 0.5 PYRAMID-WIDTH))
+								 (* 0.5 +PYRAMID-WIDTH+))
 						    ; fourth.
 						(gl:End)
 				 (gl:end-list)
@@ -287,67 +289,67 @@
 
 						   (gl:Begin :triangles)
 						    (gl:tex-coord -.5 0.5)
-						    (gl:Vertex (* -0.5 PYRAMID-WIDTH)
+						    (gl:Vertex (* -0.5 +PYRAMID-WIDTH+)
 								 0
-								 (* 0.5 PYRAMID-WIDTH))
+								 (* 0.5 +PYRAMID-WIDTH+))
 
 						    (gl:tex-coord 0.5 1.0)
 						    (gl:Vertex 0
-								 PYRAMID-HEIGHT
+								 +PYRAMID-HEIGHT+
 								 0)
 
 						    (gl:tex-coord 1.0 1.0)
-						    (gl:Vertex (* 0.5 PYRAMID-WIDTH)
+						    (gl:Vertex (* 0.5 +PYRAMID-WIDTH+)
 								 0
-								 (* 0.5 PYRAMID-WIDTH))
+								 (* 0.5 +PYRAMID-WIDTH+))
 						    ; first face.
 
 						    (gl:tex-coord 0.0 0.0)
-						    (gl:Vertex (* 0.5 PYRAMID-WIDTH)
+						    (gl:Vertex (* 0.5 +PYRAMID-WIDTH+)
 								 0
-								 (* 0.5 PYRAMID-WIDTH))
+								 (* 0.5 +PYRAMID-WIDTH+))
 
 						    (gl:tex-coord 1.0 0.0)
 						    (gl:Vertex 0.0
-								 PYRAMID-HEIGHT
+								 +PYRAMID-HEIGHT+
 								 0.0)
 
 						    (gl:tex-coord 1.0 1.0)
-						    (gl:Vertex (* 0.5 PYRAMID-WIDTH)
+						    (gl:Vertex (* 0.5 +PYRAMID-WIDTH+)
 								 0
-								 (* -0.5 PYRAMID-WIDTH))
+								 (* -0.5 +PYRAMID-WIDTH+))
 						    ; second.
 
 						    (gl:tex-coord 0.0 0.0)
-						    (gl:Vertex (* 0.5 PYRAMID-WIDTH)
+						    (gl:Vertex (* 0.5 +PYRAMID-WIDTH+)
 								 0
-								 (* -0.5 PYRAMID-WIDTH)) ; pt. 4
+								 (* -0.5 +PYRAMID-WIDTH+)) ; pt. 4
 
 						    (gl:tex-coord 1.0 0.0)
 						    (gl:Vertex 0.0
-								 PYRAMID-HEIGHT
+								 +PYRAMID-HEIGHT+
 								 0.0) ; pt. 2
 
 						    (gl:tex-coord 1.0 1.0)
-						    (gl:Vertex (* -0.5 PYRAMID-WIDTH)
+						    (gl:Vertex (* -0.5 +PYRAMID-WIDTH+)
 								 0
-								 (* -0.5 PYRAMID-WIDTH)) ; pt. 5
+								 (* -0.5 +PYRAMID-WIDTH+)) ; pt. 5
 						    ; third.
 
 						    (gl:tex-coord 0.0 1.0)
 						    (gl:Vertex 0.0
-								 PYRAMID-HEIGHT
+								 +PYRAMID-HEIGHT+
 								 0.0) ; pt. 2
 
 						    (gl:tex-coord 1.0 0.0)
-						    (gl:Vertex (* -0.5 PYRAMID-WIDTH)
+						    (gl:Vertex (* -0.5 +PYRAMID-WIDTH+)
 								 0
-								 (* -0.5 PYRAMID-WIDTH)) ; pt. 5
+								 (* -0.5 +PYRAMID-WIDTH+)) ; pt. 5
 
 						    (gl:tex-coord 0.0 0.0)
-						    (gl:Vertex (* -0.5 PYRAMID-WIDTH)
+						    (gl:Vertex (* -0.5 +PYRAMID-WIDTH+)
 								 0
-								 (* 0.5 PYRAMID-WIDTH))
+								 (* 0.5 +PYRAMID-WIDTH+))
 						    ; fourth.
 						(gl:End)
 				 (gl:end-list)
@@ -355,13 +357,13 @@
 				 ; White pawn
 				 (gl:new-list (+ *display-list-start* 3) :compile)
 				       (gl:bind-texture :texture-2d MARBLE-TEXTURE)
-				       (glu:Sphere quad SPHERE-RADIUS 10 10)
+				       (glu:Sphere quad +SPHERE-RADIUS+ 10 10)
 				 (gl:end-list)
 
 				 ; black pawn.
 				 (gl:new-list (+ *display-list-start* 4) :compile)
 				       (gl:bind-texture :texture-2d GRANITE-TEXTURE)
-				       (glu:Sphere quad SPHERE-RADIUS 10 10)
+				       (glu:Sphere quad +SPHERE-RADIUS+ 10 10)
 				 (gl:end-list) 
                  )
                    )
