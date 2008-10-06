@@ -1,13 +1,6 @@
 ; Latrunculi
 ; (c) Michael J. McDermott, 2006
 ; Licensed under the GPL v.2
-(push "/home/beowulf/cl_env/lispbuilder-sdl/" asdf:*central-registry*)
-(push "/home/beowulf/cl_env/cl-opengl/" asdf:*central-registry*)
-
-(asdf:operate 'asdf:load-op :cffi)
-(asdf:operate 'asdf:load-op :lispbuilder-sdl)
-(asdf:operate 'asdf:load-op :cl-opengl)
-(asdf:operate 'asdf:load-op :cl-glu)
 
 (defpackage #:latrunculi
   (:use #:common-lisp)

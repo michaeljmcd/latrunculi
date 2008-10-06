@@ -140,8 +140,7 @@
 			 (gl:load-identity)
 
 			 (gl:translate -0.85 0.9 0.0)
-			 (gl:scale 0.1 0.1 0.1)
-			 (gl:color 0.0 0.0 0.0)
+			 (gl:scale 0.1 0.1 0.1) (gl:color 0.0 0.0 0.0)
 
 			 ;(if (eq? mode LOCKED)
 			 ;  (glfDrawSolidString (string-append (cadr player0) "*"))
@@ -175,9 +174,13 @@
                                 (let ((current-space (cons x y))
                                       (piece (aref *board* x y)))
                                   
-                                  (gl:translate (* -0.5 +CUBE-WIDTH+) (* -0.5 +CUBE-WIDTH+) (* -0.5 +CUBE-WIDTH+)) 
+                                  (gl:translate (* -0.5 +CUBE-WIDTH+) 
+                                                (* -0.5 +CUBE-WIDTH+) 
+                                                (* -0.5 +CUBE-WIDTH+)) 
                                   (gl:call-list *display-list-start*)
-                                  (gl:translate (* 0.5 +CUBE-WIDTH+) (* 0.5 +CUBE-WIDTH+) (* 0.5 +CUBE-WIDTH+)) 
+                                  (gl:translate (* 0.5 +CUBE-WIDTH+) 
+                                                (* 0.5 +CUBE-WIDTH+) 
+                                                (* 0.5 +CUBE-WIDTH+)) 
                                   
                                   (if (and (not (eql *current-state* ':animating))
                                            (not (eql (find current-space *fade-out*) nil))
@@ -249,7 +252,6 @@
                                 (gl:translate +CUBE-WIDTH+ 0.0 0.0) 
                                 (gl:color 1.0 1.0 1.0 1.0)
                                 )
-                       
                        (gl:translate (* -1 +COLS+ +CUBE-WIDTH+) 0.0 (* -1 +CUBE-WIDTH+))
                        )
                  (sdl:update-display)
@@ -316,12 +318,10 @@
        )
 
   (if (and (eql button 1)
-           (eql *current-state* ':active-game)
-           )
+           (eql *current-state* ':active-game))
        (let ((viewport (gl:get-integer :viewport))
              (pixel 0))
 
-        (print viewport)
         (color-render)
 
         (setf pixel (gl:read-pixels x
@@ -331,22 +331,21 @@
                         :rgb
                         :unsigned-byte))
 
-        (if (and (not (eql (aref pixel 0) 255))
-                 (null *move-origin*))
-              (setf *move-origin* 
-                    (cons (aref pixel 0)
-                          (aref pixel 1)))
-              )
+        (setf (aref pixel 0) (round (* +ROWS+ (/ (aref pixel 0) 255))))
+        (setf (aref pixel 1) (round (* +COLS+ (/ (aref pixel 1) 255))))
+        ; translate the float back into an integer representation of a cell
+
         (if (and (not (eql (aref pixel 0) 255))
                  (not (null *move-origin*)))
-              (let ((move (cons *move-origin* (cons (aref pixel 0)
-                                                    (aref pixel 1))))
+              (let ((move (cons *move-origin* (list (cons (aref pixel 1)
+                                                          (aref pixel 0)))))
                     (captured-vals nil)
                     (update nil))
+                (print move)
                 (if (move-valid? *board* move +WHITE+)
                   (progn
-                    (setq captured-vals (multiple-value-list (affect-captures (movie-piece *board* move) (cons *player0* *player1*))))
-                    (setq update (update-players captured-vals *players*))
+                    (setq captured-vals (multiple-value-list (affect-captures (move-piece *board* move) (cons *player0* *player1*))))
+                    (setq update (update-players captured-vals (cons *player0* *player1*)))
                     (when (eql (player-color (car update)) +BLACK+)
                       (setq *player0* (car update))
                       (setq *player1* (cdr update))
@@ -383,6 +382,11 @@
                   )
                 )
             )
+
+        (if (and (not (eql (aref pixel 0) 255))
+                 (null *move-origin*))
+              (setf *move-origin* (cons (aref pixel 1) (aref pixel 0)))
+              )
         )
        )
 
@@ -397,7 +401,7 @@
   (gl:disable :lighting)
   (gl:disable :blend)
 
-  (gl:clear-color 1 1 1 0)
+  (gl:clear-color 255 255 255 0)
   (gl:clear :color-buffer-bit :depth-buffer-bit)
 
   (gl:matrix-mode :modelview)
@@ -411,12 +415,20 @@
         do (loop for y from 0 to (- +COLS+ 1)
                  do
                  (let ((piece (aref *board* x y)))
-					   ;(gl:Color3ub i j 0)
-                   (gl:color x y 0) 
+                   (gl:color (/ x +ROWS+)
+                             (/ y +COLS+)
+                             0
+                             0)
                    
-                   (gl:translate (* -0.5 +CUBE-WIDTH+) (* -0.5 +CUBE-WIDTH+) (* -0.5 +CUBE-WIDTH+))
+                   (gl:translate (* -0.5 +CUBE-WIDTH+) 
+                                 (* -0.5 +CUBE-WIDTH+) 
+                                 (* -0.5 +CUBE-WIDTH+))
+
                    (gl:call-list *display-list-start*)
-                   (gl:translate (* 0.5 +CUBE-WIDTH+) (* 0.5 +CUBE-WIDTH+) (* 0.5 +CUBE-WIDTH+))
+
+                   (gl:translate (* 0.5 +CUBE-WIDTH+) 
+                                 (* 0.5 +CUBE-WIDTH+) 
+                                 (* 0.5 +CUBE-WIDTH+))
 
                    (if (not (eql piece +EMPTY+))
                      (gl:translate 0.0 (* 0.5 +CUBE-WIDTH+) 0.0)
@@ -444,12 +456,14 @@
                    (if (not (eql piece +EMPTY+))
                      (gl:translate 0.0 (* -0.5 +CUBE-WIDTH+) 0.0)
                      )
+                   
+                   (gl:translate +CUBE-WIDTH+ 0.0 0.0)
                    ) 
                  )
-        
-        (gl:translate +CUBE-WIDTH+ 0.0 0.0)
+        (gl:translate (* -1 +COLS+ +CUBE-WIDTH+) 0.0 (* -1 +CUBE-WIDTH+)) 
         )
-  (gl:translate (* -1 +COLS+ +CUBE-WIDTH+) 0.0 (* -1 +CUBE-WIDTH+)) 
+
   (gl:flush) 
+  ;(sdl:update-display)
   (gl:clear-color 0.80 .68 0.38 0) 
   )
