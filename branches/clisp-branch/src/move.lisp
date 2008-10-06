@@ -230,7 +230,7 @@
 ; destination (non-inclusive) and check them for a piece.
 (defun jumped? (board delta)
   (let ((start-x (min (caadr delta) (caar delta)))
-        (end-x (max (caadr delta (caar delta))))
+        (end-x (max (caadr delta) (caar delta)))
         (start-y (min (cdadr delta) (cdar delta)))
         (end-y (max (cdadr delta) (cdar delta)))
         (answer nil))

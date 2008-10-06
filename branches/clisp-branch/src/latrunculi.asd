@@ -1,3 +1,6 @@
+(push "/home/beowulf/cl_env/lispbuilder-sdl/" asdf:*central-registry*)
+(push "/home/beowulf/cl_env/cl-opengl/" asdf:*central-registry*)
+
 (defsystem latrunculi
     :name "latrunculi"
     :version "0.1"
@@ -5,6 +8,7 @@
     :author "Michael McDermott"
     :licence "GPL-2"
     :description "The game latrunculi"
+    :depends-on (cffi lispbuilder-sdl cl-opengl cl-glu)
     :components ((:file "main")
                  (:file "ai"
                         :depends-on ("main" "move"))
