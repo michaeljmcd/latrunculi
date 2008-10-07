@@ -236,6 +236,7 @@
                                           (eql (car *slide-space*) current-space)
                                           )
                                    (progn
+                                     (print "animating!")
                                        (let* ((from (car *slide-space*))
                                               (to (cdr *slide-space*))
                                               (delta-x (- (car from) (car to)))
@@ -308,6 +309,22 @@
     )
   )
 
+(defun animate-slide ()
+  (if (< *progress* 1.0)
+    (progn
+      (sdl-cffi::sdl-delay 100)
+      (setf *progress* (+ 0.1 *progress*))
+      (display)
+      (animate-slide)
+      )
+    (progn
+      (setf *board* *next-board*)
+      (setf *next-board* nil)
+      (setf *current-state* ':active-game)
+      )
+    )
+  )
+
 (defun game-mouse-handler (button x y)
   ; 1 button = left
   (when (and (eql button 1)
@@ -335,6 +352,8 @@
         (setf (aref pixel 1) (round (* +COLS+ (/ (aref pixel 1) 255))))
         ; translate the float back into an integer representation of a cell
 
+        (print pixel)
+
         (if (and (not (eql (aref pixel 0) 255))
                  (not (null *move-origin*)))
               (let ((move (cons *move-origin* (list (cons (aref pixel 1)
@@ -361,8 +380,7 @@
                     (setq *slide-space* move)
                     (setq *current-state* ':animating)
 
-                    ; todo animation
-
+                    (animate-slide)
                     (display)
 
                     (if (not (game-over? *ai-board* (cons *player0* *player1*)))

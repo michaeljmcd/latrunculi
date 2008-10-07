@@ -20,6 +20,7 @@
 ;;;_____________________________________________________________________________
 
 ;(in-package :ut)
+(in-package :latrunculi)
 
 (defun delete-all (set1 set2)
     (set-difference set2 set1))
