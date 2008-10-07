@@ -12,7 +12,7 @@
     :components ((:file "main")
                  (:file "ai"
                         :depends-on ("main" "move"))
-                 (:file "copy_obj")
+                 (:file "copy_obj" :depends-on ("main"))
                  (:file "display-lists"
                         :depends-on ("main"))
                  (:file "gfx"

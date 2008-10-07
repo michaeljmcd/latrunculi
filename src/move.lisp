@@ -225,17 +225,14 @@
 		      ))
 ; Given a move delta, unmake-move reverses the move.
 
-; returns whether or not a given path includes some piece between the start and end points
-; We need to get a list of all the spaces in between the start and the 
-; destination (non-inclusive) and check them for a piece.
 (defun jumped? (board delta)
   (let ((start-x (min (caadr delta) (caar delta)))
         (end-x (max (caadr delta) (caar delta)))
         (start-y (min (cdadr delta) (cdar delta)))
         (end-y (max (cdadr delta) (cdar delta)))
         (answer nil))
-    (loop for i from start-x to end-x
-              do (loop for j from start-y to end-y
+    (loop for i from (+ 1 start-x) to end-x
+              do (loop for j from (+ 1 start-y) to end-y
                     do (if (not (eql (aref board i j) +EMPTY+))
                          (setq answer t)
                          )
@@ -244,6 +241,9 @@
     answer
     )
   )
+; returns whether or not a given path includes some piece between the start and end points
+; We need to get a list of all the spaces in between the start and the 
+; destination (non-inclusive) and check them for a piece.
 
 (defun move-valid? (board delta side)
 		      (let ((space (get-cell board (car delta))) ; move's origin.  
@@ -254,18 +254,18 @@
 			    (delta-y (abs (- (cdr (car (cdr delta)))
 					     (cdr (car delta)))
 					  )) ; The absolute value of the change in the y-direction
-			    ) 
-			(if (or (eql space +EMPTY+)   ; trying to move an empty space
-				(not (eql end +EMPTY+)) ; trying to move to an occupied space (and (> delta-x 0)
-				(and (> delta-y 0) ; trying to move diagonally.
-				     (> delta-x 0))
-				(not (eql side (mod space 2))) ; trying to move an opposing piece.
-				(jumped? board delta) 	; jumped a piece.
-			      )
-			  nil
-			  t
-			  )
-		      ))
+                ) 
+                (if (or (eql space +EMPTY+)   ; trying to move an empty space
+                        (not (eql end +EMPTY+)) ; trying to move to an occupied space (and (> delta-x 0)
+                        (and (> delta-y 0) ; trying to move diagonally.
+                             (> delta-x 0))
+                        (not (eql side (mod space 2))) ; trying to move an opposing piece.
+                        (jumped? board delta) 	; jumped a piece.
+                        )
+                  nil
+                  t
+                  )
+                ))
 ; Given a move, delta, using the same form as above, validate-move determines whether or not the given move is legal.
 ; This is needed to check user moves, though not AI moves (because the move generator will only generate legal moves
 ; anyway). A move is illegal under the following conditions:
