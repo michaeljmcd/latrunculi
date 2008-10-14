@@ -1,0 +1,22 @@
+Port TODO:
+-gfx is a mess; revamp/rewrite it. Most likely, targa will go away by using SDL with OpenGL and allowing
+ SDL to handle windowing, controls, and text
+-savegame will, most likely, be rewritten. This "module" was experimental anyway, but the idea will remain:
+ simply write out the read syntax for the game's data structures
+-rewrite readme
+-rewrite makefile
+-refactor some functions (in AI especially) to avoid let*
+-merge common code in display/color-render
+
+The porting here is a lot of work, but it is, in my estimation, necessary as Chicken does not support the
+requisite bindings and Ocean is too far away to be useful. The requisite bindings seem to be there and
+the work should progress quickly. Moreover, the code revamp is good as a lot of these areas were pretty
+hacked up anyway (see: gfx).
+
+Main TODO:
+-Try to make the delta of the progress during a slide a function of the overall length of the move.
+-Implement random move selection.
+-Playtesting AI to tune constants.
+-Add text showing player's names to the screen.
+-Add text showing whether the AI is thinking.
+-Add turn indicator.
