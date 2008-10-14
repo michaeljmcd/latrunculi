@@ -1,6 +1,4 @@
 Port TODO:
--First, finish porting main, move, and ai. 
--Move each of these into a LISP package.
 -gfx is a mess; revamp/rewrite it. Most likely, targa will go away by using SDL with OpenGL and allowing
  SDL to handle windowing, controls, and text
 -savegame will, most likely, be rewritten. This "module" was experimental anyway, but the idea will remain:
@@ -8,6 +6,7 @@ Port TODO:
 -rewrite readme
 -rewrite makefile
 -refactor some functions (in AI especially) to avoid let*
+-merge common code in display/color-render
 
 The porting here is a lot of work, but it is, in my estimation, necessary as Chicken does not support the
 requisite bindings and Ocean is too far away to be useful. The requisite bindings seem to be there and
