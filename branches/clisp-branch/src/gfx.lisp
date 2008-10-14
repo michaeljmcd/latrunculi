@@ -187,7 +187,7 @@
                                            )
                                     (gl:color 1.0 1.0 1.0 *alpha*)
                                     ) 
-                                  
+
                                   (if (and (not (eql *current-state* ':animating))
                                            (not (eql *slide-space* nil))
                                            (eql (car *slide-space*) current-space))
@@ -231,12 +231,11 @@
                                    (gl:translate 0.0 ( * -0.5 +CUBE-WIDTH+) 0.0)
                                    )
 
-                                 (if (and (not (eql *current-state* ':active-game))
+                                 (if (and (eql *current-state* ':animating)
                                           (not (eql nil *slide-space*))
                                           (eql (car *slide-space*) current-space)
                                           )
                                    (progn
-                                     (print "animating!")
                                        (let* ((from (car *slide-space*))
                                               (to (cdr *slide-space*))
                                               (delta-x (- (car from) (car to)))
@@ -352,15 +351,12 @@
         (setf (aref pixel 1) (round (* +COLS+ (/ (aref pixel 1) 255))))
         ; translate the float back into an integer representation of a cell
 
-        (print pixel)
-
         (if (and (not (eql (aref pixel 0) 255))
                  (not (null *move-origin*)))
               (let ((move (cons *move-origin* (list (cons (aref pixel 1)
                                                           (aref pixel 0)))))
                     (captured-vals nil)
                     (update nil))
-                (print move)
                 (if (move-valid? *board* move +WHITE+)
                   (progn
                     (setq captured-vals (multiple-value-list (affect-captures (move-piece *board* move) (cons *player0* *player1*))))
@@ -379,6 +375,8 @@
                     (setq *ai-board* (car captured-vals))
                     (setq *slide-space* move)
                     (setq *current-state* ':animating)
+
+                    (break)
 
                     (animate-slide)
                     (display)
