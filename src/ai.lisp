@@ -56,15 +56,6 @@
 ; Where mobility in general is the number of moves possible in the position and the king's mobility is the number of 
 ; moves available to the king.
 
-(defun generate-piece-moves (pt board)
-		(let ((down (generate-vertical-down board pt (cons (car pt) (+ 1 (cdr pt))) '()))
-              (up (generate-vertical-up board pt (cons (car pt) (- (cdr pt) 1)) '()))
-              (left (generate-horizontal-left board pt (cons (- (car pt) 1) (cdr pt)) '()))
-              (right (generate-horizontal-right board pt (cons (+ (car pt) 1) (cdr pt)) '())))
-        (remove nil (append right left down up))
-		))
-; takes the space (pt) of a piece and generates all moves for it.
-
 (defun game-over? (board players)
      (let ((king1 (find-if #'contains-king? (piece-list (car players)))) 
            (king2 (find-if #'contains-king?  (piece-list (cdr players))))
@@ -151,6 +142,15 @@
 ; Board is the current state, origin is the space of origin for this move, curr
 ; is the current set of coordinates and moves is the list of moves generated so far.
 ; The spaces are indexed starting at zero. 
+
+(defun generate-piece-moves (pt board)
+		(let ((down (generate-vertical-down board pt (cons (car pt) (+ 1 (cdr pt))) '()))
+              (up (generate-vertical-up board pt (cons (car pt) (- (cdr pt) 1)) '()))
+              (left (generate-horizontal-left board pt (cons (- (car pt) 1) (cdr pt)) '()))
+              (right (generate-horizontal-right board pt (cons (+ (car pt) 1) (cdr pt)) '())))
+        (remove nil (append right left down up))
+		))
+; takes the space (pt) of a piece and generates all moves for it.
 
 (defun generate-vertical-down (board origin curr moves)
 				 (if (or (eq (cdr curr) +ROWS+)
