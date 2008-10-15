@@ -9,7 +9,6 @@
 ; recognized values are:
 ; :main-menu - the game is showing the mainmenu
 ; :active-game - there is an ongoing game
-; :animating - a move has been made already, 
 ; :game-over - game is over, but still showing the board
 ;   but the user is not allowed to click yet, as the animation is not done
 
@@ -17,9 +16,7 @@
 (defvar *camera-zoom* 1.6875)
 (defvar *camera-coordinates* (vector -0.4 0.0 0.0))
 (defvar *fade-out* '())
-(defvar *slide-space* '())  ; will hold a pair of tuples describing how the piece slides from one locale to another.
 (defvar *alpha* 1.0)
-(defvar *progress* 0.0)
 (defvar *camera-angle-delta* 1) ; the amount a camera angle will change (in degrees) with each key press.
 (defvar *move-origin* '()) 	 ; from and to data in the current move.
 (defvar *ai-board* nil)
@@ -59,10 +56,10 @@
         )
   )
 
-(defun display ()
+(defun display (&optional (progress 0.0) (slide-space nil))
   (case *current-state*
     (:main-menu (menu-display))
-    (:active-game (game-display))
+    (:active-game (game-display progress))
     )
   )
 
@@ -124,10 +121,10 @@
 			    (create-display-lists)
 			  )
 
-(defun game-display ()
-  (gl:clear :color-buffer-bit :depth-buffer-bit)
-
-			 (gl:matrix-mode :projection)
+(defun game-display (&optional (progress 0.0) (slide-space nil))
+  (gl:clear :color-buffer-bit :depth-buffer-bit) 
+  
+  (gl:matrix-mode :projection)
 			 (gl:push-matrix)
 			 (gl:load-identity)
 			 (gl:ortho 0 0 0 0 -1 1)
@@ -183,22 +180,18 @@
                                                 (* 0.5 +CUBE-WIDTH+)) 
                                   
                                   (if (and (not (eql *current-state* ':animating))
-                                           (not (eql (find current-space *fade-out*) nil))
-                                           )
+                                           (not (eql (find current-space *fade-out*) nil)))
                                     (gl:color 1.0 1.0 1.0 *alpha*)
                                     ) 
 
-                                  (if (and (not (eql *current-state* ':animating))
-                                           (not (eql *slide-space* nil))
-                                           (eql (car *slide-space*) current-space))
+                                  (if (and (not (equal slide-space nil))
+                                                (equal (car slide-space) current-space))
                                     (progn
-                                      (let* ((from (car *slide-space*))
-                                             (to (cdr *slide-space*))
-                                             (delta-x (- (car from) (car to)))
-                                             (delta-y (- (cdr from) (cdr to))))
+                                      (let ((delta-x (- (caar slide-space) (caadr slide-space)))
+                                            (delta-y (- (cdar slide-space) (cdadr slide-space))))
                                          (if (not (eql delta-x 0)) ; if the move is horizontal
-                                           (gl:translate (* -1 *progress* +CUBE-WIDTH+ delta-x) 0.0 0.0)
-                                           (gl:translate 0.0 0.0 (* *progress* +CUBE-WIDTH+ delta-y))
+                                           (gl:translate (* -1 progress +CUBE-WIDTH+ delta-x) 0.0 0.0)
+                                           (gl:translate 0.0 0.0 (* progress +CUBE-WIDTH+ delta-y))
                                            )
                                          )
                                        )
@@ -231,18 +224,14 @@
                                    (gl:translate 0.0 ( * -0.5 +CUBE-WIDTH+) 0.0)
                                    )
 
-                                 (if (and (eql *current-state* ':animating)
-                                          (not (eql nil *slide-space*))
-                                          (eql (car *slide-space*) current-space)
-                                          )
+                                 (if (and (not (equal slide-space nil))
+                                          (equal (car slide-space) current-space))
                                    (progn
-                                       (let* ((from (car *slide-space*))
-                                              (to (cdr *slide-space*))
-                                              (delta-x (- (car from) (car to)))
-                                              (delta-y (- (cdr from) (cdr to))))
+                                       (let ((delta-x (- (caar slide-space) (caadr slide-space)))
+                                             (delta-y (- (cdar slide-space) (cdadr slide-space))))
                                          (if (not (eql delta-x 0)) ; if the move is horizontal
-                                           (gl:translate (* *progress* +CUBE-WIDTH+ delta-x) 0.0 0.0)
-                                           (gl:translate 0.0 0.0 (* -1 *progress* +CUBE-WIDTH+ delta-y))
+                                           (gl:translate (* progress +CUBE-WIDTH+ delta-x) 0.0 0.0)
+                                           (gl:translate 0.0 0.0 (* -1 progress +CUBE-WIDTH+ delta-y))
                                            )
                                          )
                                        )
@@ -308,33 +297,31 @@
     )
   )
 
-(defun animate-slide ()
-  (if (< *progress* 1.0)
+(defun animate-slide (progress slide-space)
+  (if (< progress 1.0)
     (progn
       (sdl-cffi::sdl-delay 100)
-      (setf *progress* (+ 0.1 *progress*))
-      (display)
-      (animate-slide)
+      (display progress slide-space)
+      (animate-slide (+ progress 0.10) slide-space)
       )
     (progn
       (setf *board* *next-board*)
       (setf *next-board* nil)
-      (setf *current-state* ':active-game)
       )
     )
   )
 
 (defun game-mouse-handler (button x y)
   ; 1 button = left
-  (when (and (eql button 1)
-             (eql *current-state* ':main-menu))
+  (when (and (equal button 1)
+             (equal *current-state* ':main-menu))
        (setq *current-state* ':active-game) 
        (initialize-game) 
        (display)
        )
 
-  (if (and (eql button 1)
-           (eql *current-state* ':active-game))
+  (if (and (equal button 1)
+           (equal *current-state* ':active-game))
        (let ((viewport (gl:get-integer :viewport))
              (pixel 0))
 
@@ -373,12 +360,8 @@
 
                     (setq *next-board* (move-piece *board* move))
                     (setq *ai-board* (car captured-vals))
-                    (setq *slide-space* move)
-                    (setq *current-state* ':animating)
 
-                    (break)
-
-                    (animate-slide)
+                    (animate-slide 0.0 move)
                     (display)
 
                     (if (not (game-over? *ai-board* (cons *player0* *player1*)))
