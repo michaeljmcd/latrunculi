@@ -4,7 +4,6 @@
 (in-package #:latrunculi)
 
 (defun sub1 (num) (- num 1))
-(defun add1 (num) (+ num 1))
 
 (defun get-cell (board coor)
 		   (if (or (>= (cdr coor) +ROWS+)
