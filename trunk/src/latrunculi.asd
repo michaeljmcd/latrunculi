@@ -16,9 +16,9 @@
                  (:file "display-lists"
                         :depends-on ("main"))
                  (:file "gfx"
-                        :depends-on ("display-lists" "main"))
+                        :depends-on ("display-lists" "main" "ai"))
                  (:file "move"
-                        :depends-on ("main"))
+                        :depends-on ("main" "copy_obj"))
                  (:file "savegame"
                         :depends-on ("main"))
                  )

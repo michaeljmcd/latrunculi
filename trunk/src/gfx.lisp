@@ -10,17 +10,12 @@
 ; :main-menu - the game is showing the mainmenu
 ; :active-game - there is an ongoing game
 ; :game-over - game is over, but still showing the board
-;   but the user is not allowed to click yet, as the animation is not done
 
 (defvar *camera-angle* 320)
 (defvar *camera-zoom* 1.6875)
 (defvar *camera-coordinates* (vector -0.4 0.0 0.0))
-(defvar *fade-out* '())
-(defvar *alpha* 1.0)
 (defvar *camera-angle-delta* 1) ; the amount a camera angle will change (in degrees) with each key press.
 (defvar *move-origin* '()) 	 ; from and to data in the current move.
-(defvar *ai-board* nil)
-(defvar *next-board* nil)
 
 (defun start () 
   (sdl:with-init () 
@@ -110,141 +105,135 @@
   )
 
 (defun initialize-game ()
-			    (gl:depth-func :less)
-			    (gl:matrix-mode :projection)
-			    (gl:scale *camera-zoom* *camera-zoom* *camera-zoom*)
-			    (gl:rotate *camera-angle* 1.0 0.0 0.0)
-			    ; Set the initial camera zoom and rotation.
+  (gl:depth-func :less)
+  (gl:matrix-mode :projection)
+  (gl:scale *camera-zoom* *camera-zoom* *camera-zoom*)
+  (gl:rotate *camera-angle* 1.0 0.0 0.0)
+  ; Set the initial camera zoom and rotation.
 
-			    (gl:clear-color 0.80 0.68 0.38 0) 
+  (gl:clear-color 0.80 0.68 0.38 0) 
 
-			    (create-display-lists)
-			  )
+  (create-display-lists) 
+  )
 
-(defun game-display (&optional (progress 0.0) (slide-space nil))
+(defun game-display (&optional (progress 0.0) (slide-space nil) (fade-out nil) (alpha 1.0))
   (gl:clear :color-buffer-bit :depth-buffer-bit) 
   
   (gl:matrix-mode :projection)
-			 (gl:push-matrix)
-			 (gl:load-identity)
-			 (gl:ortho 0 0 0 0 -1 1)
-			 (gl:matrix-mode :modelview)
-			 (gl:push-matrix)
-			 (gl:load-identity)
+  (gl:push-matrix)
+  (gl:load-identity)
+  (gl:ortho 0 0 0 0 -1 1)
+  (gl:matrix-mode :modelview)
+  (gl:push-matrix)
+  (gl:load-identity)
 
-			 (gl:disable :texture-2d)
-			 (gl:color 1.0 1.0 0.0)
-			 (gl:load-identity)
+  (gl:disable :texture-2d)
+  (gl:color 1.0 1.0 0.0)
+  (gl:load-identity)
 
-			 (gl:translate -0.85 0.9 0.0)
-			 (gl:scale 0.1 0.1 0.1) (gl:color 0.0 0.0 0.0)
+  (gl:translate -0.85 0.9 0.0)
+  (gl:scale 0.1 0.1 0.1) (gl:color 0.0 0.0 0.0)
 
-			 ;(if (eq? mode LOCKED)
-			 ;  (glfDrawSolidString (string-append (cadr player0) "*"))
-			 ;  (glfDrawSolidString (cadr player0))
-			 ;  )
+  ; print text
 
-			 (gl:translate 0.0 -18.0 0.0)
-			 (gl:color 0.0 0.0 0.0) 
-			 
-			 ;(if (not (eq? mode LOCKED))
-			 ;  (glfDrawSolidString (string-append (cadr player1) "*"))
-			 ;  (glfDrawSolidString (cadr player1))
-			 ;  )
+  (gl:translate 0.0 -18.0 0.0)
+  (gl:color 0.0 0.0 0.0) 
 
-			 (gl:enable :texture-2d)
+  ; print text
 
-			 (gl:matrix-mode :projection)
-			 (gl:pop-matrix)
-			 (gl:matrix-mode :modelview)
-			 (gl:pop-matrix)
- 
-                 (gl:matrix-mode :modelview) 
-                 (gl:load-identity)
-                 (gl:translate (aref *camera-coordinates* 0)
-                               (aref *camera-coordinates* 1) 
-                               (aref *camera-coordinates* 2)) 
+  (gl:enable :texture-2d)
+
+  (gl:matrix-mode :projection)
+  (gl:pop-matrix)
+  (gl:matrix-mode :modelview)
+  (gl:pop-matrix)
+  
+  (gl:matrix-mode :modelview) 
+  (gl:load-identity)
+  (gl:translate (aref *camera-coordinates* 0)
+                (aref *camera-coordinates* 1) 
+                (aref *camera-coordinates* 2)) 
+  
+  (loop for x from 0 to (- +ROWS+ 1)
+        do (loop for y from 0 to (- +COLS+ 1)
+                 do
+                 (let ((current-space (cons x y))
+                       (piece (aref *board* x y)))
+                   
+                   (gl:translate (* -0.5 +CUBE-WIDTH+) 
+                                 (* -0.5 +CUBE-WIDTH+) 
+                                 (* -0.5 +CUBE-WIDTH+)) 
+                   (gl:call-list *display-list-start*)
+                   (gl:translate (* 0.5 +CUBE-WIDTH+) 
+                                 (* 0.5 +CUBE-WIDTH+) 
+                                 (* 0.5 +CUBE-WIDTH+)) 
+                   
+                   (if (and (not (eql *current-state* ':animating))
+                            (not (eql (find current-space fade-out) nil)))
+                     (gl:color 1.0 1.0 1.0 alpha)
+                     ) 
+
+                   (if (and (not (equal slide-space nil))
+                                 (equal (car slide-space) current-space))
+                     (progn
+                       (let ((delta-x (- (caar slide-space) (caadr slide-space)))
+                             (delta-y (- (cdar slide-space) (cdadr slide-space))))
+                          (if (not (eql delta-x 0)) ; if the move is horizontal
+                            (gl:translate (* -1 progress +CUBE-WIDTH+ delta-x) 0.0 0.0)
+                            (gl:translate 0.0 0.0 (* progress +CUBE-WIDTH+ delta-y))
+                            )
+                          )
+                        )
+                      )
+                  ; Assumes a correct move (i.e. no diagonal)
+                  (if (not (eql piece +EMPTY+))
+                    (gl:translate 0.0 ( * 0.5 +CUBE-WIDTH+) 0.0)
+                    )
+
+                  (cond 
+                    ((eql piece +WHITE_KING+)
+                     (gl:call-list (+ *display-list-start* 1))
+                      )
+                    ((eql piece +BLACK_KING+)
+                     (gl:call-list (+ *display-list-start* 2))
+                      )
+                    ((eql piece +WHITE_PAWN+)
+                     (gl:translate 0.0 (* 0.25 +CUBE-WIDTH+) 0.0)
+                     (gl:call-list (+ *display-list-start* 3))
+                     (gl:translate 0.0 (* -0.25 +CUBE-WIDTH+) 0.0)
+                     )
+                    ((eql piece +BLACK_PAWN+)
+                     (gl:translate 0.0 (* 0.25 +CUBE-WIDTH+) 0.0)
+                     (gl:call-list (+ *display-list-start* 4))
+                     (gl:translate 0.0 (* -0.25 +CUBE-WIDTH+) 0.0)
+                     )
+                    )
+
+                  (if (not (eql piece +EMPTY+))
+                    (gl:translate 0.0 ( * -0.5 +CUBE-WIDTH+) 0.0)
+                    )
+
+                  (if (and (not (equal slide-space nil))
+                           (equal (car slide-space) current-space))
+                    (progn
+                        (let ((delta-x (- (caar slide-space) (caadr slide-space)))
+                              (delta-y (- (cdar slide-space) (cdadr slide-space))))
+                          (if (not (eql delta-x 0)) ; if the move is horizontal
+                            (gl:translate (* progress +CUBE-WIDTH+ delta-x) 0.0 0.0)
+                            (gl:translate 0.0 0.0 (* -1 progress +CUBE-WIDTH+ delta-y))
+                            )
+                          )
+                        )
+                    )
+                  )
                  
-                 (loop for x from 0 to (- +ROWS+ 1)
-                       do (loop for y from 0 to (- +COLS+ 1)
-                                do
-                                (let ((current-space (cons x y))
-                                      (piece (aref *board* x y)))
-                                  
-                                  (gl:translate (* -0.5 +CUBE-WIDTH+) 
-                                                (* -0.5 +CUBE-WIDTH+) 
-                                                (* -0.5 +CUBE-WIDTH+)) 
-                                  (gl:call-list *display-list-start*)
-                                  (gl:translate (* 0.5 +CUBE-WIDTH+) 
-                                                (* 0.5 +CUBE-WIDTH+) 
-                                                (* 0.5 +CUBE-WIDTH+)) 
-                                  
-                                  (if (and (not (eql *current-state* ':animating))
-                                           (not (eql (find current-space *fade-out*) nil)))
-                                    (gl:color 1.0 1.0 1.0 *alpha*)
-                                    ) 
-
-                                  (if (and (not (equal slide-space nil))
-                                                (equal (car slide-space) current-space))
-                                    (progn
-                                      (let ((delta-x (- (caar slide-space) (caadr slide-space)))
-                                            (delta-y (- (cdar slide-space) (cdadr slide-space))))
-                                         (if (not (eql delta-x 0)) ; if the move is horizontal
-                                           (gl:translate (* -1 progress +CUBE-WIDTH+ delta-x) 0.0 0.0)
-                                           (gl:translate 0.0 0.0 (* progress +CUBE-WIDTH+ delta-y))
-                                           )
-                                         )
-                                       )
-                                     )
-								 ; Assumes a correct move (i.e. no diagonal)
-                                 (if (not (eql piece +EMPTY+))
-                                   (gl:translate 0.0 ( * 0.5 +CUBE-WIDTH+) 0.0)
-                                   )
-
-                                 (cond 
-                                   ((eql piece +WHITE_KING+)
-                                    (gl:call-list (+ *display-list-start* 1))
-                                     )
-                                   ((eql piece +BLACK_KING+)
-                                    (gl:call-list (+ *display-list-start* 2))
-                                     )
-                                   ((eql piece +WHITE_PAWN+)
-                                    (gl:translate 0.0 (* 0.25 +CUBE-WIDTH+) 0.0)
-                                    (gl:call-list (+ *display-list-start* 3))
-                                    (gl:translate 0.0 (* -0.25 +CUBE-WIDTH+) 0.0)
-                                    )
-                                   ((eql piece +BLACK_PAWN+)
-                                    (gl:translate 0.0 (* 0.25 +CUBE-WIDTH+) 0.0)
-                                    (gl:call-list (+ *display-list-start* 4))
-                                    (gl:translate 0.0 (* -0.25 +CUBE-WIDTH+) 0.0)
-                                    )
-                                   )
-
-                                 (if (not (eql piece +EMPTY+))
-                                   (gl:translate 0.0 ( * -0.5 +CUBE-WIDTH+) 0.0)
-                                   )
-
-                                 (if (and (not (equal slide-space nil))
-                                          (equal (car slide-space) current-space))
-                                   (progn
-                                       (let ((delta-x (- (caar slide-space) (caadr slide-space)))
-                                             (delta-y (- (cdar slide-space) (cdadr slide-space))))
-                                         (if (not (eql delta-x 0)) ; if the move is horizontal
-                                           (gl:translate (* progress +CUBE-WIDTH+ delta-x) 0.0 0.0)
-                                           (gl:translate 0.0 0.0 (* -1 progress +CUBE-WIDTH+ delta-y))
-                                           )
-                                         )
-                                       )
-                                   )
-                                 )
-                                
-                                (gl:translate +CUBE-WIDTH+ 0.0 0.0) 
-                                (gl:color 1.0 1.0 1.0 1.0)
-                                )
-                       (gl:translate (* -1 +COLS+ +CUBE-WIDTH+) 0.0 (* -1 +CUBE-WIDTH+))
-                       )
-                 (sdl:update-display)
-               )
+                 (gl:translate +CUBE-WIDTH+ 0.0 0.0) 
+                 (gl:color 1.0 1.0 1.0 1.0)
+                 )
+        (gl:translate (* -1 +COLS+ +CUBE-WIDTH+) 0.0 (* -1 +CUBE-WIDTH+))
+        )
+  (sdl:update-display) 
+  )
 
 (defun game-keyboard-handler (key)
   (if (eql *current-state* ':active-game)
@@ -304,10 +293,7 @@
       (display progress slide-space)
       (animate-slide (+ progress 0.10) slide-space)
       )
-    (progn
-      (setf *board* *next-board*)
-      (setf *next-board* nil)
-      )
+     t
     )
   )
 
@@ -358,13 +344,12 @@
                       (setq *player0* (cdr update))
                       )
 
-                    (setq *next-board* (move-piece *board* move))
-                    (setq *ai-board* (car captured-vals))
-
                     (animate-slide 0.0 move)
+
+                    (setq *board* (car captured-vals))
                     (display)
 
-                    (if (not (game-over? *ai-board* (cons *player0* *player1*)))
+                    (if (not (game-over? *board* (cons *player0* *player1*)))
                       (progn
                         ; get AI move
                         )
@@ -384,8 +369,8 @@
 
         (if (and (not (eql (aref pixel 0) 255))
                  (null *move-origin*))
-              (setf *move-origin* (cons (aref pixel 1) (aref pixel 0)))
-              )
+          (setf *move-origin* (cons (aref pixel 1) (aref pixel 0)))
+          )
         )
        )
 

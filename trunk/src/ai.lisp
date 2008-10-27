@@ -161,7 +161,7 @@
 				       moves
 				       (generate-vertical-down board 
 							       origin 
-							       (cons (car curr) (add1 (cdr curr))) 
+							       (cons (car curr) (+ 1 (cdr curr))) 
 							       (cons (cons origin (list curr)) moves))
 				       )
 			   	     )
@@ -175,7 +175,7 @@
 				       moves
 				       (generate-horizontal-right board 
 								  origin 
-								  (cons (add1 (car curr))
+								  (cons (+ 1 (car curr))
 									(cdr curr)) 
 								  (cons (cons origin (list curr)) moves))
 				       )
