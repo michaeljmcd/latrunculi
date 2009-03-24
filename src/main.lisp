@@ -5,6 +5,9 @@
 (defpackage #:latrunculi
   (:use #:common-lisp)
   (:export #:start)
+  (:export #:animate-slide)
+  (:export #:game-mouse-handler)
+  (:export #:game-display)
   )
 
 (in-package #:latrunculi)
