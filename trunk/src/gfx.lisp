@@ -54,7 +54,7 @@
 (defun display (&optional (progress 0.0) (slide-space nil))
   (case *current-state*
     (:main-menu (menu-display))
-    (:active-game (game-display progress))
+    (:active-game (game-display progress slide-space))
     )
   )
 
@@ -64,8 +64,7 @@
                                            :key-color nil
                                            :surface-alpha 255
                                            ))
-        (menu-texture (first (gl:gen-textures 1)))
-        )
+        (menu-texture (first (gl:gen-textures 1))))
     (gl:bind-texture :texture-2d menu-texture)
     (gl:tex-parameter :texture-2d :texture-min-filter :linear)
     (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
@@ -170,44 +169,35 @@
                    
                    (if (and (not (eql *current-state* ':animating))
                             (not (eql (find current-space fade-out) nil)))
-                     (gl:color 1.0 1.0 1.0 alpha)
-                     ) 
+                     (gl:color 1.0 1.0 1.0 alpha)) 
 
                    (if (and (not (equal slide-space nil))
-                                 (equal (car slide-space) current-space))
+                            (equal (car slide-space) current-space))
                      (progn
                        (let ((delta-x (- (caar slide-space) (caadr slide-space)))
                              (delta-y (- (cdar slide-space) (cdadr slide-space))))
-                          (if (not (eql delta-x 0)) ; if the move is horizontal
-                            (gl:translate (* -1 progress +CUBE-WIDTH+ delta-x) 0.0 0.0)
-                            (gl:translate 0.0 0.0 (* progress +CUBE-WIDTH+ delta-y))
-                            )
+                         (gl:translate (* -1.0 progress +CUBE-WIDTH+ delta-x) 0.0 0.0)
+                         (gl:translate 0.0 0.0 (* progress +CUBE-WIDTH+ delta-y))
                           )
-                        )
-                      )
+                        ))
+                   
                   ; Assumes a correct move (i.e. no diagonal)
                   (if (not (eql piece +EMPTY+))
-                    (gl:translate 0.0 ( * 0.5 +CUBE-WIDTH+) 0.0)
-                    )
+                    (gl:translate 0.0 ( * 0.5 +CUBE-WIDTH+) 0.0))
 
                   (cond 
                     ((eql piece +WHITE_KING+)
-                     (gl:call-list (+ *display-list-start* 1))
-                      )
+                     (gl:call-list (+ *display-list-start* 1)))
                     ((eql piece +BLACK_KING+)
-                     (gl:call-list (+ *display-list-start* 2))
-                      )
+                     (gl:call-list (+ *display-list-start* 2)))
                     ((eql piece +WHITE_PAWN+)
                      (gl:translate 0.0 (* 0.25 +CUBE-WIDTH+) 0.0)
                      (gl:call-list (+ *display-list-start* 3))
-                     (gl:translate 0.0 (* -0.25 +CUBE-WIDTH+) 0.0)
-                     )
+                     (gl:translate 0.0 (* -0.25 +CUBE-WIDTH+) 0.0))
                     ((eql piece +BLACK_PAWN+)
                      (gl:translate 0.0 (* 0.25 +CUBE-WIDTH+) 0.0)
                      (gl:call-list (+ *display-list-start* 4))
-                     (gl:translate 0.0 (* -0.25 +CUBE-WIDTH+) 0.0)
-                     )
-                    )
+                     (gl:translate 0.0 (* -0.25 +CUBE-WIDTH+) 0.0)))
 
                   (if (not (eql piece +EMPTY+))
                     (gl:translate 0.0 ( * -0.5 +CUBE-WIDTH+) 0.0)
@@ -218,14 +208,12 @@
                     (progn
                         (let ((delta-x (- (caar slide-space) (caadr slide-space)))
                               (delta-y (- (cdar slide-space) (cdadr slide-space))))
-                          (if (not (eql delta-x 0)) ; if the move is horizontal
-                            (gl:translate (* progress +CUBE-WIDTH+ delta-x) 0.0 0.0)
-                            (gl:translate 0.0 0.0 (* -1 progress +CUBE-WIDTH+ delta-y))
-                            )
+                          (gl:translate (* progress +CUBE-WIDTH+ delta-x) 0.0d0 0.0d0)
+                          (gl:translate 0.0d0 0.0d0 (* -1.0 progress +CUBE-WIDTH+ delta-y))
                           )
                         )
                     )
-                  )
+                  ) 
                  
                  (gl:translate +CUBE-WIDTH+ 0.0 0.0) 
                  (gl:color 1.0 1.0 1.0 1.0)
