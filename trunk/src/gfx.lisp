@@ -17,6 +17,8 @@
 (defvar *camera-angle-delta* 1) ; the amount a camera angle will change (in degrees) with each key press.
 (defvar *move-origin* '()) 	 ; from and to data in the current move.
 
+;(defmacro translate-circular (x y z))
+
 (defun start () 
   (sdl:with-init () 
     (sdl:window 1024 768 
@@ -156,7 +158,7 @@
   (loop for x from 0 to (- +ROWS+ 1)
         do (loop for y from 0 to (- +COLS+ 1)
                  do
-                 (let ((current-space (cons x y))
+                 (let ((current-space (cons y x))
                        (piece (aref *board* x y)))
                    
                    (gl:translate (* -0.5 +CUBE-WIDTH+) 
@@ -167,21 +169,16 @@
                                  (* 0.5 +CUBE-WIDTH+) 
                                  (* 0.5 +CUBE-WIDTH+)) 
                    
-                   (if (and (not (eql *current-state* ':animating))
-                            (not (eql (find current-space fade-out) nil)))
-                     (gl:color 1.0 1.0 1.0 alpha)) 
+                   ;(if (and (not (eql *current-state* ':animating))
+                   ;         (not (eql (find current-space fade-out) nil)))
+                   ;  (gl:color 1.0 1.0 1.0 alpha)) 
 
                    (if (and (not (equal slide-space nil))
                             (equal (car slide-space) current-space))
-                     (progn
                        (let ((delta-x (- (caar slide-space) (caadr slide-space)))
                              (delta-y (- (cdar slide-space) (cdadr slide-space))))
-                         (gl:translate (* -1.0 progress +CUBE-WIDTH+ delta-x) 0.0 0.0)
-                         (gl:translate 0.0 0.0 (* progress +CUBE-WIDTH+ delta-y))
-                          )
-                        ))
+                          (gl:translate (* -1 progress +CUBE-WIDTH+ delta-x) 0.0 (* progress +CUBE-WIDTH+ delta-y))))
                    
-                  ; Assumes a correct move (i.e. no diagonal)
                   (if (not (eql piece +EMPTY+))
                     (gl:translate 0.0 ( * 0.5 +CUBE-WIDTH+) 0.0))
 
@@ -200,28 +197,19 @@
                      (gl:translate 0.0 (* -0.25 +CUBE-WIDTH+) 0.0)))
 
                   (if (not (eql piece +EMPTY+))
-                    (gl:translate 0.0 ( * -0.5 +CUBE-WIDTH+) 0.0)
-                    )
+                    (gl:translate 0.0 (* -0.5 +CUBE-WIDTH+) 0.0))
 
-                  (if (and (not (equal slide-space nil))
-                           (equal (car slide-space) current-space))
-                    (progn
-                        (let ((delta-x (- (caar slide-space) (caadr slide-space)))
-                              (delta-y (- (cdar slide-space) (cdadr slide-space))))
-                          (gl:translate (* progress +CUBE-WIDTH+ delta-x) 0.0d0 0.0d0)
-                          (gl:translate 0.0d0 0.0d0 (* -1.0 progress +CUBE-WIDTH+ delta-y))
-                          )
-                        )
-                    )
-                  ) 
+                   (if (and (not (equal slide-space nil))
+                            (equal (car slide-space) current-space))
+                       (let ((delta-x (- (caar slide-space) (caadr slide-space)))
+                             (delta-y (- (cdar slide-space) (cdadr slide-space))))
+                          (gl:translate (* progress +CUBE-WIDTH+ delta-x) 0.0 (* -1 progress +CUBE-WIDTH+ delta-y))))
+                  )
                  
                  (gl:translate +CUBE-WIDTH+ 0.0 0.0) 
-                 (gl:color 1.0 1.0 1.0 1.0)
-                 )
-        (gl:translate (* -1 +COLS+ +CUBE-WIDTH+) 0.0 (* -1 +CUBE-WIDTH+))
-        )
-  (sdl:update-display) 
-  )
+                 (gl:color 1.0 1.0 1.0 1.0))
+        (gl:translate (* -1 +COLS+ +CUBE-WIDTH+) 0.0 (* -1 +CUBE-WIDTH+)))
+  (sdl:update-display))
 
 (defun game-keyboard-handler (key)
   (if (eql *current-state* ':active-game)
