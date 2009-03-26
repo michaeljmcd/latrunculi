@@ -8,7 +8,8 @@
   (:export #:animate-slide)
   (:export #:game-mouse-handler)
   (:export #:game-display)
-  )
+  (:export #:get-cell)
+  (:export #:*board*))
 
 (in-package #:latrunculi)
 
