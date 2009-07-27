@@ -103,6 +103,8 @@
 				beta)
 		     ))
 
+; Primarily a driver function. Creates a list of scored moves (scoring is done by the recursive function nega-max) and 
+; selects the one with the highest score.
 (defun find-ai-move (board side players)
 		       (let* ((self (if (eql (car players) side)
 				      (car players)
@@ -127,9 +129,11 @@
                                       )
                        (generate-moves board side players)))
                  ))
-; Primarily a driver function. Creates a list of scored moves (scoring is done by the recursive function nega-max) and 
-; selects the one with the highest score.
 
+; This convention applies to all of the next four functions.
+; Board is the current state, origin is the space of origin for this move, curr
+; is the current set of coordinates and moves is the list of moves generated so far.
+; The spaces are indexed starting at zero. 
 (defun generate-moves (board side players)
 			 (let ((pieces (if (eq side (player-color (car players)))
 					 (piece-list (car players))
@@ -137,11 +141,6 @@
 				       )))
                (mapcan (lambda (piece) (generate-piece-moves (cdr piece) board)) pieces)
 			   ))
-
-; This convention applies to all of the next four functions.
-; Board is the current state, origin is the space of origin for this move, curr
-; is the current set of coordinates and moves is the list of moves generated so far.
-; The spaces are indexed starting at zero. 
 
 (defun generate-piece-moves (pt board)
 		(let ((down (generate-vertical-down board pt (cons (car pt) (+ 1 (cdr pt))) '()))

@@ -5,9 +5,13 @@
 (defpackage #:latrunculi
   (:use #:common-lisp)
   (:export #:start)
-  (:export #:animate-slide)
   (:export #:game-mouse-handler)
   (:export #:game-display)
+  (:export #:affect-captures)
+  (:export #:at-offset)
+  (:export #:move-piece)
+  (:export #:make-move)
+  (:export #:filter-captured-pieces)
   (:export #:get-cell)
   (:export #:*board*))
 
