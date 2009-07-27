@@ -1,7 +1,7 @@
 ; move.scm is to hold the move-related functions, such as making a move and validating one.
 ; The reason for this is so that the click events in the OpenGL code can access these functions without having to include the rest of the AI code.
 
-(in-package #:latrunculi)
+;(in-package #:latrunculi)
 
 (defun sub1 (num) (- num 1))
 
@@ -19,17 +19,13 @@
   (let ((fresh-board (make-array '(8 12) :element-type 'integer)))
     (loop for i from 0 to (- +ROWS+ 1)
           do (loop for j from 0 to (- +COLS+ 1)
-                do (setf (aref fresh-board i j) (aref board i j))
-                )
-          )
-    fresh-board
-    )
-  )
+                do (setf (aref fresh-board i j) (aref board i j))))
+    fresh-board))
 
 (defun is-surrounded-horizontally? (board space)
 				   (let* ((this-cell (get-cell board space))
-					  (side (mod this-cell 2)) 
-					  (space-after (cons (+ (car space) 1) (cdr space))) 
+                          (side (mod this-cell 2)) 
+                          (space-after (cons (+ (car space) 1) (cdr space))) 
 					  ; the coordinates of the space to the right of the space under examination.  
 
 					  (space-before (cons (- (car space) 1) (cdr space)))
@@ -164,6 +160,12 @@
 		       caught
 		       ))
 
+
+; This function removes any pieces that ought to be captured. The rules regarding captures are as follows:
+; 1. If a pawn is surrounded on two opposite sides, it is captured.
+; 2. An outside wall cannot be used to capture a pawn.
+; 3. A stone in a corner can be taken by placing two stones across the corner.
+; 4. Multiple stones may be captured along a line (really doesn't change anything, but should be stated).
 (defun affect-captures (board players)
   (let ((captured-pieces (find-if (lambda (piece)
                                     (let ((pt (cdr piece)))
@@ -179,17 +181,12 @@
                               (append (piece-list (car players)) (piece-list (cdr players))))
                          ))
     (if (> (length captured-pieces) 0)
-        (values (cdr (last (map 'list (lambda (piece) (replace-space board (cdr piece) +EMPTY+)) captured-pieces)))
-                captured-pieces)
-        (values board captured-pieces))
+      (values (cdr (last (map 'list (lambda (piece) (replace-space board (cdr piece) +EMPTY+)) captured-pieces))) captured-pieces)
+      (values board captured-pieces))
   ))
 
-; This function removes any pieces that ought to be captured. The rules regarding captures are as follows:
-; 1. If a pawn is surrounded on two opposite sides, it is captured.
-; 2. An outside wall cannot be used to capture a pawn.
-; 3. A stone in a corner can be taken by placing two stones across the corner.
-; 4. Multiple stones may be captured along a line (really doesn't change anything, but should be stated).
-
+; Clears the space. Returns the modified board and the tuple describing the piece
+; removed from the board. 
 (defun replace-space (board space replacement)
   (let ((piece-cleared (get-cell board space))
         (updated-board (duplicate-board board)))
@@ -197,8 +194,6 @@
     (values updated-board piece-cleared)
     )
   )
-; Clears the space. Returns the modified board and the tuple describing the piece
-; removed from the board. 
 
 (defun move-piece (board delta)
   (multiple-value-bind (new-board piece) 
@@ -207,23 +202,25 @@
     )
   )
 
-(defun make-move (board delta players)
-  (multiple-value-bind (new-board)
-    (move-piece board delta)
-    (affect-captures new-board players))
-  )
 ; Applies change delta (of the form: ((X1 . Y1) . (X2 . Y2))) to the given board board. Must take captures
 ; into affect. Will be used for both AI moves and player moves. AI moves verified during generation, whereas
 ; player moves will have to be verified in another function. This function does no verification. It simply makes
 ; the move and, if a piece is captured, removes it.
+(defun make-move (board delta players)
+  (multiple-value-bind (new-board)
+    (move-piece board delta)
+    (affect-captures new-board players)))
 
+; Given a move delta, unmake-move reverses the move.
 (defun unmake-move (board delta players)
 		      (make-move board (cons (car (cdr delta))
                                      (list (car delta)) 
                                      players)
 		      ))
-; Given a move delta, unmake-move reverses the move.
 
+; returns whether or not a given path includes some piece between the start and end points
+; We need to get a list of all the spaces in between the start and the 
+; destination (non-inclusive) and check them for a piece.
 (defun jumped? (board delta)
   (let ((start-x (min (caadr delta) (caar delta)))
         (end-x (max (caadr delta) (caar delta)))
@@ -240,10 +237,15 @@
     answer
     )
   )
-; returns whether or not a given path includes some piece between the start and end points
-; We need to get a list of all the spaces in between the start and the 
-; destination (non-inclusive) and check them for a piece.
-
+;
+; Given a move, delta, using the same form as above, validate-move determines whether or not the given move is legal.
+; This is needed to check user moves, though not AI moves (because the move generator will only generate legal moves
+; anyway). A move is illegal under the following conditions:
+; 1. The starting space is empty.
+; 2. The starting space contains an opposing piece.
+; 3. The move is diagonal (i.e. /\x > 0 AND /\ y > 0)
+; 4. The move jumps over a piece on either side.
+; 5. The ending space already has a piece on it.
 (defun move-valid? (board delta side)
 		      (let ((space (get-cell board (car delta))) ; move's origin.  
 			    (end (get-cell board (car (cdr delta)))) ; move's destination.  
@@ -265,15 +267,7 @@
                   t
                   )
                 ))
-; Given a move, delta, using the same form as above, validate-move determines whether or not the given move is legal.
-; This is needed to check user moves, though not AI moves (because the move generator will only generate legal moves
-; anyway). A move is illegal under the following conditions:
-; 1. The starting space is empty.
-; 2. The starting space contains an opposing piece.
-; 3. The move is diagonal (i.e. /\x > 0 AND /\ y > 0)
-; 4. The move jumps over a piece on either side.
-; 5. The ending space already has a piece on it.
-
+;
 ; Returns a tuple containing the updated player data. Takes into affect both captures and moves.
 (defun update-players (captures players)
   (cons (update-player captures (car players)) 
@@ -303,5 +297,4 @@
                      )
                    ))
     (find-if-not captured? piece-list)
-    )
-  )
+    ))
