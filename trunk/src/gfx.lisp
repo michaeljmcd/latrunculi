@@ -63,28 +63,30 @@
     ))
 
 (defun menu-display ()
-  (let ((menu-surface (sdl:convert-surface :surface (sdl:load-image (sdl:create-path "exekias.bmp" "../img/")) 
-                                           :free-p t
-                                           :key-color nil
-                                           :surface-alpha 255
-                                           ))
+  (let ((menu-surface (sdl:convert-surface :surface (sdl:load-image (sdl:create-path "exekias.bmp" "../img/"))))
         (menu-texture (first (gl:gen-textures 1))))
+    ;(gl:pixel-store :unpack-alignment 3)
     (gl:bind-texture :texture-2d menu-texture)
     (gl:tex-parameter :texture-2d :texture-min-filter :linear)
     (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
 
+    ; bmp = bgra? format
     (sdl-base::with-pixel (pixels (sdl:fp menu-surface)) 
                           (gl:tex-image-2d 
                             :texture-2d 
                             0 
-                            :rgba
+                            :rgb ; texture format
                             1024 
                             1024 
                             0 
-                            :bgra
+                            :bgra ; pixel data format
                             :unsigned-byte 
-                            (sdl-base::pixel-data pixels))
-                          )
+                            (sdl-base::pixel-data pixels)))
+    #|
+    (sdl-base::with-pixel (pixels (sdl:fp menu-surface)) 
+        (glu:build-2d-mipmaps :texture-2d 3 1024 1024 :bgra-ext :unsigned-byte 
+            (sdl-base::pixel-data pixels)))
+|#
 
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (gl:load-identity)
@@ -193,11 +195,11 @@
                             (equal (car slide-space) current-space))
                        (let ((delta-x (- (caar slide-space) (caadr slide-space)))
                              (delta-y (- (cdar slide-space) (cdadr slide-space))))
-                          (gl:translate (* progress +CUBE-WIDTH+ delta-x) 0.0 (* -1 progress +CUBE-WIDTH+ delta-y))))
-                  )
+                          (gl:translate (* progress +CUBE-WIDTH+ delta-x) 0.0 (* -1 progress +CUBE-WIDTH+ delta-y)))
+                          ))
                  
                  (gl:translate +CUBE-WIDTH+ 0.0 0.0) 
-                 (gl:color 1.0 1.0 1.0 1.0))
+                 (gl:color 1.0 1.0 1.0 1.0)))
         (gl:translate (* -1 +COLS+ +CUBE-WIDTH+) 0.0 (* -1 +CUBE-WIDTH+)))
   (sdl:update-display))
 
@@ -391,9 +393,9 @@
                           (gl:call-list (+ *display-list-start* 4))
                           (gl:translate 0.0 (* -0.25 +CUBE-WIDTH+) 0.0)
                           )))
-
+                    )
                    (gl:translate +CUBE-WIDTH+ 0.0 0.0)
-                   ) )
+                   ))
         (gl:translate (* -1 +COLS+ +CUBE-WIDTH+) 0.0 (* -1 +CUBE-WIDTH+)) )
 
   (gl:flush) 

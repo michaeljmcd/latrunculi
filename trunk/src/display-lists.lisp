@@ -15,18 +15,17 @@
 				      (GRANITE-TEXTURE 14)
 				      (MARBLE-TEXTURE 15)
                       (pine-surface (sdl:convert-surface :surface (sdl:load-image (sdl:create-path "pine.bmp" "../img/"))
-                                                         :free-p t
-                                                         :key-color nil
-                                                         :surface-alpha 255))
+                                                         :free t
+                                                         :enable-color-key nil
+                                                         :enable-alpha t))
                       (marble-surface (sdl:convert-surface :surface (sdl:load-image (sdl:create-path "white_marble.bmp" "../img/"))
-                                                         :free-p t
-                                                         :key-color nil
-                                                         :surface-alpha 255))
+                                                         :free t
+                                                         :enable-color-key nil
+                                                         :enable-alpha t))
                       (granite-surface (sdl:convert-surface :surface (sdl:load-image (sdl:create-path "granite.bmp" "../img/"))
-                                                         :free-p t
-                                                         :key-color nil
-                                                         :surface-alpha 255))
-                                      )
+                                                         :free t
+                                                         :enable-color-key nil
+                                                         :enable-alpha t)))
 				 (glu:quadric-normals quad :smooth)
 				 (glu:quadric-texture quad :true)
 				 (glu:quadric-orientation quad :outside)
@@ -43,7 +42,7 @@
                                           (gl:tex-image-2d 
                                             :texture-2d 
                                             0 
-                                            :rgba
+                                            :rgb
                                             64 
                                             64 
                                             0 
@@ -57,7 +56,7 @@
                                       (gl:tex-image-2d 
                                         :texture-2d 
                                         0 
-                                        :rgba
+                                        :rgb
                                         64 
                                         64 
                                         0 
@@ -82,7 +81,7 @@
                         (gl:tex-image-2d 
                           :texture-2d 
                           0 
-                          :rgba
+                          :rgb
                           64 
                           64 
                           0 
