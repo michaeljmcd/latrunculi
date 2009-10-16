@@ -1,7 +1,7 @@
 ; move.scm is to hold the move-related functions, such as making a move and validating one.
 ; The reason for this is so that the click events in the OpenGL code can access these functions without having to include the rest of the AI code.
 
-;(in-package #:latrunculi)
+(in-package #:latrunculi)
 
 (defun sub1 (num) (- num 1))
 
@@ -44,8 +44,7 @@
 					      (not (eql this-cell +BLACK_KING+)) 
 					      (not (eql this-cell +WHITE_KING+)))
 				       t
-				       nil
-				       )
+				       nil)
 				     ))
 
 (defun is-surrounded-vertically? (board space)
@@ -65,20 +64,17 @@
 					       (not (eql this-cell +EMPTY+))
 					       (not (eql this-cell +BLACK_KING+))
 					       (not (eql this-cell +WHITE_KING+))) 
-					t
-					nil
-					)
+                        t
+                        nil)
 				    ))
 
 (defun is-corner? (space)
 		  (if (or (and (eql (cdr space) 0) 
 			   (or (eql (car space) 0)
-			       (eql (car space) (sub1 +COLS+)))
-			   ) ; deals with the upper two corners.
+			       (eql (car space) (sub1 +COLS+)))) ; deals with the upper two corners.
 			  (and (eql (cdr space) (sub1 +ROWS+))
 			       (or (eql (car space) 0)
-				   (eql (car space) (sub1 +COLS+))))
-			  )
+				   (eql (car space) (sub1 +COLS+)))))
 		    t
 		    nil
 		  ))
@@ -104,8 +100,7 @@
 				      (not (eql below-side space-side))
 				      (not (eql right-side space-side)))
 			       (setq caught t) 
-			       (setq caught nil)
-			       )
+			       (setq caught nil))
 			     ))
 
 		       (when (eql space LOWER_LEFT)
@@ -192,15 +187,13 @@
         (updated-board (duplicate-board board)))
     (setf (aref updated-board (cdr space) (car space)) replacement)
     (values updated-board piece-cleared)
-    )
-  )
+    ))
 
 (defun move-piece (board delta)
   (multiple-value-bind (new-board piece) 
     (replace-space (duplicate-board board) (car delta) +EMPTY+) 
     (replace-space new-board (cadr delta) piece)
-    )
-  )
+    ))
 
 ; Applies change delta (of the form: ((X1 . Y1) . (X2 . Y2))) to the given board board. Must take captures
 ; into affect. Will be used for both AI moves and player moves. AI moves verified during generation, whereas
@@ -231,13 +224,9 @@
               do (loop for j from (+ 1 start-y) to end-y
                     do (if (not (eql (aref board i j) +EMPTY+))
                          (setq answer t)
-                         )
-                    )
-              )
-    answer
-    )
-  )
-;
+                         )))
+    answer))
+
 ; Given a move, delta, using the same form as above, validate-move determines whether or not the given move is legal.
 ; This is needed to check user moves, though not AI moves (because the move generator will only generate legal moves
 ; anyway). A move is illegal under the following conditions:
@@ -264,23 +253,20 @@
                         (jumped? board delta) 	; jumped a piece.
                         )
                   nil
-                  t
-                  )
+                  t)
                 ))
 ;
 ; Returns a tuple containing the updated player data. Takes into affect both captures and moves.
 (defun update-players (captures players)
   (cons (update-player captures (car players)) 
-        (update-player captures (cdr players))) 
-  )
+        (update-player captures (cdr players))) )
 
 (defun update-player (captures player)
   (let ((self (deep-copy player)))
     (setf (slot-value self 'pieces) 
           (filter-captured-pieces (slot-value self 'pieces) captures))
     player
-    )
-  )
+    ))
 
 (defun filter-captured-pieces (piece-list captures)
   (let ((captured? (lambda (piece)
@@ -293,8 +279,7 @@
                               nil)
                        nil
                        t
-                       )
-                     )
+                       ))
                    ))
     (find-if-not captured? piece-list)
     ))
