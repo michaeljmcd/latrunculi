@@ -34,9 +34,9 @@
          [1 [5 1]]]
 )
  
-(def *player0* (Player. +BLACK+ "Ajax" +AI+ player0-initial-pieces ai-settings0))
+(def player0 (Player. +BLACK+ "Ajax" +AI+ player0-initial-pieces ai-settings0))
 
-(def *board*
+(def board
                 [[3 3 3 3 3 3 3 3 3 3 3 3]
                   [-1 -1 -1 -1 -1 1 -1 -1 -1 -1 -1 -1]
                   [-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1]
