@@ -3,7 +3,11 @@
   :url "https://github.com/michaeljmcd/latrunculi"
   :license {:name "MIT"
             :url "https://opensource.org/licenses/MIT"}
-  :dependencies [[org.clojure/clojure "1.8.0"]]
+  :dependencies 
+      [[org.clojure/clojure "1.8.0"]
+       [org.lwjgl/lwjgl "3.1.6"]
+       [org.lwjgl/lwjgl-glfw "3.1.6"]
+       [org.lwjgl/lwjgl-opengl "3.1.6"]]
   :main ^:skip-aot latrunculi.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
