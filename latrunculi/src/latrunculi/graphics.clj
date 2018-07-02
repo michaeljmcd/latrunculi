@@ -1,5 +1,5 @@
 (ns latrunculi.graphics
- (:import (org.lwjgl.glfw GLFW)
+ (:import (org.lwjgl.glfw GLFW GLFWKeyCallback)
           (org.lwjgl.opengl GL GL11)
           (org.lwjgl BufferUtils)))
 
@@ -13,9 +13,17 @@
  (GLFW/glfwWindowHint GLFW/GLFW_SAMPLES 4)
 
  (let [window (GLFW/glfwCreateWindow (int 1024) (int 768) "Latrunculi" (long 0) (long 0))]
-  (GLFW/glfwSetCursor window  (GLFW/glfwCreateStandardCursor GLFW/GLFW_CROSSHAIR_CURSOR))
+  (GLFW/glfwSetCursor window  (GLFW/glfwCreateStandardCursor GLFW/GLFW_ARROW_CURSOR))
   (GLFW/glfwMakeContextCurrent window)
   (GLFW/glfwSwapInterval 0)
+
+  (GLFW/glfwSetKeyCallback window 
+   (proxy [GLFWKeyCallback] []
+    (invoke [window key scanCode, action, mods]
+     (print "Hi")
+    )
+   ))
+
   (GLFW/glfwShowWindow window)
 
   (let [intBuffer (BufferUtils/createIntBuffer 2)]

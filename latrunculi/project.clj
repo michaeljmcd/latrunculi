@@ -5,6 +5,7 @@
             :url "https://opensource.org/licenses/MIT"}
   :dependencies 
       [[org.clojure/clojure "1.8.0"]
+       [com.taoensso/timbre "4.10.0"]
        [org.lwjgl/lwjgl "3.1.6"]
        [org.lwjgl/lwjgl-glfw "3.1.6"]
        [org.lwjgl/lwjgl-opengl "3.1.6"]]
