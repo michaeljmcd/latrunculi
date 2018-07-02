@@ -1,4 +1,5 @@
 (ns latrunculi.core
+  (:require [latrunculi.graphics :as gfx])
   (:gen-class))
 
 (def +AI+ 0)
@@ -68,4 +69,5 @@
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
+  (gfx/start)
   (println "Hello, World!"))

@@ -31,10 +31,14 @@
    (GL11/glEnable GL11/GL_BLEND)
    (GL11/glHint GL11/GL_PERSPECTIVE_CORRECTION_HINT GL11/GL_NICEST)
    (GL11/glBlendFunc GL11/GL_SRC_ALPHA GL11/GL_ONE_MINUS_SRC_ALPHA)
+
+   (while (not (GLFW/glfwWindowShouldClose window))
+    (GLFW/glfwSwapBuffers window)
+    (GLFW/glfwPollEvents)
+   )
+
+   (GLFW/glfwDestroyWindow window)
+   (GLFW/glfwTerminate)
   )
-
-  (Thread/sleep (long 5000))
-
-  (GLFW/glfwSetWindowShouldClose window true)
  )
 )
