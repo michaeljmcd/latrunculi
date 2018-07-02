@@ -4,7 +4,18 @@
           (org.lwjgl.opengl GL GL11)
           (org.lwjgl BufferUtils)))
 
-(def global-state (atom 0))
+(def global-state (atom 
+                   { :current-scene :main-menu }
+                   ))
+
+(defn- render-menu [current-state]
+ ;(info "Main menu")
+)
+
+(defn- render-state [current-state]
+ (case (:current-scene current-state)
+  :main-menu (render-menu current-state)
+ ))
 
 (defn start []
  (assert (GLFW/glfwInit) "Failed to initialize GLFW.")
@@ -42,6 +53,8 @@
    (GL11/glBlendFunc GL11/GL_SRC_ALPHA GL11/GL_ONE_MINUS_SRC_ALPHA)
 
    (while (not (GLFW/glfwWindowShouldClose window))
+    (render-state @global-state)
+
     (GLFW/glfwSwapBuffers window)
     (GLFW/glfwPollEvents)
    )
