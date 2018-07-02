@@ -8,6 +8,7 @@
        [org.lwjgl/lwjgl "3.1.6"]
        [org.lwjgl/lwjgl-glfw "3.1.6"]
        [org.lwjgl/lwjgl-opengl "3.1.6"]]
+  :jvm-opts ["-Djava.library.path=lib"]
   :main ^:skip-aot latrunculi.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
