@@ -1,4 +1,5 @@
 (ns latrunculi.graphics
+ (:require [taoensso.timbre :as timbre :refer [trace info]])
  (:import (org.lwjgl.glfw GLFW GLFWKeyCallback)
           (org.lwjgl.opengl GL GL11)
           (org.lwjgl BufferUtils)))
@@ -20,7 +21,7 @@
   (GLFW/glfwSetKeyCallback window 
    (proxy [GLFWKeyCallback] []
     (invoke [window key scanCode, action, mods]
-     (print "Hi")
+     (info "Hi")
     )
    ))
 
