@@ -8,14 +8,36 @@
                    { :current-scene :main-menu }
                    ))
 
+(def textures (atom 0))
+
 (defn- render-menu [current-state]
- ;(info "Main menu")
+ (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
+ (GL11/glClear GL11/GL_DEPTH_BUFFER_BIT)
+ (GL11/glLoadIdentity)
+
+ (GL11/glBegin GL11/GL_QUADS)
+    (GL11/glVertex3i -1 1 0) ; top left
+    (GL11/glTexCoord2i 1 0)
+
+    (GL11/glVertex3i 1 1 0) ; top right
+    (GL11/glTexCoord2i 1 1)
+
+    (GL11/glVertex3i 1 -1 0) ; bottom right
+    (GL11/glTexCoord2i 0 1)
+
+    (GL11/glVertex3i -1 -1 0) ; bottom left
+    (GL11/glTexCoord2i 0 0)
+ (GL11/glEnd)
 )
 
 (defn- render-state [current-state]
  (case (:current-scene current-state)
   :main-menu (render-menu current-state)
  ))
+
+(defn- load-textures [current-textures]
+ { :menu-background 0 }
+)
 
 (defn start []
  (assert (GLFW/glfwInit) "Failed to initialize GLFW.")
@@ -51,6 +73,8 @@
    (GL11/glEnable GL11/GL_BLEND)
    (GL11/glHint GL11/GL_PERSPECTIVE_CORRECTION_HINT GL11/GL_NICEST)
    (GL11/glBlendFunc GL11/GL_SRC_ALPHA GL11/GL_ONE_MINUS_SRC_ALPHA)
+
+   (swap! textures load-textures)
 
    (while (not (GLFW/glfwWindowShouldClose window))
     (render-state @global-state)
