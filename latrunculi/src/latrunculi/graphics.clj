@@ -11,7 +11,10 @@
 ; Valid scenes are: :main-menu
 
 (def global-state (atom 
-                   { :current-scene :main-menu }
+                   { 
+                      :current-scene :main-menu 
+                      :camera-settings { :zoom 1.6875 :angle 320 :coordinates [ -0.4 0.0 0.0 ] :angle-delta 1 }
+                   }
                    ))
 
 (def textures (atom 0))
