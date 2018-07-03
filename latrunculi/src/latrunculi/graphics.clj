@@ -1,8 +1,10 @@
 (ns latrunculi.graphics
  (:require [taoensso.timbre :as timbre :refer [trace info]])
- (:import (org.lwjgl.glfw GLFW GLFWKeyCallback)
+ (:import (org.lwjgl.glfw GLFW GLFWKeyCallback Callbacks)
           (org.lwjgl.opengl GL GL11)
           (org.lwjgl BufferUtils)))
+
+; Valid scenes are: :main-menu
 
 (def global-state (atom 
                    { :current-scene :main-menu }
@@ -11,6 +13,7 @@
 (def textures (atom 0))
 
 (defn- render-menu [current-state]
+ (GL11/glBindTexture GL11/GL_TEXTURE_2D (:menu-background @textures))
  (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
  (GL11/glClear GL11/GL_DEPTH_BUFFER_BIT)
  (GL11/glLoadIdentity)
@@ -35,8 +38,16 @@
   :main-menu (render-menu current-state)
  ))
 
+(defn- load-texture [image-path]
+ (let [texture-id (GL11/glGenTextures)]
+  (GL11/glBindTexture GL11/GL_TEXTURE_2D texture-id)
+  (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)
+  (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
+ texture-id
+ ))
+
 (defn- load-textures [current-textures]
- { :menu-background 0 }
+ { :menu-background (load-texture "img/exekias.bmp") }
 )
 
 (defn start []
@@ -83,6 +94,7 @@
     (GLFW/glfwPollEvents)
    )
 
+   (Callbacks/glfwFreeCallbacks window)
    (GLFW/glfwDestroyWindow window)
    (GLFW/glfwTerminate)
   )
