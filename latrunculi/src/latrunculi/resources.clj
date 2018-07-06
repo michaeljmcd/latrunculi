@@ -6,6 +6,11 @@
           (org.lwjgl.opengl GL11)
  ))
 
+(def ^:const +CUBE-WIDTH+ 0.075) 
+(def ^:const +PYRAMID-HEIGHT+ 0.15) 
+(def ^:const +PYRAMID-WIDTH+ 0.075)
+(def ^:const +SPHERE-RADIUS+ 0.0375)
+
 (defn- load-image [image-path]
  (let [file (File. image-path)]
   (assert (.isFile file) "Texture does not exist.")
