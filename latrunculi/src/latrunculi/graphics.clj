@@ -1,6 +1,6 @@
 (ns latrunculi.graphics
  (:require [taoensso.timbre :as timbre :refer [trace info]])
- (:import (org.lwjgl.glfw GLFW GLFWKeyCallback Callbacks)
+ (:import (org.lwjgl.glfw GLFW GLFWKeyCallback Callbacks GLFWMouseButtonCallback)
           (org.lwjgl.opengl GL GL11)
           (org.lwjgl BufferUtils)
           (org.lwjgl.system MemoryStack)
@@ -8,14 +8,14 @@
           (java.nio.channels FileChannel FileChannel$MapMode)
           (java.io File FileInputStream)))
 
-; Valid scenes are: :main-menu
+; Valid scenes are: :main-menu, :active-game
 
 (def global-state (atom 
-                   { 
-                      :current-scene :main-menu 
-                      :camera-settings { :zoom 1.6875 :angle 320 :coordinates [ -0.4 0.0 0.0 ] :angle-delta 1 }
-                   }
-                   ))
+                   {:current-scene :main-menu 
+                    :camera-settings {:zoom 1.6875
+                                      :angle 320
+                                      :coordinates [ -0.4 0.0 0.0 ]
+                                      :angle-delta 1}}))
 
 (def textures (atom 0))
 
@@ -40,9 +40,24 @@
  (GL11/glEnd)
 )
 
+(defn- game-display [current-state]
+ (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
+ (GL11/glClear GL11/GL_DEPTH_BUFFER_BIT)
+
+ (GL11/glMatrixMode GL11/GL_PROJECTION)
+ (GL11/glPushMatrix)
+ (GL11/glLoadIdentity)
+ (GL11/glOrtho 0 0 0 0 -1 1)
+ (GL11/glMatrixMode GL11/GL_MODELVIEW)
+ (GL11/glPushMatrix)
+ (GL11/glLoadIdentity)
+ ; line 133
+)
+
 (defn- render-state [current-state]
  (case (:current-scene current-state)
   :main-menu (render-menu current-state)
+  :active-game (game-display current-state)
  ))
 
 (defn- load-image [image-path]
@@ -93,6 +108,11 @@
  { :menu-background (create-texture "img/exekias.bmp") }
 )
 
+(defn- menu-mouse-handler [button]
+ (if (= button (GLFW/GLFW_MOUSE_BUTTON_LEFT))
+  (info "Hi there"))
+)
+
 (defn start []
  (assert (GLFW/glfwInit) "Failed to initialize GLFW.")
  (GLFW/glfwDefaultWindowHints)
@@ -109,6 +129,15 @@
    (proxy [GLFWKeyCallback] []
     (invoke [window key scanCode, action, mods]
      (info "Hi")
+    )
+   ))
+
+  (GLFW/glfwSetMouseButtonCallback window
+   (proxy [GLFWMouseButtonCallback] []
+    (invoke [window button action mods]
+     (case (:current-scene @global-state)
+      :main-menu (menu-mouse-handler button)
+     )
     )
    ))
 
