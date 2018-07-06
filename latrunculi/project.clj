@@ -1,3 +1,8 @@
+(def native-lib-dir (str "-Djava.library.path=lib/" 
+                         (case (System/getProperty "os.name") 
+                           "Linux" "linux_x64" 
+                           "Windows" "windows_x64")))
+
 (defproject latrunculi "0.1.0-SNAPSHOT"
   :description "The game of Latrunculi"
   :url "https://github.com/michaeljmcd/latrunculi"
@@ -10,7 +15,7 @@
        [org.lwjgl/lwjgl-stb "3.1.6"]
        [org.lwjgl/lwjgl-glfw "3.1.6"]
        [org.lwjgl/lwjgl-opengl "3.1.6"]]
-  :jvm-opts ["-Djava.library.path=lib/winx64"]
+  :jvm-opts [~native-lib-dir]
   :main ^:skip-aot latrunculi.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
