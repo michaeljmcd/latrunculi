@@ -1,5 +1,6 @@
 (ns latrunculi.graphics
- (:require [taoensso.timbre :as timbre :refer [trace info]])
+ (:require [taoensso.timbre :as timbre :refer [trace info]]
+           [latrunculi.model :as model])
  (:import (org.lwjgl.glfw GLFW GLFWKeyCallback Callbacks GLFWMouseButtonCallback)
           (org.lwjgl.opengl GL GL11)
           (org.lwjgl BufferUtils)
@@ -12,12 +13,15 @@
 
 (def global-state (atom 
                    {:current-scene :main-menu 
+                    :game-state nil
                     :camera-settings {:zoom 1.6875
                                       :angle 320
                                       :coordinates [ -0.4 0.0 0.0 ]
                                       :angle-delta 1}}))
 
 (def textures (atom 0))
+
+(defn- third [array] (first (next (next array))))
 
 (defn- render-menu [current-state]
  (GL11/glBindTexture GL11/GL_TEXTURE_2D (:menu-background @textures))
@@ -40,7 +44,7 @@
  (GL11/glEnd)
 )
 
-(defn- game-display [current-state]
+(defn- render-active-game [current-state]
  (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
  (GL11/glClear GL11/GL_DEPTH_BUFFER_BIT)
 
@@ -51,13 +55,37 @@
  (GL11/glMatrixMode GL11/GL_MODELVIEW)
  (GL11/glPushMatrix)
  (GL11/glLoadIdentity)
- ; line 133
+
+ (GL11/glDisable GL11/GL_TEXTURE_2D)
+ (GL11/glColor3i 1 1 0)
+ (GL11/glLoadIdentity)
+
+ (GL11/glTranslatef -0.85 0.9 0.0)
+ (GL11/glScalef 0.1 0.1 0.1)
+ (GL11/glColor3i 0 0 0)
+
+ ; Print text
+(GL11/glTranslatef 0.0 -18.0 0.0)
+(GL11/glColor3i 0 0 0)
+(GL11/glEnable GL11/GL_TEXTURE_2D)
+
+    ; TODO: are these 4 lines useful? do they do anything?
+(GL11/glMatrixMode GL11/GL_PROJECTION)
+(GL11/glPopMatrix)
+(GL11/glMatrixMode GL11/GL_MODELVIEW)
+(GL11/glPopMatrix)
+
+(GL11/glMatrixMode GL11/GL_MODELVIEW)
+(GL11/glLoadIdentity)
+
+(let [camera-coords (-> current-state :camera-settings :coordinates)]
+(GL11/glTranslatef (first camera-coords) (second camera-coords) (third camera-coords)))
 )
 
 (defn- render-state [current-state]
  (case (:current-scene current-state)
   :main-menu (render-menu current-state)
-  :active-game (game-display current-state)
+  :active-game (render-active-game current-state)
  ))
 
 (defn- load-image [image-path]
@@ -110,7 +138,11 @@
 
 (defn- menu-mouse-handler [button]
  (if (= button (GLFW/GLFW_MOUSE_BUTTON_LEFT))
-  (info "Hi there"))
+  (swap! global-state assoc :current-scene :active-game)
+  )
+)
+
+(defn- game-mouse-handler [button]
 )
 
 (defn start []
@@ -137,6 +169,7 @@
     (invoke [window button action mods]
      (case (:current-scene @global-state)
       :main-menu (menu-mouse-handler button)
+      :active-game (game-mouse-handler button)
      )
     )
    ))
