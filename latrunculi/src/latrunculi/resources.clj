@@ -56,6 +56,11 @@
  ))
 
 (defn load-textures [current-textures]
- { :menu-background (create-texture "img/exekias.bmp") }
+ {:menu-background (create-texture "img/exekias.bmp")
+  :pine (create-texture "img/pine.bmp")
+  :white-marble (create-texture "img/white_marble.bmp")
+  :black-marble (create-texture "img/granite.bmp")}
 )
 
+(defn create-resources []
+)
