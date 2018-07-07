@@ -55,12 +55,140 @@
   texture-id
  ))
 
-(defn load-textures [current-textures]
+(defn- load-textures []
  {:menu-background (create-texture "img/exekias.bmp")
   :pine (create-texture "img/pine.bmp")
   :white-marble (create-texture "img/white_marble.bmp")
   :black-marble (create-texture "img/granite.bmp")}
 )
 
-(defn create-resources []
-)
+(defn- create-empty-space-display-list [textures list-id]
+ (let [pine-texture-id (-> textures :pine)]
+  (GL11/glNewList list-id GL11/GL_COMPILE)
+   (GL11/glBindTexture GL11/GL_TEXTURE_2D pine-texture-id)
+   (GL11/glBegin GL11/GL_QUADS)
+
+   ; Face 1:
+
+   (GL11/glTexCoord2f 1.0 0.0)
+   (GL11/glVertex3f 0 +CUBE-WIDTH+ +CUBE-WIDTH+)
+   ; P_1
+
+   (GL11/glTexCoord2f 0.0 0.0)
+   (GL11/glVertex3f 0 +CUBE-WIDTH+ 0)
+   ; P_2
+
+   (GL11/glTexCoord2f 1.0 0.0)
+   (GL11/glVertex3f 0 0 0)
+   ; P_6
+
+   (GL11/glTexCoord2f 1.0 1.0)
+   (GL11/glVertex3f 0 0 +CUBE-WIDTH+)
+   ; P_5
+
+   ; Face 2:
+
+   (GL11/glTexCoord2f 1.0 0.0)
+   (GL11/glVertex3f 0 +CUBE-WIDTH+ 0)
+   ; P_2
+
+   (GL11/glTexCoord2f 0.0 0.0)
+   (GL11/glVertex3f +CUBE-WIDTH+ +CUBE-WIDTH+ 0)
+   ; P_3
+
+   (GL11/glTexCoord2f 0.0 1.0)
+   (GL11/glVertex3f +CUBE-WIDTH+ 0 0)
+   ; P_7
+
+   (GL11/glTexCoord2f 1.0 1.0)
+   (GL11/glVertex3f 0 0 0)
+   ; P_6
+
+   ; Face 3:
+   (GL11/glTexCoord2f 0.0 0.0)
+   (GL11/glVertex3f +CUBE-WIDTH+ +CUBE-WIDTH+ +CUBE-WIDTH+)
+   ; P_4
+
+   (GL11/glTexCoord2f 1.0 0.0)
+   (GL11/glVertex3f +CUBE-WIDTH+ +CUBE-WIDTH+ 0)
+   ; P_3
+
+   (GL11/glTexCoord2f 1.0 1.0)
+   (GL11/glVertex3f +CUBE-WIDTH+ 0 0)
+   ; P_7
+
+   (GL11/glTexCoord2f 0.0 1.0)
+   (GL11/glVertex3f +CUBE-WIDTH+ 0 +CUBE-WIDTH+)
+   ; P_8 
+
+   ; Face 4:
+
+   (GL11/glTexCoord2f 0.0 0.0)
+   (GL11/glVertex3f 0 +CUBE-WIDTH+ +CUBE-WIDTH+)
+   ; P_1
+
+   (GL11/glTexCoord2f 1.0 0.0)
+   (GL11/glVertex3f +CUBE-WIDTH+ +CUBE-WIDTH+ +CUBE-WIDTH+)
+   ; P_4
+
+   (GL11/glTexCoord2f 1.0 1.0)
+   (GL11/glVertex3f +CUBE-WIDTH+ 0 +CUBE-WIDTH+)
+   ; P_8 
+
+   (GL11/glTexCoord2f 0.0 1.0)
+   (GL11/glVertex3f 0 0 +CUBE-WIDTH+)
+   ; P_5
+
+   ; Face 5:
+
+   (GL11/glTexCoord2f 0.0 0.0)
+   (GL11/glVertex3f 0 +CUBE-WIDTH+ +CUBE-WIDTH+)
+   ; P_1
+   
+   (GL11/glTexCoord2f 1.0 0.0)
+   (GL11/glVertex3f 0 +CUBE-WIDTH+ 0)
+   ; P_2
+
+   (GL11/glTexCoord2f 1.0 1.0)
+   (GL11/glVertex3f +CUBE-WIDTH+ +CUBE-WIDTH+ 0)
+   ; P_3
+
+   (GL11/glTexCoord2f 0.0 1.0)
+   (GL11/glVertex3f +CUBE-WIDTH+ +CUBE-WIDTH+ +CUBE-WIDTH+)
+   ; P_4
+   ; Face 6:
+
+   (GL11/glTexCoord2f 0.0 1.0)
+   (GL11/glVertex3f +CUBE-WIDTH+ 0 +CUBE-WIDTH+)
+   ; P_8 
+
+   (GL11/glTexCoord2f 1.0 1.0)
+   (GL11/glVertex3f +CUBE-WIDTH+ 0 0)
+   ; P_7
+
+   (GL11/glTexCoord2f 1.0 0.0)
+   (GL11/glVertex3f 0 0 0)
+   ; P_6
+
+   (GL11/glTexCoord2f 0.0 0.0)
+   (GL11/glVertex3f 0 0 +CUBE-WIDTH+)
+   ; P_5
+   (GL11/glEnd) 
+  (GL11/glEndList)
+ ))
+
+; We are going to create display lists for each of the following possibilities:
+; 1. Empty space
+; 2. White king
+; 3. Black king
+; 4. White pawn
+; 5. Black pawn
+(defn- create-display-lists [textures]
+ (let [list-start (GL11/glGenLists 5)]
+  {:empty-space (create-empty-space-display-list textures list-start)}
+ ))
+
+(defn load-resources [current-resources]
+ (let [textures (load-textures)]
+ {:textures textures :display-lists (create-display-lists textures)}
+ ))

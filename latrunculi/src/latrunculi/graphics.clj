@@ -17,12 +17,12 @@
                                       :coordinates [ -0.4 0.0 0.0 ]
                                       :angle-delta 1}}))
 
-(def textures (atom 0))
+(def resources (atom 0))
 
 (defn- third [array] (first (next (next array))))
 
 (defn- render-menu [current-state]
- (GL11/glBindTexture GL11/GL_TEXTURE_2D (:menu-background @textures))
+ (GL11/glBindTexture GL11/GL_TEXTURE_2D (-> @resources :textures :menu-background))
  (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
  (GL11/glClear GL11/GL_DEPTH_BUFFER_BIT)
  (GL11/glLoadIdentity)
@@ -141,7 +141,7 @@
    (GL11/glHint GL11/GL_PERSPECTIVE_CORRECTION_HINT GL11/GL_NICEST)
    (GL11/glBlendFunc GL11/GL_SRC_ALPHA GL11/GL_ONE_MINUS_SRC_ALPHA)
 
-   (swap! textures resources/load-textures)
+   (swap! resources resources/load-resources)
 
    (while (not (GLFW/glfwWindowShouldClose window))
     (render-state @global-state)
