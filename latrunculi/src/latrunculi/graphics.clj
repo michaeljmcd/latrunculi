@@ -109,6 +109,19 @@
   :active-game (render-active-game window current-state)
  ))
 
+(defn- initialize-game [s]
+ (GL11/glDepthFunc GL11/GL_LESS)
+ (GL11/glMatrixMode GL11/GL_PROJECTION)
+
+ (let [zoom (-> s :camera-settings :zoom)]
+ (GL11/glScalef zoom zoom zoom))
+
+ (let [angle (-> s :camera-settings :angle)]
+  (GL11/glRotatef angle 1.0 0.0 0.0))
+
+ (GL11/glClearColor 0.80 0.68 0.38 0)
+)
+
 (defn- menu-mouse-handler [button]
  (if (= button (GLFW/GLFW_MOUSE_BUTTON_LEFT))
   (swap! global-state 
@@ -117,6 +130,7 @@
                (assoc :current-scene :active-game)
                (assoc :game-state (m/create-default-game-state))
            )))
+   (initialize-game @global-state)
   )
 )
 
