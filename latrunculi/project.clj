@@ -1,7 +1,7 @@
 (def native-lib-dir (str "-Djava.library.path=lib/" 
                          (case (System/getProperty "os.name") 
                            "Linux" "linux_x64" 
-                           "Windows" "windows_x64")))
+                           "Windows 10" "windows_x64")))
 
 (defproject latrunculi "0.1.0-SNAPSHOT"
   :description "The game of Latrunculi"

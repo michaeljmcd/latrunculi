@@ -21,6 +21,17 @@
 
 (defn- third [array] (first (next (next array))))
 
+(defmacro at-offset [coordinates & operations]
+ (let [x (first coordinates)
+       y (second coordinates)
+       z (third coordinates)]
+`(do
+        (GL11/glTranslatef ~x ~y ~z)
+        ~@operations
+        (GL11/glTranslatef (* -1 ~x) (* -1 ~y) (* -1 ~z))
+    )
+))
+
 (defn- render-menu [current-state]
  (GL11/glBindTexture GL11/GL_TEXTURE_2D (-> @resources :textures :menu-background))
  (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
@@ -78,7 +89,15 @@
 
 (let [camera-coords (-> current-state :camera-settings :coordinates)]
 (GL11/glTranslatef (first camera-coords) (second camera-coords) (third camera-coords)))
-; 160
+ (doseq [row (-> current-state :game-state :board)]
+   (doseq [cell row]
+    (at-offset [(* -0.5 resources/+CUBE-WIDTH+)
+                (* -0.5 resources/+CUBE-WIDTH+)
+                (* -0.5 resources/+CUBE-WIDTH+)]
+               (GL11/glCallList (-> @resources :display-lists :empty-space)))
+    ; 168
+   )
+ )
 )
 
 (defn- render-state [current-state]
@@ -89,7 +108,12 @@
 
 (defn- menu-mouse-handler [button]
  (if (= button (GLFW/GLFW_MOUSE_BUTTON_LEFT))
-  (swap! global-state assoc :current-scene :active-game)
+  (swap! global-state 
+         (fn [s]
+           (-> s
+               (assoc :current-scene :active-game)
+               (assoc :game-state (model/create-default-game-state))
+           )))
   )
 )
 

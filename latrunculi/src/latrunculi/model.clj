@@ -33,9 +33,7 @@
          [1 [5 1]]]
 )
  
-(def player0 (Player. +BLACK+ "Ajax" +AI+ player0-initial-pieces ai-settings0))
-
-(def board
+(def starting-board
                 [[3 3 3 3 3 3 3 3 3 3 3 3]
                   [-1 -1 -1 -1 -1 1 -1 -1 -1 -1 -1 -1]
                   [-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1]
@@ -63,3 +61,9 @@
 ;
 ; A tuple will be of the form (L . I) where L is a value from the above
 ; legend and I is the ID for the piece if applicable and -1 if N/A. 
+
+(defn create-default-game-state []
+{:players [{:color +BLACK+ :name "Ajax" :controller +AI+ :pieces player0-initial-pieces :ai-settings ai-settings0}
+           {:color +WHITE+ :name "Achilles" :controller +AI+ :pieces player0-initial-pieces :ai-settings ai-settings0}]
+ :board starting-board}
+)
