@@ -18,8 +18,6 @@
 (def +INFINITY+ 1e38)
 (def +NEGATIVE-INFINITY+ -1e37)
 
-(defrecord Player [color name controller pieces ai-settings])
-
 (def ai-settings0 {:search-depth 2 :own-pawn-value 95 :opponent-pawn-value 65 :own-king-mobility-value 0.0001 :opponent-king-mobility-value 0.0001})
 (def ai-settings1 {:search-depth 2 :own-pawn-value 95 :opponent-pawn-value 65 :own-king-mobility-value 0.0001 :opponent-king-mobility-value 0.0001})
 

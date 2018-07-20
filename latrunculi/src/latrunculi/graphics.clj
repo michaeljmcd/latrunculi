@@ -53,7 +53,23 @@
  (GL11/glEnd)
 )
 
-(defn- render-active-game [window current-state]
+(defn- render-piece [cell resources]
+    (if (not (= cell m/+EMPTY+))
+        (at-offset (0.0 (* 0.5 r/+CUBE-WIDTH+) 0.0)
+          (cond
+           (= cell m/+WHITE_KING+) (GL11/glCallList (-> resources :display-lists :white-king))
+           (= cell m/+BLACK_KING+) (GL11/glCallList (-> resources :display-lists :black-king))
+           (= cell m/+WHITE_PAWN+) (do 
+                            (GL11/glTranslatef 0.0 (* 0.25 r/+CUBE-WIDTH+) 0.0)
+                            (GL11/glCallList (-> resources :display-lists :white-pawn))
+                            (GL11/glTranslatef 0.0 (* -0.25 r/+CUBE-WIDTH+) 0.0))
+           (= cell m/+BLACK_PAWN+) (do
+             (GL11/glTranslatef 0.0 (* 0.25 r/+CUBE-WIDTH+) 0.0)
+             (GL11/glCallList (-> resources :display-lists :black-pawn))
+             (GL11/glTranslatef 0.0 (* -0.25 r/+CUBE-WIDTH+) 0.0))))
+))
+
+(defn- render-active-game [window current-state resources]
  (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
 
  (GL11/glMatrixMode GL11/GL_PROJECTION)
@@ -93,9 +109,10 @@
     (at-offset [(* -0.5 r/+CUBE-WIDTH+)
                 (* -0.5 r/+CUBE-WIDTH+)
                 (* -0.5 r/+CUBE-WIDTH+)]
-               (GL11/glCallList (-> @resources :display-lists :empty-space)))
+               (GL11/glCallList (-> resources :display-lists :empty-space)))
     ; 168
-    ; from 201-204:
+    (render-piece cell resources)
+
     (GL11/glTranslatef r/+CUBE-WIDTH+ 0.0 0.0)
     (GL11/glColor4f 1.0 1.0 1.0 1.0)
    )
@@ -103,10 +120,10 @@
  )
 )
 
-(defn- render-state [window current-state]
+(defn- render-state [window current-state resources]
  (case (:current-scene current-state)
   :main-menu (render-menu current-state)
-  :active-game (render-active-game window current-state)
+  :active-game (render-active-game window current-state resources)
  ))
 
 (defn- initialize-game [s]
@@ -187,7 +204,7 @@
    (info "resources: " @resources)
 
    (while (not (GLFW/glfwWindowShouldClose window))
-    (render-state window @global-state)
+    (render-state window @global-state @resources)
 
     (GLFW/glfwSwapBuffers window)
     (GLFW/glfwPollEvents)
