@@ -6,7 +6,7 @@
 (def +BLACK+ 1)
 (def +WHITE+ 0)
 
-(def +COLS+ 12)
+(def +COLUMNS+ 12)
 (def +ROWS+ 8)
 
 (def +EMPTY+ -1)

@@ -1,7 +1,7 @@
 (ns latrunculi.graphics
  (:require [taoensso.timbre :as timbre :refer [trace info]]
-           [latrunculi.model :as model]
-           [latrunculi.resources :as resources])
+           [latrunculi.model :as m]
+           [latrunculi.resources :as r])
  (:import (org.lwjgl.glfw GLFW GLFWKeyCallback Callbacks GLFWMouseButtonCallback)
           (org.lwjgl.opengl GL GL11)
           (org.lwjgl BufferUtils)
@@ -9,14 +9,15 @@
 
 ; Valid scenes are: :main-menu, :active-game
 
-(def global-state (atom 
-                   {:current-scene :main-menu 
+(defn- create-default-global-state [s]
+{:current-scene :main-menu 
                     :game-state nil
                     :camera-settings {:zoom 1.6875
                                       :angle 320
                                       :coordinates [ -0.4 0.0 0.0 ]
-                                      :angle-delta 1}}))
+                                      :angle-delta 1}})
 
+(def global-state (atom 0))
 (def resources (atom 0))
 
 (defn- third [array] (first (next (next array))))
@@ -53,7 +54,7 @@
  (GL11/glEnd)
 )
 
-(defn- render-active-game [current-state]
+(defn- render-active-game [window current-state]
  (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
  (GL11/glClear GL11/GL_DEPTH_BUFFER_BIT)
 
@@ -91,19 +92,24 @@
 (GL11/glTranslatef (first camera-coords) (second camera-coords) (third camera-coords)))
  (doseq [row (-> current-state :game-state :board)]
    (doseq [cell row]
-    (at-offset [(* -0.5 resources/+CUBE-WIDTH+)
-                (* -0.5 resources/+CUBE-WIDTH+)
-                (* -0.5 resources/+CUBE-WIDTH+)]
+    (at-offset [(* -0.5 r/+CUBE-WIDTH+)
+                (* -0.5 r/+CUBE-WIDTH+)
+                (* -0.5 r/+CUBE-WIDTH+)]
                (GL11/glCallList (-> @resources :display-lists :empty-space)))
     ; 168
+    ; from 201-204:
+    (GL11/glTranslatef r/+CUBE-WIDTH+ 0.0 0.0)
+    (GL11/glColor4f 1.0 1.0 1.0 1.0)
    )
+   (GL11/glTranslatef (* -1 m/+COLUMNS+ r/+CUBE-WIDTH+) 0.0 (* -1.0 r/+CUBE-WIDTH+))
  )
+ (GLFW/glfwSwapBuffers window)
 )
 
-(defn- render-state [current-state]
+(defn- render-state [window current-state]
  (case (:current-scene current-state)
   :main-menu (render-menu current-state)
-  :active-game (render-active-game current-state)
+  :active-game (render-active-game window current-state)
  ))
 
 (defn- menu-mouse-handler [button]
@@ -112,7 +118,7 @@
          (fn [s]
            (-> s
                (assoc :current-scene :active-game)
-               (assoc :game-state (model/create-default-game-state))
+               (assoc :game-state (m/create-default-game-state))
            )))
   )
 )
@@ -121,6 +127,7 @@
 )
 
 (defn start []
+ (swap! global-state create-default-global-state)
  (assert (GLFW/glfwInit) "Failed to initialize GLFW.")
  (GLFW/glfwDefaultWindowHints)
  (GLFW/glfwWindowHint GLFW/GLFW_VISIBLE GLFW/GLFW_FALSE)
@@ -165,11 +172,11 @@
    (GL11/glHint GL11/GL_PERSPECTIVE_CORRECTION_HINT GL11/GL_NICEST)
    (GL11/glBlendFunc GL11/GL_SRC_ALPHA GL11/GL_ONE_MINUS_SRC_ALPHA)
 
-   (swap! resources resources/load-resources)
+   (swap! resources r/load-resources)
    (info "resources: " @resources)
 
    (while (not (GLFW/glfwWindowShouldClose window))
-    (render-state @global-state)
+    (render-state window @global-state)
 
     (GLFW/glfwSwapBuffers window)
     (GLFW/glfwPollEvents)
