@@ -101,7 +101,6 @@
    )
    (GL11/glTranslatef (* -1 m/+COLUMNS+ r/+CUBE-WIDTH+) 0.0 (* -1.0 r/+CUBE-WIDTH+))
  )
- (GLFW/glfwSwapBuffers window)
 )
 
 (defn- render-state [window current-state]
