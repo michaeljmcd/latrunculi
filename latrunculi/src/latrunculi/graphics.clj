@@ -35,8 +35,7 @@
 
 (defn- render-menu [current-state]
  (GL11/glBindTexture GL11/GL_TEXTURE_2D (-> @resources :textures :menu-background))
- (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
- (GL11/glClear GL11/GL_DEPTH_BUFFER_BIT)
+ (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
  (GL11/glLoadIdentity)
 
  (GL11/glBegin GL11/GL_QUADS)
@@ -55,8 +54,7 @@
 )
 
 (defn- render-active-game [window current-state]
- (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
- (GL11/glClear GL11/GL_DEPTH_BUFFER_BIT)
+ (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
 
  (GL11/glMatrixMode GL11/GL_PROJECTION)
  (GL11/glPushMatrix)
