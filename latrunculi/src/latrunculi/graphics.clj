@@ -154,18 +154,20 @@
 (defn- game-mouse-handler [button]
 )
 
-(defn- create-camera-pan-fn [delta]
+(defn- create-camera-pan-fn [idx delta]
     (fn [s] 
               (let [coords (-> s :camera-settings :coordinates)]
-                (assoc-in s [:camera-settings :coordinates 0]
+                (assoc-in s [:camera-settings :coordinates idx]
                             (+ delta (first coords)))
              )))
 
 (defn- game-keyboard-handler [key]
  (swap! global-state
      (cond 
-      (= key GLFW/GLFW_KEY_RIGHT) (create-camera-pan-fn 0.01)
-      (= key GLFW/GLFW_KEY_LEFT) (create-camera-pan-fn -0.01)
+      (= key GLFW/GLFW_KEY_RIGHT) (create-camera-pan-fn 0 0.01)
+      (= key GLFW/GLFW_KEY_LEFT) (create-camera-pan-fn 0 -0.01)
+      (= key GLFW/GLFW_KEY_UP) (create-camera-pan-fn 1 0.01)
+      (= key GLFW/GLFW_KEY_DOWN) (create-camera-pan-fn 1 -0.01)
         )
  ))
 
