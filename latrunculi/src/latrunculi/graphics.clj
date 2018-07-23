@@ -154,6 +154,21 @@
 (defn- game-mouse-handler [button]
 )
 
+(defn- create-camera-pan-fn [delta]
+    (fn [s] 
+              (let [coords (-> s :camera-settings :coordinates)]
+                (assoc-in s [:camera-settings :coordinates 0]
+                            (+ delta (first coords)))
+             )))
+
+(defn- game-keyboard-handler [key]
+ (swap! global-state
+     (cond 
+      (= key GLFW/GLFW_KEY_RIGHT) (create-camera-pan-fn 0.01)
+      (= key GLFW/GLFW_KEY_LEFT) (create-camera-pan-fn -0.01)
+        )
+ ))
+
 (defn start []
  (swap! global-state create-default-global-state)
  (assert (GLFW/glfwInit) "Failed to initialize GLFW.")
@@ -169,8 +184,10 @@
 
   (GLFW/glfwSetKeyCallback window 
    (proxy [GLFWKeyCallback] []
-    (invoke [window key scanCode, action, mods]
-     (info "Hi")
+    (invoke [window key scanCode action mods]
+     (case (:current-scene @global-state)
+        :active-game (game-keyboard-handler key)
+     )
     )
    ))
 
