@@ -208,10 +208,33 @@
 
 (defn- game-mouse-handler [button position state]
  (info "Click at " position)
- (let [viewport (GL11/glGetInteger GL11/GL_VIEWPORT)]
   (color-render state @resources)
+
+  (let [stack (MemoryStack/stackPush)
+        viewport-buffer (.mallocInt stack 4)
+        pixel-buffer (.mallocInt stack 4)]
+    (GL11/glGetIntegerv GL11/GL_VIEWPORT viewport-buffer)
+    (GL11/glReadPixels (int (first position))
+                   (int (- (.get viewport-buffer 3) (second position)))
+                   (int 1)
+                   (int 1 )
+                   GL11/GL_RGB 
+                   GL11/GL_UNSIGNED_BYTE
+                   pixel-buffer)
+    (let [pixel [(.get pixel-buffer 0) (.get pixel-buffer 1) (.get pixel-buffer 2) (.get pixel-buffer 3)]
+          viewport [(.get viewport-buffer 0) (.get viewport-buffer 1) (.get viewport-buffer 2) (.get viewport-buffer 3)]]
+          ; TODO: make these trace later
+   (info "viewport: " viewport)
+   (info "pixel: " pixel)
+     (if (not (= (get pixel 0) 255))
+      (info "Not 255")
+     )
+   )
+  )
+    (GL11/glEnable GL11/GL_TEXTURE_2D)
+    (GL11/glEnable GL11/GL_DITHER)
+    (GL11/glEnable GL11/GL_BLEND)
  )
-)
 
 (defn- create-camera-pan-fn [idx delta]
     (fn [s] 
@@ -236,7 +259,7 @@
       (= key GLFW/GLFW_KEY_LEFT) (create-camera-pan-fn 0 -0.01)
       (= key GLFW/GLFW_KEY_UP) (create-camera-pan-fn 1 0.01)
       (= key GLFW/GLFW_KEY_DOWN) (create-camera-pan-fn 1 -0.01)
-      (= key GLFW/GLFW_KEY_PAGE_UP) (create-camera-zoom-update-fn 1.01)
+      (= key GLFW/GLFW_KEY_PAGE_UP) (create-camera-zoom-update-fn 1.05)
       (= key GLFW/GLFW_KEY_PAGE_DOWN) (create-camera-zoom-update-fn 0.95)
       (= key GLFW/GLFW_KEY_HOME) (fn [s]
                                     (let [delta (-> s :camera-settings :angle-delta)
