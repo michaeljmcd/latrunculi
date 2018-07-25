@@ -15,7 +15,8 @@
                     :camera-settings {:zoom 1.6875
                                       :angle 320
                                       :coordinates [ -0.4 0.0 0.0 ]
-                                      :angle-delta 1}})
+                                      :angle-delta 1}
+                    :default-background-color [0.80 0.68 0.38 0]})
 
 (def global-state (atom 0))
 (def resources (atom 0))
@@ -70,6 +71,9 @@
 ))
 
 (defn- render-active-game [window current-state resources]
+ (let [color (:default-background-color current-state)]
+   (GL11/glClearColor (get color 0) (get color 1) (get color 2) (get color 3)))
+
  (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
 
  (GL11/glMatrixMode GL11/GL_PROJECTION)
@@ -135,8 +139,6 @@
 
  (let [angle (-> s :camera-settings :angle)]
   (GL11/glRotatef angle 1.0 0.0 0.0))
-
- (GL11/glClearColor 0.80 0.68 0.38 0)
 )
 
 (defn- menu-mouse-handler [button]
