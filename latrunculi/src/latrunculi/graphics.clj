@@ -5,6 +5,7 @@
  (:import (org.lwjgl.glfw GLFW GLFWKeyCallback Callbacks GLFWMouseButtonCallback)
           (org.lwjgl.opengl GL GL11)
           (org.lwjgl BufferUtils)
+          (org.lwjgl.system MemoryStack)
           ))
 
 ; Valid scenes are: :main-menu, :active-game
@@ -12,6 +13,7 @@
 (defn- create-default-global-state [s]
 {:current-scene :main-menu 
                     :game-state nil
+                    :move-origin nil
                     :camera-settings {:zoom 1.6875
                                       :angle 320
                                       :coordinates [ -0.4 0.0 0.0 ]
@@ -33,6 +35,15 @@
         (GL11/glTranslatef (* -1 ~x) (* -1 ~y) (* -1 ~z))
     )
 ))
+
+(defn- get-mouse-position [window]
+ (let [stack (MemoryStack/stackPush)
+       xBuff (.mallocDouble stack 1)
+       yBuff (.mallocDouble stack 1)]
+  (GLFW/glfwGetCursorPos window xBuff yBuff)
+  [(.get xBuff 0) (.get yBuff 0)]
+ )
+)
 
 (defn- render-menu [current-state]
  (GL11/glBindTexture GL11/GL_TEXTURE_2D (-> @resources :textures :menu-background))
@@ -153,7 +164,33 @@
   )
 )
 
-(defn- game-mouse-handler [button]
+(defn- color-render [state]
+ (GL11/glDisable GL11/GL_TEXTURE_2D)
+ (GL11/glDisable GL11/GL_DITHER)
+ (GL11/glDisable GL11/GL_LIGHTING)
+ (GL11/glDisable GL11/GL_BLEND)
+
+ (GL11/glClearColor 255 255 255 0)
+ (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+
+ (GL11/glMatrixMode GL11/GL_MODELVIEW)
+ (GL11/glLoadIdentity)
+
+ (GL11/glTranslatef (get-in state [:camera-settings :coordinates 0])
+                    (get-in state [:camera-settings :coordinates 1])
+                    (get-in state [:camera-settings :coordinates 2]))
+
+ (doseq [row (get-in state [:game-state :board])]
+  (doseq [cell row]
+   ;(GL11/glColorf (/
+  ))
+)
+
+(defn- game-mouse-handler [button position state]
+ (info "Click at " position)
+ (let [viewport (GL11/glGetInteger GL11/GL_VIEWPORT)]
+  (color-render state)
+ )
 )
 
 (defn- create-camera-pan-fn [idx delta]
@@ -233,7 +270,7 @@
     (invoke [window button action mods]
      (case (:current-scene @global-state)
       :main-menu (menu-mouse-handler button)
-      :active-game (game-mouse-handler button)
+      :active-game (game-mouse-handler button (get-mouse-position window) @global-state)
      )
     )
    ))
