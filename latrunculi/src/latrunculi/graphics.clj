@@ -81,9 +81,12 @@
              (GL11/glTranslatef 0.0 (* -0.25 r/+CUBE-WIDTH+) 0.0))))
 ))
 
-(defn- render-active-game [window current-state resources]
+(defn- clear-with-default-color [current-state]
  (let [color (:default-background-color current-state)]
-   (GL11/glClearColor (get color 0) (get color 1) (get color 2) (get color 3)))
+   (GL11/glClearColor (get color 0) (get color 1) (get color 2) (get color 3))))
+
+(defn- render-active-game [window current-state resources]
+ (clear-with-default-color current-state)
 
  (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
 
@@ -164,7 +167,7 @@
   )
 )
 
-(defn- color-render [state]
+(defn- color-render [state resources]
  (GL11/glDisable GL11/GL_TEXTURE_2D)
  (GL11/glDisable GL11/GL_DITHER)
  (GL11/glDisable GL11/GL_LIGHTING)
@@ -179,17 +182,34 @@
  (GL11/glTranslatef (get-in state [:camera-settings :coordinates 0])
                     (get-in state [:camera-settings :coordinates 1])
                     (get-in state [:camera-settings :coordinates 2]))
+ (doseq [x (range m/+ROWS+)]
+   (doseq [y (range m/+COLUMNS+)]
 
- (doseq [row (get-in state [:game-state :board])]
-  (doseq [cell row]
-   ;(GL11/glColorf (/
-  ))
+   (GL11/glColor4f (/ x m/+ROWS+)
+                  (/ y m/+COLUMNS+)
+                  0
+                  0)
+    (at-offset [(* -0.5 r/+CUBE-WIDTH+)
+                (* -0.5 r/+CUBE-WIDTH+)
+                (* -0.5 r/+CUBE-WIDTH+)]
+               (GL11/glCallList (-> resources :display-lists :empty-space)))
+
+    (let [piece (get-in state [:game-state :board x y])]
+     (render-piece piece resources)
+    )
+    (GL11/glTranslatef r/+CUBE-WIDTH+ 0.0 0.0)
+  )
+   (GL11/glTranslatef (* -1 m/+COLUMNS+ r/+CUBE-WIDTH+) 0.0 (* -1.0 r/+CUBE-WIDTH+))
+   )
+
+ (GL11/glFlush)
+ (clear-with-default-color state)
 )
 
 (defn- game-mouse-handler [button position state]
  (info "Click at " position)
  (let [viewport (GL11/glGetInteger GL11/GL_VIEWPORT)]
-  (color-render state)
+  (color-render state @resources)
  )
 )
 
