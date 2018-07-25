@@ -168,9 +168,7 @@
   (let [zoom (-> s :camera-settings :zoom)]
    (assoc-in s [:camera-settings :zoom]
                (* zoom delta))
-  )
- )
-)
+  )))
 
 (defn- game-keyboard-handler [key]
  (swap! global-state
@@ -181,6 +179,28 @@
       (= key GLFW/GLFW_KEY_DOWN) (create-camera-pan-fn 1 -0.01)
       (= key GLFW/GLFW_KEY_PAGE_UP) (create-camera-zoom-update-fn 1.01)
       (= key GLFW/GLFW_KEY_PAGE_DOWN) (create-camera-zoom-update-fn 0.95)
+      (= key GLFW/GLFW_KEY_HOME) (fn [s]
+                                    (let [delta (-> s :camera-settings :angle-delta)
+                                          angle (-> s :camera-settings :angle)]
+                                    (GL11/glMatrixMode GL11/GL_PROJECTION)
+                                    (GL11/glRotatef delta 0.0 1.0 0.0)
+                                    (assoc-in s [:camera-settings :angle]
+                                       (mod (+ angle delta) 360))))
+      (= key GLFW/GLFW_KEY_END) (fn [s]
+                                    (let [delta (-> s :camera-settings :angle-delta)
+                                          angle (-> s :camera-settings :angle)]
+                                    (GL11/glMatrixMode GL11/GL_PROJECTION)
+                                    (GL11/glRotatef (* -1 delta) 0.0 1.0 0.0)
+                                    (assoc-in s [:camera-settings :angle]
+                                       (mod (- angle delta) 360))))
+      (= key GLFW/GLFW_KEY_INSERT) (fn [s]
+                                    (let [delta (-> s :camera-settings :angle-delta)
+                                          angle (-> s :camera-settings :angle)]
+                                    (GL11/glMatrixMode GL11/GL_PROJECTION)
+                                    (GL11/glRotatef delta 1.0 0.0 0.0)
+                                    (assoc-in s [:camera-settings :angle]
+                                       (mod (+ angle delta) 360))))
+
         )
  ))
 
