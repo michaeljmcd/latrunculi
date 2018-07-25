@@ -161,6 +161,17 @@
                             (+ delta (first coords)))
              )))
 
+(defn- create-camera-zoom-update-fn [delta]
+ (fn [s]
+  (GL11/glMatrixMode GL11/GL_PROJECTION)
+  (GL11/glScalef delta delta delta)
+  (let [zoom (-> s :camera-settings :zoom)]
+   (assoc-in s [:camera-settings :zoom]
+               (* zoom delta))
+  )
+ )
+)
+
 (defn- game-keyboard-handler [key]
  (swap! global-state
      (cond 
@@ -168,6 +179,8 @@
       (= key GLFW/GLFW_KEY_LEFT) (create-camera-pan-fn 0 -0.01)
       (= key GLFW/GLFW_KEY_UP) (create-camera-pan-fn 1 0.01)
       (= key GLFW/GLFW_KEY_DOWN) (create-camera-pan-fn 1 -0.01)
+      (= key GLFW/GLFW_KEY_PAGE_UP) (create-camera-zoom-update-fn 1.01)
+      (= key GLFW/GLFW_KEY_PAGE_DOWN) (create-camera-zoom-update-fn 0.95)
         )
  ))
 
