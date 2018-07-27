@@ -141,39 +141,42 @@
 (defn- render-state [window current-state resources]
  (case (:current-scene current-state)
   :main-menu (render-menu current-state)
-  :active-game (render-active-game window current-state resources)
+  ;:active-game (render-active-game window current-state resources)
+  :active-game (color-render window current-state resources)
  ))
 
-(defn- initialize-game [s]
- (GL11/glDepthFunc GL11/GL_LESS)
- (GL11/glMatrixMode GL11/GL_PROJECTION)
-
- (let [zoom (-> s :camera-settings :zoom)]
- (GL11/glScalef zoom zoom zoom))
-
- (let [angle (-> s :camera-settings :angle)]
-  (GL11/glRotatef angle 1.0 0.0 0.0))
-)
-
-(defn- menu-mouse-handler [button]
- (if (= button (GLFW/GLFW_MOUSE_BUTTON_LEFT))
+(defn- initialize-game []
   (swap! global-state 
          (fn [s]
            (-> s
                (assoc :current-scene :active-game)
                (assoc :game-state (m/create-default-game-state))
            )))
-   (initialize-game @global-state)
+
+ (GL11/glDepthFunc GL11/GL_LESS)
+ (GL11/glMatrixMode GL11/GL_PROJECTION)
+
+ (let [zoom (-> @global-state :camera-settings :zoom)]
+ (GL11/glScalef zoom zoom zoom))
+
+ (let [angle (-> @global-state :camera-settings :angle)]
+  (GL11/glRotatef angle 1.0 0.0 0.0))
+)
+
+(defn- menu-mouse-handler [button]
+ (if (= button (GLFW/GLFW_MOUSE_BUTTON_LEFT))
+   (initialize-game)
   )
 )
 
-(defn- color-render [state resources]
+(defn- color-render [window state resources]
  (GL11/glDisable GL11/GL_TEXTURE_2D)
  (GL11/glDisable GL11/GL_DITHER)
  (GL11/glDisable GL11/GL_LIGHTING)
  (GL11/glDisable GL11/GL_BLEND)
 
- (GL11/glClearColor 255 255 255 0)
+ ;(GL11/glClearColor 255 255 255 0)
+ (GL11/glClearColor 1.0 1.0 1.0 0)
  (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
 
  (GL11/glMatrixMode GL11/GL_MODELVIEW)
@@ -182,33 +185,35 @@
  (GL11/glTranslatef (get-in state [:camera-settings :coordinates 0])
                     (get-in state [:camera-settings :coordinates 1])
                     (get-in state [:camera-settings :coordinates 2]))
- (doseq [x (range m/+ROWS+)]
-   (doseq [y (range m/+COLUMNS+)]
 
-   (GL11/glColor4f (/ x m/+ROWS+)
-                  (/ y m/+COLUMNS+)
-                  0
-                  0)
-    (at-offset [(* -0.5 r/+CUBE-WIDTH+)
-                (* -0.5 r/+CUBE-WIDTH+)
-                (* -0.5 r/+CUBE-WIDTH+)]
-               (GL11/glCallList (-> resources :display-lists :empty-space)))
+  (doseq [x (range m/+ROWS+)]
+    (doseq [y (range m/+COLUMNS+)]
+    (GL11/glColor4b x
+                    y
+                    0
+                    0)
 
-    (let [piece (get-in state [:game-state :board x y])]
-     (render-piece piece resources)
-    )
-    (GL11/glTranslatef r/+CUBE-WIDTH+ 0.0 0.0)
-  )
-   (GL11/glTranslatef (* -1 m/+COLUMNS+ r/+CUBE-WIDTH+) 0.0 (* -1.0 r/+CUBE-WIDTH+))
+      (at-offset [(* -0.5 r/+CUBE-WIDTH+)
+                  (* -0.5 r/+CUBE-WIDTH+)
+                  (* -0.5 r/+CUBE-WIDTH+)]
+         (GL11/glCallList (-> resources :display-lists :empty-space)))
+ 
+     (let [piece (get-in state [:game-state :board x y])]
+      (render-piece piece resources)
+     )
+     (GL11/glTranslatef r/+CUBE-WIDTH+ 0.0 0.0)
+   )
+    (GL11/glTranslatef (* -1 m/+COLUMNS+ r/+CUBE-WIDTH+) 0.0 (* -1.0 r/+CUBE-WIDTH+))
    )
 
  (GL11/glFlush)
+ ;(GLFW/glfwSwapBuffers window)
  (clear-with-default-color state)
 )
 
-(defn- game-mouse-handler [button position state]
+(defn- game-mouse-handler [window button position state]
  (info "Click at " position)
-  (color-render state @resources)
+  (color-render window state @resources)
 
   (let [stack (MemoryStack/stackPush)
         viewport-buffer (.mallocInt stack 4)
@@ -218,9 +223,10 @@
                    (int (- (.get viewport-buffer 3) (second position)))
                    (int 1)
                    (int 1 )
-                   GL11/GL_RGB 
-                   GL11/GL_UNSIGNED_BYTE
+                   GL11/GL_RGBA 
+                   GL11/GL_UNSIGNED_INT
                    pixel-buffer)
+
     (let [pixel [(.get pixel-buffer 0) (.get pixel-buffer 1) (.get pixel-buffer 2) (.get pixel-buffer 3)]
           viewport [(.get viewport-buffer 0) (.get viewport-buffer 1) (.get viewport-buffer 2) (.get viewport-buffer 3)]]
           ; TODO: make these trace later
@@ -228,6 +234,7 @@
    (info "pixel: " pixel)
      (if (not (= (get pixel 0) 255))
       (info "Not 255")
+      (info "Clicked empty space")
      )
    )
   )
@@ -313,7 +320,7 @@
     (invoke [window button action mods]
      (case (:current-scene @global-state)
       :main-menu (menu-mouse-handler button)
-      :active-game (game-mouse-handler button (get-mouse-position window) @global-state)
+      :active-game (game-mouse-handler window button (get-mouse-position window) @global-state)
      )
     )
    ))
@@ -336,6 +343,7 @@
 
    (swap! resources r/load-resources)
    (info "resources: " @resources)
+   (initialize-game)
 
    (while (not (GLFW/glfwWindowShouldClose window))
     (render-state window @global-state @resources)
