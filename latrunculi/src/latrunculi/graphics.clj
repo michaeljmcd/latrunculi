@@ -220,7 +220,7 @@
 
   (let [stack (MemoryStack/stackPush)
         viewport-buffer (.mallocInt stack 4)
-        pixel-buffer (.mallocInt stack 4)]
+        pixel-buffer (.malloc stack 4)]
     (GL11/glGetIntegerv GL11/GL_VIEWPORT viewport-buffer)
 
     (info "Reading pixels at " [(int (first position))
@@ -232,7 +232,7 @@
                    (int 1)
                    (int 1 )
                    GL11/GL_RGBA 
-                   GL11/GL_UNSIGNED_INT
+                   GL11/GL_UNSIGNED_BYTE
                    pixel-buffer)
 
     (let [pixel [(.get pixel-buffer 0) (.get pixel-buffer 1) (.get pixel-buffer 2) (.get pixel-buffer 3)]
@@ -240,7 +240,7 @@
           ; TODO: make these trace later
    (info "viewport: " viewport)
    (info "pixel: " pixel)
-     (if (not (= (get pixel 0) 255))
+     (if (not (= (get pixel 0) -1))
       (info "Not 255")
       (info "Clicked empty space")
      )
