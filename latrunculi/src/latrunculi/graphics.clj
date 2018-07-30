@@ -41,7 +41,10 @@
        xBuff (.mallocDouble stack 1)
        yBuff (.mallocDouble stack 1)]
   (GLFW/glfwGetCursorPos window xBuff yBuff)
-  [(.get xBuff 0) (.get yBuff 0)]
+   (let [result [(.get xBuff 0) (.get yBuff 0)]]
+    (MemoryStack/stackPop)
+    result
+   )
  )
 )
 
@@ -219,6 +222,11 @@
         viewport-buffer (.mallocInt stack 4)
         pixel-buffer (.mallocInt stack 4)]
     (GL11/glGetIntegerv GL11/GL_VIEWPORT viewport-buffer)
+
+    (info "Reading pixels at " [(int (first position))
+                   (int (- (.get viewport-buffer 3) (second position)))
+    ])
+
     (GL11/glReadPixels (int (first position))
                    (int (- (.get viewport-buffer 3) (second position)))
                    (int 1)
@@ -237,6 +245,7 @@
       (info "Clicked empty space")
      )
    )
+    (MemoryStack/stackPop)
   )
     (GL11/glEnable GL11/GL_TEXTURE_2D)
     (GL11/glEnable GL11/GL_DITHER)

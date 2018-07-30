@@ -26,12 +26,16 @@
    (.close fis)
 
    (STBImage/stbi_info_from_memory buffer width height comp1)
+
+   (let [result
    { 
      :image (STBImage/stbi_load_from_memory buffer width height comp1 0)
      :width (.get width 0)
      :height (.get height 0)
      :comp (.get comp1 0)
-   }
+   }]
+   (MemoryStack/stackPop)
+   result)
  )
 ))
 
