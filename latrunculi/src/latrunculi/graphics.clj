@@ -144,8 +144,7 @@
 (defn- render-state [window current-state resources]
  (case (:current-scene current-state)
   :main-menu (render-menu current-state)
-  ;:active-game (render-active-game window current-state resources)
-  :active-game (color-render window current-state resources)
+  :active-game (render-active-game window current-state resources)
  ))
 
 (defn- initialize-game []
@@ -210,7 +209,6 @@
    )
 
  (GL11/glFlush)
- ;(GLFW/glfwSwapBuffers window)
  (clear-with-default-color state)
 )
 
