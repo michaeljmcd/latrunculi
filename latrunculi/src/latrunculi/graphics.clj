@@ -190,8 +190,8 @@
 
   (doseq [x (range m/+ROWS+)]
     (doseq [y (range m/+COLUMNS+)]
-    (GL11/glColor4b x
-                    y
+    (GL11/glColor4f (float (/ x 255))
+                    (float (/ y 255))
                     0
                     0)
 
@@ -234,11 +234,13 @@
                    pixel-buffer)
 
     (let [pixel [(.get pixel-buffer 0) (.get pixel-buffer 1) (.get pixel-buffer 2) (.get pixel-buffer 3)]
+          coordinates pixel
           viewport [(.get viewport-buffer 0) (.get viewport-buffer 1) (.get viewport-buffer 2) (.get viewport-buffer 3)]]
           ; TODO: make these trace later
    (info "viewport: " viewport)
    (info "pixel: " pixel)
-     (if (not (= (get pixel 0) -1))
+   (info "coordinates:  " coordinates)
+     (if (not (= (get coordinates 0) -1))
       (info "Not 255")
       (info "Clicked empty space")
      )
