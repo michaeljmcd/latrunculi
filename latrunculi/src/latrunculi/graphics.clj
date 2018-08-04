@@ -212,7 +212,16 @@
  (clear-with-default-color state)
 )
 
-(defn- game-mouse-handler [window button position state]
+(defn- mouse-coordinates-empty? [coordinates]
+ (= (get coordinates 0) -1))
+
+(defn- process-move-input [state move]
+ (info "Going to do stuff about move " move)
+)
+
+(defn- game-mouse-handler [window button action position state]
+ (if (= action GLFW/GLFW_RELEASE)
+  (do
  (info "Click at " position)
   (color-render window state @resources)
 
@@ -234,14 +243,17 @@
                    pixel-buffer)
 
     (let [pixel [(.get pixel-buffer 0) (.get pixel-buffer 1) (.get pixel-buffer 2) (.get pixel-buffer 3)]
-          coordinates pixel
+          coordinates [(second pixel) (first pixel)]
           viewport [(.get viewport-buffer 0) (.get viewport-buffer 1) (.get viewport-buffer 2) (.get viewport-buffer 3)]]
           ; TODO: make these trace later
    (info "viewport: " viewport)
    (info "pixel: " pixel)
    (info "coordinates:  " coordinates)
-     (if (not (= (get coordinates 0) -1))
-      (info "Not 255")
+     (if (not (mouse-coordinates-empty? coordinates))
+      (if (nil? (:move-origin state))
+       (swap! global-state (fn [s] (assoc-in s [:move-origin] coordinates)))
+       (process-move-input state [(:move-origin state) coordinates])
+      )
       (info "Clicked empty space")
      )
    )
@@ -251,6 +263,8 @@
     (GL11/glEnable GL11/GL_DITHER)
     (GL11/glEnable GL11/GL_BLEND)
  )
+ nil
+ ))
 
 (defn- create-camera-pan-fn [idx delta]
     (fn [s] 
@@ -329,7 +343,7 @@
     (invoke [window button action mods]
      (case (:current-scene @global-state)
       :main-menu (menu-mouse-handler button)
-      :active-game (game-mouse-handler window button (get-mouse-position window) @global-state)
+      :active-game (game-mouse-handler window button action (get-mouse-position window) @global-state)
      )
     )
    ))
