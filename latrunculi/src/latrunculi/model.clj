@@ -65,3 +65,11 @@
            {:color +WHITE+ :name "Achilles" :controller +AI+ :pieces player0-initial-pieces :ai-settings ai-settings0}]
  :board starting-board}
 )
+
+(defn get-cell [board coordinates]
+ (if (or (>= (second coordinates) +ROWS+)
+         (>= (first coordinates) +COLUMNS+)
+         (< (first coordinates) 0)
+         (< (second coordinates) 0))
+    nil
+    (get-in board coordinates)))
