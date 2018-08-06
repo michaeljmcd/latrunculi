@@ -1,4 +1,5 @@
-(ns latrunculi.model)
+(ns latrunculi.model
+ (:require [taoensso.timbre :as timbre :refer [trace info with-level]]))
 
 (def +AI+ 0)
 (def +HUMAN+ 1)
@@ -73,3 +74,58 @@
          (< (second coordinates) 0))
     nil
     (get-in board coordinates)))
+
+; Returns whether or not a given path includes some piece between the start and end points
+; We need to get a list of all the spaces in between the start and the 
+; destination (non-inclusive) and check them for a piece.
+(defn jumped? [board delta]
+ (let [
+  start-y (min (get-in delta [0 0]) (get-in delta [1 0]))
+  end-y (max (get-in delta [0 0]) (get-in delta [1 0]))
+  start-x (min (get-in delta [0 1]) (get-in delta [1 1]))
+  end-x (max (get-in delta [0 1]) (get-in delta [1 1]))
+  ]
+  (trace "Start X:" 
+         start-x 
+         "end X:" 
+         end-x 
+         "start Y:"
+         start-y
+         "end Y:"
+         end-y)
+  (not (= (vec (distinct (rest (flatten
+  (keep-indexed (fn [y-index row]
+                 (keep-indexed (fn [x-index space]
+                                (if (and (and (>= x-index start-x)
+                                              (<= x-index end-x))
+                                         (and (>= y-index start-y)
+                                              (<= y-index end-y)))
+                                  space
+                                  nil)
+                               ) row)
+                ) board)))))
+   [-1]))
+))
+
+; Given a move, delta, using the same form as above, validate-move determines whether or not the given move is legal.
+; This is needed to check user moves, though not AI moves (because the move generator will only generate legal moves
+; anyway). A move is illegal under the following conditions:
+; 1. The starting space is empty.
+; 2. The starting space contains an opposing piece.
+; 3. The move is diagonal (i.e. /\x > 0 AND /\ y > 0)
+; 4. The move jumps over a piece on either side.
+; 5. The ending space already has a piece on it.
+
+(defn move-valid? [board delta side]
+ (let [origin (get-cell board (first delta))
+       destination (get-cell board (second delta))
+       delta-y (Math/abs (- (first (second delta)) (first (first delta))))
+       delta-x (Math/abs (- (second (second delta)) (second (first delta))))]
+  (trace "Testing validity of move from " origin " to " destination " with delta x: " delta-x " and delta y: " delta-y)
+  (not (or (= origin +EMPTY+) ; attempting to move an empty space
+           (not (= side (mod origin 2))) ; attempting to move other player's piece
+           (and (> delta-x 0) (> delta-y 0))
+           (not (= destination +EMPTY+))
+           (jumped? board delta)
+        ))
+ ))

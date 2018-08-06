@@ -1,5 +1,6 @@
 (ns latrunculi.model-test
   (:require [clojure.test :refer :all]
+            [taoensso.timbre :as timbre :refer [trace info with-level]]
             [latrunculi.model :refer :all]))
 
 (deftest query-tests
@@ -18,3 +19,15 @@
      (is (= +EMPTY+ (get-cell board [3 0])))
     ))
   )
+
+(deftest validation-tests
+ (with-level :trace
+ (testing "move-valid? detects invalid moves."
+  (let [board starting-board]
+   (is (true? (move-valid? board [[0 0] [3 0]] +BLACK+)))
+   (is (false? (move-valid? board [[1 0] [2 0]] +BLACK+))) ; empty starting space
+   (is (false? (move-valid? board [[7 0] [6 0]] +BLACK+))) ; empty starting space
+   (is (false? (move-valid? board [[0 0] [1 1]] +BLACK+))) ; empty starting space
+   (is (false? (move-valid? board [[0 0] [7 0]] +BLACK+))) ; empty starting space
+  )
+ )))
