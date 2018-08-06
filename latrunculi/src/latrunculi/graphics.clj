@@ -217,7 +217,11 @@
 
 (defn- process-move-input [state move]
  (info "Going to do stuff about move " move)
-)
+ (if (or (m/move-valid? (get-in state [:game-state :board]) move m/+BLACK+)
+         (m/move-valid? (get-in state [:game-state :board]) move m/+WHITE+)) ; TODO: fix this; for testing.
+  true
+  false
+ ))
 
 (defn- game-mouse-handler [window button action position state]
  (if (= action GLFW/GLFW_RELEASE)

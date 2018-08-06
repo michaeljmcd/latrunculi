@@ -129,3 +129,6 @@
            (jumped? board delta)
         ))
  ))
+
+(defn move-piece [board delta]
+)

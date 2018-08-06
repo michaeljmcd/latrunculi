@@ -21,7 +21,6 @@
   )
 
 (deftest validation-tests
- (with-level :trace
  (testing "move-valid? detects invalid moves."
   (let [board starting-board]
    (is (true? (move-valid? board [[0 0] [3 0]] +BLACK+)))
@@ -30,4 +29,8 @@
    (is (false? (move-valid? board [[0 0] [1 1]] +BLACK+))) ; empty starting space
    (is (false? (move-valid? board [[0 0] [7 0]] +BLACK+))) ; empty starting space
   )
- )))
+ ))
+
+(deftest processing-tests
+ (testing "move-piece swaps spaces correctly."
+ ))
