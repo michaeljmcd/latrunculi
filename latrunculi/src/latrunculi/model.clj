@@ -131,4 +131,11 @@
  ))
 
 (defn move-piece [board delta]
-)
+ (let [origin (first delta)
+       destination (second delta)
+       original-piece (get-cell board origin)]
+ (-> board
+  (update-in [(first origin) (second origin)] (constantly +EMPTY+))
+  (update-in [(first destination) (second destination)] (constantly original-piece))
+ )
+))

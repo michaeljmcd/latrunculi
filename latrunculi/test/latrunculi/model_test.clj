@@ -33,4 +33,8 @@
 
 (deftest processing-tests
  (testing "move-piece swaps spaces correctly."
- ))
+  (let [board starting-board
+        move [[0 0] [3 0]]
+        expected  [[-1 3 3 3 3 3 3 3 3 3 3 3] [-1 -1 -1 -1 -1 1 -1 -1 -1 -1 -1 -1] [-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1] [3 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1] [-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1] [-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1] [-1 -1 -1 -1 -1 -1 0 -1 -1 -1 -1 -1] [2 2 2 2 2 2 2 2 2 2 2 2]]]
+    (is (= expected (move-piece board move)))
+ )))
