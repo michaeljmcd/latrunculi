@@ -216,17 +216,17 @@
  (= (get coordinates 0) -1))
 
 (defn- process-move-input [state move]
- (info "Going to do stuff about move " move)
+ (trace "Going to do stuff about move " move)
  (if (or (m/move-valid? (get-in state [:game-state :board]) move m/+BLACK+)
          (m/move-valid? (get-in state [:game-state :board]) move m/+WHITE+)) ; TODO: fix this; for testing.
-  true
-  false
+  (do (trace "Move is valid, going to move.") state)
+  (do (trace "Move is invalid, returning current state.") state)
  ))
 
 (defn- game-mouse-handler [window button action position state]
  (if (= action GLFW/GLFW_RELEASE)
   (do
- (info "Click at " position)
+ (trace "Click at " position)
   (color-render window state @resources)
 
   (let [stack (MemoryStack/stackPush)
@@ -234,7 +234,7 @@
         pixel-buffer (.malloc stack 4)]
     (GL11/glGetIntegerv GL11/GL_VIEWPORT viewport-buffer)
 
-    (info "Reading pixels at " [(int (first position))
+    (trace "Reading pixels at " [(int (first position))
                    (int (- (.get viewport-buffer 3) (second position)))
     ])
 
@@ -249,10 +249,9 @@
     (let [pixel [(.get pixel-buffer 0) (.get pixel-buffer 1) (.get pixel-buffer 2) (.get pixel-buffer 3)]
           coordinates [(second pixel) (first pixel)]
           viewport [(.get viewport-buffer 0) (.get viewport-buffer 1) (.get viewport-buffer 2) (.get viewport-buffer 3)]]
-          ; TODO: make these trace later
-   (info "viewport: " viewport)
-   (info "pixel: " pixel)
-   (info "coordinates:  " coordinates)
+   (trace "viewport: " viewport)
+   (trace "pixel: " pixel)
+   (trace "coordinates:  " coordinates)
      (if (not (mouse-coordinates-empty? coordinates))
       (if (nil? (:move-origin state))
        (swap! global-state (fn [s] (assoc-in s [:move-origin] coordinates)))
@@ -369,7 +368,7 @@
    (GL11/glBlendFunc GL11/GL_SRC_ALPHA GL11/GL_ONE_MINUS_SRC_ALPHA)
 
    (swap! resources r/load-resources)
-   (info "resources: " @resources)
+   (trace "resources: " @resources)
    (initialize-game)
 
    (while (not (GLFW/glfwWindowShouldClose window))

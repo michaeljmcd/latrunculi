@@ -68,12 +68,17 @@
 )
 
 (defn get-cell [board coordinates]
+ (trace "Retrieving space value for" coordinates "in" board)
  (if (or (>= (second coordinates) +ROWS+)
          (>= (first coordinates) +COLUMNS+)
          (< (first coordinates) 0)
          (< (second coordinates) 0))
-    nil
-    (get-in board coordinates)))
+    (do (trace "Invalid coordinates, returning sentinel value.") nil)
+    (do (trace "Valid coordinates, retrieving value.") 
+     (let [res (nth (nth board (second coordinates)) (first coordinates))]
+      (trace "Found value" res "at" (reverse coordinates))
+      res)
+     )))
 
 ; Returns whether or not a given path includes some piece between the start and end points
 ; We need to get a list of all the spaces in between the start and the 
@@ -117,6 +122,7 @@
 ; 5. The ending space already has a piece on it.
 
 (defn move-valid? [board delta side]
+ (trace "Entering move validation with delta" delta "and board" board "for side" side ".")
  (let [origin (get-cell board (first delta))
        destination (get-cell board (second delta))
        delta-y (Math/abs (- (first (second delta)) (first (first delta))))
@@ -126,7 +132,7 @@
            (not (= side (mod origin 2))) ; attempting to move other player's piece
            (and (> delta-x 0) (> delta-y 0))
            (not (= destination +EMPTY+))
-           (jumped? board delta)
+           ;(jumped? board delta)
         ))
  ))
 
